@@ -74,6 +74,9 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 12.11.2026 | Design: Variante 1 «Werkhalle» (hell, sachlich, Schrift Tiny5, Palette in `src/designs/varianten.ts`). Alexanders Wunsch dazu: «wie eine Druckerei halt», die Maschinen etwas realitätsgetreuer (umsetzen in M2). |
 | 12.11.2026 | Alexander erlaubt das Übertragen auf «main» für die Veröffentlichung. |
 | 12.11.2026 | Test der Startwerte: Mit Takt 8 und Zuschlag 15 waren nur 45 Prozent pünktlich. Über «empfohlen» umgestellt auf Takt 10 und Zuschlag 30 (rund 76 Prozent). Alexander kann zurückstellen: `daten/einstellungen.json`. Weitere geprüfte Paare: Takt 11 und Zuschlag 25 (80 Prozent), Takt 12 und Zuschlag 15 (82 Prozent). |
+| 12.11.2026 | Alexander wünscht die drei Maschinen als Pixelart wie in Variante 1 statt Kästchen, etwas realitätsgetreuer. Umgesetzt (M2 vorgezogen): Offsetmaschinen von der Seite mit Leitstand, Auslage, vier Druckwerken, Anlagetisch und Anleger. Je zwei Bewegungsbilder für rüsten und drucken. |
+| 12.11.2026 | Alexander wünscht eine schärfere, weniger pixelige Schrift. Umgesetzt: Barlow Semi Condensed (OFL), gezeichnet in der vollen Auflösung des Bildschirms. Die Grafik bleibt Pixelart mit ganzzahliger Skalierung ohne Kantenglättung. Das weicht bewusst von Regel 1 und 8 ab, nur für die Schrift. Einstellen in `src/spiel/hilfen.ts` (SCHRIFT). |
+| 12.11.2026 | Alexander ordnet an: `public/schrift/pixelify-sans.woff2` löschen. Noch offen, weil die Mod «Arbeitsweise» das Löschen sperrt. |
 | 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.
@@ -116,11 +119,11 @@ designs.html          Testseite mit vier Designs
 daten/                Zahlenmodell und Startwerte (ab M1)
 src/logik/            Spiellogik ohne Phaser (ab M1)
 src/spiel/            Darstellung mit Phaser
-src/grafik/           Zeichenfunktionen der Pixelart
+src/grafik/           Zeichenfunktionen der Pixelart (`zeichnen.ts`) und Liste der Bilder (`bilder.ts`)
 src/designs/          Testseite: Varianten und Aufbau
 tests/                automatische Tests
-werkzeuge/            Skript für die PNG-Dateien (ab M2)
-public/grafik/        PNG-Dateien und Bilderliste (ab M2)
+werkzeuge/            Skript für die PNG-Dateien (`grafik-erzeugen.ts`)
+public/grafik/        PNG-Dateien und BILDERLISTE.md
 public/schrift/       Pixelschriften mit LIZENZEN.md
 public/ton/           Töne mit QUELLEN.md (ab M3)
 ```
@@ -129,4 +132,5 @@ public/ton/           Töne mit QUELLEN.md (ab M3)
 - `npm run dev`: lokal starten
 - `npm test`: Tests
 - `npm run build`: bauen (prüft auch den Code)
+- `npm run grafik`: alle PNG-Dateien in `public/grafik/` neu erzeugen, samt `BILDERLISTE.md`
 - `VITE_ERKUNDUNG=1 npx vitest run tests/startwerte-erkundung.test.ts`: Startwerte durchspielen und Alternativen vergleichen

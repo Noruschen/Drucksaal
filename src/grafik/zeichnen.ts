@@ -87,38 +87,74 @@ export function zeichneHalle(l: Leinwand, s: Stil, breite: number, oben: number,
   }
 }
 
-/** Digitaldruckmaschine. (x, y) ist die linke untere Ecke. Breite 70, Höhe 36. */
-export function zeichneDigitaldruck(l: Leinwand, s: Stil, x: number, y: number, z: Zustand): void {
+/** Signallampe: steht rot, rüstet gelb blinkend, druckt grün. */
+function lampe(f: Farben, z: Zustand, bild: number): string {
+  if (z === 'steht') return f.schlecht;
+  if (z === 'ruestet') return bild === 0 ? f.warnung : f.maschineDunkel;
+  return f.gut;
+}
+
+export const DIGITAL_BREITE = 70;
+
+/**
+ * Digitaldruckmaschine von vorn: Papiermagazin, Druckmodul mit Bedienfeld, Auslage.
+ * (x, y) ist die linke untere Ecke. Breite 70, Höhe 40. bild = 0 oder 1 (Bewegung).
+ */
+export function zeichneDigitaldruck(l: Leinwand, s: Stil, x: number, y: number, z: Zustand, bild = 0): void {
   const f = s.farben;
-  if (s.detail >= 2) l.rechteck(x - 2, y, 74, 2, f.bodenFuge);
-  teil(l, s, x, y - 26, 62, 26, f.maschine);
-  // Auslage rechts mit Bogenstapel
-  teil(l, s, x + 62, y - 12, 8, 2, f.maschineDunkel);
-  l.rechteck(x + 63, y - (z === 'druckt' ? 16 : 14), 6, z === 'druckt' ? 4 : 2, f.papier);
-  // Bedienfeld auf Ständer
-  teil(l, s, x + 46, y - 35, 12, 8, f.maschineDunkel);
-  l.rechteck(x + 47, y - 34, 10, 6, z === 'steht' ? f.maschineDunkel : f.akzent);
-  l.rechteck(x + 51, y - 27, 2, 1, f.maschineDunkel);
-  if (s.detail >= 1) {
-    // Papierschubladen links, Farbmarken in der Mitte
-    l.rechteck(x + 2, y - 17, 14, 1, f.maschineDunkel);
-    l.rechteck(x + 2, y - 9, 14, 1, f.maschineDunkel);
-    l.rechteck(x + 18, y - 26, 1, 26, f.maschineDunkel);
+  const d = s.detail;
+  if (d >= 2) l.rechteck(x - 1, y, 72, 2, f.bodenFuge);
+
+  // Papiermagazin
+  teil(l, s, x, y - 26, 20, 26, f.maschine);
+  if (d >= 1) {
+    l.rechteck(x + 2, y - 18, 16, 1, f.maschineDunkel);
+    l.rechteck(x + 2, y - 10, 16, 1, f.maschineDunkel);
+    l.rechteck(x + 8, y - 15, 4, 1, f.maschineDunkel);
+    l.rechteck(x + 8, y - 7, 4, 1, f.maschineDunkel);
+  }
+  if (z === 'ruestet' && bild === 1) {
+    // Schublade offen: Papier nachlegen
+    l.rechteck(x + 2, y - 17, 16, 6, f.maschineHell);
+    l.rechteck(x + 3, y - 16, 14, 2, f.papier);
+  }
+
+  // Druckmodul
+  teil(l, s, x + 20, y - 30, 30, 30, f.maschine);
+  if (d >= 2) {
+    l.rechteck(x + 24, y - 24, 16, 9, f.maschineDunkel);
+    if (z === 'druckt') l.rechteck(x + 25 + (bild === 0 ? 1 : 8), y - 23, 5, 7, f.akzent);
+    else l.rechteck(x + 25, y - 23, 14, 1, f.akzent);
+  }
+  if (d >= 1) {
     const marken = [f.c, f.m, f.y, f.k];
-    marken.forEach((farbe, i) => l.rechteck(x + 23 + i * 5, y - 7, 3, 3, farbe));
-    l.rechteck(x + 2, y - 23, 3, 3, signalfarbe(f, z));
+    marken.forEach((farbe, i) => l.rechteck(x + 24 + i * 5, y - 9, 3, 4, farbe));
+    l.rechteck(x + 44, y - 27, 3, 3, lampe(f, z, bild));
   }
-  if (s.detail >= 2) {
-    l.rechteck(x, y - 26, 62, 2, f.maschineHell);
-    l.rechteck(x + 22, y - 20, 20, 8, f.maschineDunkel);
-    l.rechteck(x + 23, y - 19, 18, 1, f.akzent);
-    l.rechteck(x, y - 2, 62, 2, f.maschineDunkel);
+  // Bedienfeld auf Ständer
+  teil(l, s, x + 37, y - 39, 12, 8, f.maschineDunkel);
+  l.rechteck(x + 38, y - 38, 10, 6, z === 'steht' ? f.maschineDunkel : z === 'ruestet' && bild === 1 ? f.fenster : f.akzent);
+  l.rechteck(x + 42, y - 31, 2, 1, f.maschineDunkel);
+
+  // Auslage
+  teil(l, s, x + 50, y - 22, 20, 22, f.maschine);
+  l.rechteck(x + 52, y - 19, 16, 11, f.maschineDunkel);
+  const stapel = z === 'druckt' ? 4 + bild : 2;
+  l.rechteck(x + 53, y - 9 - stapel, 14, stapel, f.papier);
+  l.rechteck(x + 52, y - 9, 16, 1, f.maschineHell);
+  if (z === 'druckt' && bild === 0) l.rechteck(x + 53, y - 18, 9, 1, f.papier);
+
+  if (d >= 2) {
+    l.rechteck(x, y - 26, 20, 1, f.maschineHell);
+    l.rechteck(x + 20, y - 30, 30, 1, f.maschineHell);
+    l.rechteck(x + 50, y - 22, 20, 1, f.maschineHell);
+    l.rechteck(x + 19, y - 25, 1, 25, f.maschineDunkel);
+    l.rechteck(x + 49, y - 21, 1, 21, f.maschineDunkel);
+    l.rechteck(x, y - 2, 70, 2, f.maschineDunkel);
   }
-  if (s.detail >= 3) {
-    l.rechteck(x + 7, y - 14, 4, 1, f.maschineHell);
-    l.rechteck(x + 7, y - 6, 4, 1, f.maschineHell);
-    l.rechteck(x + 24, y - 17, 6, 1, f.maschineHell);
-    l.rechteck(x + 48, y - 33, 3, 1, f.papier);
+  if (d >= 3) {
+    l.rechteck(x + 3, y - 23, 6, 1, f.maschineHell);
+    l.rechteck(x + 39, y - 37, 3, 1, f.papier);
   }
 }
 
@@ -126,75 +162,115 @@ export interface Offsetmasse {
   werke: number;
   werkBreite: number;
   werkHoehe: number;
+  leitstandBreite: number;
   auslageBreite: number;
   auslageHoehe: number;
+  tischBreite: number;
   anlegerBreite: number;
   anlegerHoehe: number;
 }
 
-export const SM52: Offsetmasse = { werke: 4, werkBreite: 11, werkHoehe: 27, auslageBreite: 16, auslageHoehe: 20, anlegerBreite: 14, anlegerHoehe: 18 };
-export const RA76: Offsetmasse = { werke: 4, werkBreite: 14, werkHoehe: 36, auslageBreite: 22, auslageHoehe: 27, anlegerBreite: 16, anlegerHoehe: 24 };
+export const SM52: Offsetmasse = { werke: 4, werkBreite: 10, werkHoehe: 25, leitstandBreite: 8, auslageBreite: 14, auslageHoehe: 16, tischBreite: 3, anlegerBreite: 12, anlegerHoehe: 17 };
+export const RA76: Offsetmasse = { werke: 4, werkBreite: 13, werkHoehe: 34, leitstandBreite: 9, auslageBreite: 20, auslageHoehe: 21, tischBreite: 4, anlegerBreite: 14, anlegerHoehe: 23 };
 
 export function offsetBreite(m: Offsetmasse): number {
-  return m.auslageBreite + m.werke * m.werkBreite + m.anlegerBreite;
+  return m.leitstandBreite + 1 + m.auslageBreite + m.werke * m.werkBreite + m.tischBreite + m.anlegerBreite;
 }
 
-/** Bogenoffsetmaschine von der Seite: Auslage, Druckwerke, Anleger. (x, y) ist die linke untere Ecke. */
-export function zeichneOffset(l: Leinwand, s: Stil, x: number, y: number, m: Offsetmasse, z: Zustand): void {
+/**
+ * Bogenoffsetmaschine von der Seite, von links nach rechts: Leitstand, Auslage,
+ * Druckwerke (Gelb, Magenta, Cyan, Schwarz), Anlagetisch, Anleger. Der Bogen läuft von rechts nach links.
+ * (x, y) ist die linke untere Ecke. bild = 0 oder 1 (Bewegung).
+ */
+export function zeichneOffset(l: Leinwand, s: Stil, x: number, y: number, m: Offsetmasse, z: Zustand, bild = 0): void {
   const f = s.farben;
+  const d = s.detail;
   const gesamt = offsetBreite(m);
-  if (s.detail >= 2) l.rechteck(x - 2, y, gesamt + 4, 2, f.bodenFuge);
+  if (d >= 2) l.rechteck(x - 1, y, gesamt + 2, 2, f.bodenFuge);
 
-  // Auslage mit Bogenstapel
+  // Leitstand: Pult mit Bildschirm
+  const lb = m.leitstandBreite;
+  teil(l, s, x, y - 11, lb, 11, f.maschine);
+  l.rechteck(x, y - 11, lb, 2, d >= 2 ? f.maschineHell : f.maschine);
+  teil(l, s, x + 1, y - 19, lb - 2, 6, f.maschineDunkel);
+  l.rechteck(x + 2, y - 18, lb - 4, 4, z === 'steht' ? f.maschineDunkel : bild === 0 ? f.akzent : f.fenster);
+  l.rechteck(x + Math.floor(lb / 2), y - 13, 1, 2, f.maschineDunkel);
+
+  // Auslage mit Bogenstapel, Kettenführung steigt zum letzten Druckwerk an
+  const ax = x + lb + 1;
   const ab = m.auslageBreite;
   const ah = m.auslageHoehe;
-  teil(l, s, x, y - ah, ab, ah, f.maschine);
-  l.rechteck(x + 2, y - ah + 4, ab - 4, ah - 6, f.maschineDunkel);
-  const stapel = z === 'druckt' ? Math.floor((ah - 8) * 0.7) : 3;
-  l.rechteck(x + 3, y - 2 - stapel, ab - 6, stapel, f.papier);
-  if (s.detail >= 2) for (let i = 2; i < stapel; i += 2) l.rechteck(x + 3, y - 2 - i, ab - 6, 1, f.papierSchatten);
-  if (s.detail >= 1) l.rechteck(x + 2, y - ah + 1, 3, 2, signalfarbe(f, z));
-  if (s.detail >= 2) {
-    // Leitstand an der Auslage
-    teil(l, s, x + ab - 9, y - ah - 6, 8, 5, f.maschineDunkel);
-    l.rechteck(x + ab - 8, y - ah - 5, 6, 3, z === 'steht' ? f.maschineDunkel : f.akzent);
-  }
+  teil(l, s, ax, y - ah, ab, ah, f.maschine);
+  teil(l, s, ax + ab - 7, y - ah - 4, 7, 4, f.maschine);
+  l.rechteck(ax + 2, y - ah + 4, ab - 5, ah - 7, f.maschineDunkel);
+  const stapel = z === 'druckt' ? Math.floor((ah - 9) * 0.6) + bild : 3;
+  l.rechteck(ax + 3, y - 3 - stapel, ab - 7, stapel, f.papier);
+  if (d >= 2) for (let i = 2; i < stapel; i += 2) l.rechteck(ax + 3, y - 3 - i, ab - 7, 1, f.papierSchatten);
+  l.rechteck(ax + 2, y - 3, ab - 5, 1, f.maschineHell);
+  if (z === 'druckt') l.rechteck(ax + 3 + (bild === 0 ? 4 : 1), y - ah + 5, 6, 1, f.papier);
+  if (d >= 1) l.rechteck(ax + 2, y - ah - 3, 2, 3, lampe(f, z, bild));
+  if (d >= 2) l.rechteck(ax, y - ah, ab - 7, 1, f.maschineHell);
 
-  // Druckwerke
-  const marken = [f.k, f.c, f.m, f.y];
+  // Druckwerke: Unterbau mit Zylindern, darüber das Farbwerk
+  const marken = [f.y, f.m, f.c, f.k];
+  const wx0 = ax + ab;
+  const wh = m.werkHoehe;
+  const unterbau = Math.floor(wh * 0.5);
   for (let i = 0; i < m.werke; i++) {
-    const wx = x + ab + i * m.werkBreite;
+    const wx = wx0 + i * m.werkBreite;
     const wb = m.werkBreite - 1;
-    const wh = m.werkHoehe;
-    teil(l, s, wx, y - wh, wb, wh, f.maschine);
-    teil(l, s, wx + 1, y - wh - 2, wb - 2, 2, f.maschine);
-    if (s.detail >= 1) l.rechteck(wx + 2, y - wh + 2, wb - 4, 3, marken[i % 4]);
-    if (s.detail >= 2) {
-      l.rechteck(wx, y - wh, 1, wh, f.maschineHell);
-      l.rechteck(wx + 2, y - wh + 8, wb - 4, 7, f.maschineDunkel);
+    teil(l, s, wx, y - unterbau, wb, unterbau, f.maschine);
+    teil(l, s, wx + 2, y - wh, wb - 2, wh - unterbau, f.maschine);
+    teil(l, s, wx + 3, y - wh - 2, wb - 4, 2, f.maschine);
+    l.rechteck(wx + wb, y - unterbau + 2, 1, unterbau - 2, f.maschineDunkel);
+    if (d >= 1) l.rechteck(wx + 4, y - wh + 2, wb - 6, 2, marken[i % 4]);
+    if (d >= 2) {
+      l.rechteck(wx + 2, y - wh, 1, wh - unterbau, f.maschineHell);
+      l.rechteck(wx, y - unterbau, 2, 1, f.maschineHell);
       l.rechteck(wx + wb - 1, y - wh + 1, 1, wh - 1, f.maschineDunkel);
+      // Schutz am Farbwerk: beim Rüsten abwechselnd offen (Plattenwechsel)
+      const offen = z === 'ruestet' && i % 2 === bild;
+      const sh = wh - unterbau - 8;
+      l.rechteck(wx + 4, y - wh + 6, wb - 6, sh, offen ? f.fenster : f.maschineDunkel);
+      if (offen) l.rechteck(wx + 4, y - wh + 6 + Math.floor(sh / 2), wb - 6, 1, f.akzent);
+      // Zwei Zylinder im Unterbau, beim Drucken drehen sie
+      const zy = y - unterbau + 3;
+      const zg = Math.min(4, wb - 6);
+      l.rechteck(wx + 2, zy, zg, zg, f.maschineDunkel);
+      l.rechteck(wx + wb - zg - 2, zy + zg + 1, zg, zg, f.maschineDunkel);
+      if (z === 'druckt') {
+        l.rechteck(wx + 2 + (bild === 0 ? 0 : zg - 1), zy + (bild === 0 ? 0 : zg - 1), 1, 1, f.maschineHell);
+        l.rechteck(wx + wb - zg - 2 + (bild === 0 ? zg - 1 : 0), zy + zg + 1 + (bild === 0 ? 0 : zg - 1), 1, 1, f.maschineHell);
+      }
     }
-    if (s.detail >= 3) {
-      // Zylinder im Schutzfenster, Trittbrett
-      l.rechteck(wx + 3, y - wh + 9, wb - 6, 2, z === 'druckt' ? f.akzent : f.maschine);
-      l.rechteck(wx + 3, y - wh + 12, wb - 6, 2, f.maschine);
-      l.rechteck(wx + 1, y - 5, wb - 2, 1, f.maschineDunkel);
-      l.rechteck(wx + 2, y - wh - 2, wb - 5, 1, f.maschineHell);
+    if (d >= 3) {
+      l.rechteck(wx, y - 4, wb, 1, f.maschineDunkel);
+      l.rechteck(wx + 4, y - wh - 2, wb - 7, 1, f.maschineHell);
     }
   }
 
-  // Anleger mit Bogenstapel
-  const nx = x + ab + m.werke * m.werkBreite;
-  const nb = m.anlegerBreite;
+  // Anlagetisch
+  const tx = wx0 + m.werke * m.werkBreite;
+  const tb = m.tischBreite;
   const nh = m.anlegerHoehe;
-  teil(l, s, nx, y - nh, nb, nh, f.maschine);
-  l.rechteck(nx + 2, y - nh + 4, nb - 4, nh - 6, f.maschineDunkel);
-  const vorrat = z === 'druckt' ? Math.floor((nh - 8) * 0.5) : nh - 9;
-  l.rechteck(nx + 3, y - 2 - vorrat, nb - 6, vorrat, f.papier);
-  if (s.detail >= 2) for (let i = 2; i < vorrat; i += 2) l.rechteck(nx + 3, y - 2 - i, nb - 6, 1, f.papierSchatten);
-  teil(l, s, nx + 1, y - nh - 3, nb - 4, 3, f.maschineDunkel);
+  teil(l, s, tx, y - nh + 4, tb, nh - 4, f.maschine);
+  l.rechteck(tx - 1, y - nh + 3, tb + 2, 2, f.maschineDunkel);
+  if (z === 'druckt') l.rechteck(tx - 1 + bild, y - nh + 2, tb + 1, 1, f.papier);
 
-  if (s.detail >= 2) l.rechteck(x, y - 2, gesamt, 2, f.maschineDunkel);
+  // Anleger mit Bogenstapel und Saugkopf
+  const nx = tx + tb;
+  const nb = m.anlegerBreite;
+  teil(l, s, nx, y - nh, nb, nh, f.maschine);
+  l.rechteck(nx + 2, y - nh + 4, nb - 4, nh - 7, f.maschineDunkel);
+  const vorrat = nh - 10 - (z === 'druckt' ? 3 + bild : 0);
+  l.rechteck(nx + 3, y - 3 - vorrat, nb - 6, vorrat, f.papier);
+  if (d >= 2) for (let i = 2; i < vorrat; i += 2) l.rechteck(nx + 3, y - 3 - i, nb - 6, 1, f.papierSchatten);
+  l.rechteck(nx + 2, y - 3, nb - 4, 1, f.maschineHell);
+  teil(l, s, nx + 1, y - nh - 3, nb - 5, 3, f.maschineDunkel);
+  if (d >= 2) {
+    l.rechteck(nx, y - nh, nb, 1, f.maschineHell);
+    l.rechteck(ax, y - 2, gesamt - lb - 1, 2, f.maschineDunkel);
+  }
 }
 
 /** Symbol für die Farbigkeit: zwei Bogen (Schön- und Widerdruckseite). Grösse 17 x 9. */

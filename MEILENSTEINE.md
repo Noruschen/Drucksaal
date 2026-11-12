@@ -9,13 +9,13 @@ Stand: 12.11.2026
 | Schritt 2 | Plan | erledigt, Freigabe über «empfohlen» |
 | Schritt 3 | Projektgerüst, CLAUDE.md, Veröffentlichung eingerichtet, erster Commit | erledigt, noch nicht veröffentlicht |
 | Schritt 4 | Testseite mit vier Designs | erledigt, gewählt: Variante 1 «Werkhalle» |
-| M1 | Spielbare Schicht mit Platzhaltern, Auswertung, Tests der Kontrollwerte, Test der Startwerte, veröffentlicht | gebaut und getestet, **wartet auf «weiter»**. Veröffentlicht, sobald das Repository öffentlich ist |
-| M2 | Pixelart im gewählten Design, alle Grafiken, Maschinen bewegen sich | offen |
+| M1 | Spielbare Schicht mit Platzhaltern, Auswertung, Tests der Kontrollwerte, Test der Startwerte, veröffentlicht | gebaut und getestet. Veröffentlicht, sobald das Repository öffentlich ist |
+| M2 | Pixelart im gewählten Design, alle Grafiken, Maschinen bewegen sich | gebaut und getestet (auf Alexanders Wunsch vorgezogen), **wartet auf «weiter»** |
 | M3 | Bestleistung speichern, Home-Bildschirm, Ton, Feinschliff | offen |
 
 ## Offen bei Alexander
 1. Repository auf öffentlich stellen, danach «Settings», «Pages», «Source»: «GitHub Actions».
-2. Ungenutzte Datei `public/schrift/pixelify-sans.woff2`: löschen ja oder nein.
+2. Löschen von `public/schrift/pixelify-sans.woff2` in der Mod «Arbeitsweise» freigeben.
 
 ## Nach jedem Meilenstein
 1. Tests laufen lassen.

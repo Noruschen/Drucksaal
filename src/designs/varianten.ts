@@ -1,4 +1,4 @@
-import type { Stil } from '../grafik/zeichnen';
+import type { Stil } from '../grafik/zeichnen.ts';
 
 export interface Schrift {
   name: string;

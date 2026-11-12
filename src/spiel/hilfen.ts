@@ -1,13 +1,20 @@
 import Phaser from 'phaser';
-import { VARIANTEN } from '../designs/varianten';
+import { STIL } from '../grafik/bilder.ts';
 
 // Gewähltes Design: Variante 1 «Werkhalle».
-export const DESIGN = VARIANTEN[0];
-export const FARBEN = DESIGN.stil.farben;
-export const SCHRIFT = DESIGN.schrift;
+export const FARBEN = STIL.farben;
+
+/**
+ * Schrift im Spiel. Auf Alexanders Wunsch nicht pixelig, sondern scharf:
+ * Sie wird in der vollen Auflösung des Bildschirms gezeichnet, die Grafik bleibt Pixelart.
+ */
+export const SCHRIFT = { name: 'Barlow Semi Condensed', familie: 'BarlowSemiCondensed', datei: 'barlow-semi-condensed-500.woff2', groesse: 9 };
 
 export const BREITE = 320;
 export const HOEHE = 180;
+
+/** Aktueller ganzzahliger Vergrösserungsfaktor (Bildpunkte des Geräts pro Spielpixel). */
+export const ansicht = { faktor: 1 };
 
 export interface Rechteck {
   x: number;
@@ -32,9 +39,9 @@ export class Maler {
     this.g.clear();
   }
 
-  r(x: number, y: number, b: number, h: number, hex: string): void {
+  r(x: number, y: number, b: number, h: number, hex: string, deckkraft = 1): void {
     if (b <= 0 || h <= 0) return;
-    this.g.fillStyle(farbzahl(hex), 1);
+    this.g.fillStyle(farbzahl(hex), deckkraft);
     this.g.fillRect(x, y, b, h);
   }
 
@@ -50,23 +57,17 @@ export class Maler {
     this.r(x + 1, y + 1, b - 2, h - 2, FARBEN.maschineDunkel);
     this.r(x + 1, y + 1, Math.round((b - 2) * Math.max(0, Math.min(1, anteil))), h - 2, hex);
   }
-
-  knopf(k: Rechteck, hex: string, dunkel: string): void {
-    this.r(k.x + 1, k.y, k.b - 2, k.h, FARBEN.umriss);
-    this.r(k.x, k.y + 1, k.b, k.h - 2, FARBEN.umriss);
-    this.r(k.x + 1, k.y + 1, k.b - 2, k.h - 2, hex);
-    this.r(k.x + 1, k.y + k.h - 4, k.b - 2, 3, dunkel);
-  }
 }
 
 export type Ausrichtung = 'links' | 'mitte' | 'rechts';
 
-/** Legt eine Beschriftung in der Pixelschrift an. */
-export function schrift(szene: Phaser.Scene, x: number, y: number, inhalt: string, hex: string, ausrichtung: Ausrichtung = 'links'): Phaser.GameObjects.Text {
+/** Legt eine Beschriftung an. Sie wird in der Auflösung des Bildschirms gezeichnet und bleibt darum scharf. */
+export function schrift(szene: Phaser.Scene, x: number, y: number, inhalt: string, hex: string, ausrichtung: Ausrichtung = 'links', groesse = SCHRIFT.groesse): Phaser.GameObjects.Text {
   const t = szene.add.text(x, y, inhalt, {
     fontFamily: SCHRIFT.familie,
-    fontSize: `${SCHRIFT.groesse}px`,
+    fontSize: `${groesse}px`,
     color: hex,
+    resolution: ansicht.faktor,
   });
   t.setOrigin(ausrichtung === 'links' ? 0 : ausrichtung === 'mitte' ? 0.5 : 1, 0);
   t.setDepth(5);
@@ -77,6 +78,33 @@ export function schrift(szene: Phaser.Scene, x: number, y: number, inhalt: strin
 export function setze(t: Phaser.GameObjects.Text, inhalt: string, hex?: string): void {
   if (t.text !== inhalt) t.setText(inhalt);
   if (hex && t.style.color !== hex) t.setColor(hex);
+}
+
+export function bild(szene: Phaser.Scene, x: number, y: number, name: string, tiefe = 1): Phaser.GameObjects.Image {
+  return szene.add.image(x, y, name).setOrigin(0, 0).setDepth(tiefe);
+}
+
+/** Wechselt das Bild nur, wenn es sich geändert hat. */
+export function setzeBild(b: Phaser.GameObjects.Image, name: string): void {
+  if (b.texture.key !== name) b.setTexture(name);
+}
+
+/**
+ * Richtet die Kamera einer Szene auf das Spielfeld 320 x 180 aus und hält sie bei jeder
+ * Grössenänderung nach. Die Schrift wird dabei in der neuen Auflösung neu gezeichnet.
+ */
+export function richteAus(szene: Phaser.Scene): void {
+  const anwenden = (): void => {
+    const kamera = szene.cameras.main;
+    kamera.setZoom(ansicht.faktor);
+    kamera.centerOn(BREITE / 2, HOEHE / 2);
+    for (const objekt of szene.children.list) {
+      if (objekt instanceof Phaser.GameObjects.Text && objekt.style.resolution !== ansicht.faktor) objekt.setResolution(ansicht.faktor);
+    }
+  };
+  anwenden();
+  szene.scale.on('resize', anwenden);
+  szene.events.once('shutdown', () => szene.scale.off('resize', anwenden));
 }
 
 export function minSek(sekunden: number): string {

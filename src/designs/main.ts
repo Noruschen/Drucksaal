@@ -14,8 +14,8 @@ import {
   zeichneSchaltflaeche,
   zeichneUhr,
   type Leinwand,
-} from '../grafik/zeichnen';
-import { VARIANTEN, type Schrift, type Variante } from './varianten';
+} from '../grafik/zeichnen.ts';
+import { VARIANTEN, type Schrift, type Variante } from './varianten.ts';
 
 const BREITE = 320;
 const HOEHE = 180;
