@@ -1,0 +1,26 @@
+{
+  "hinweis": "Zahlenmodell, von Alexander bestätigt. Nicht ändern. Massstab: 1 Spielsekunde entspricht 1 echten Minute.",
+  "maschinen": [
+    {
+      "id": "digital",
+      "name": "Digitaldruck",
+      "ruestzeit": 5,
+      "leistung": 50,
+      "vierVier": { "durchgaenge": 1, "leistungsFaktor": 0.5 }
+    },
+    {
+      "id": "sm52",
+      "name": "SM 52",
+      "ruestzeit": 15,
+      "leistung": 150,
+      "vierVier": { "durchgaenge": 2, "leistungsFaktor": 1 }
+    },
+    {
+      "id": "ra76",
+      "name": "RA 76",
+      "ruestzeit": 30,
+      "leistung": 400,
+      "vierVier": { "durchgaenge": 2, "leistungsFaktor": 1 }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "hinweis": "Startwerte zum Einstellen. Zeiten in Sekunden, Auflagen in Exemplaren. Alexanders erster Vorschlag war takt 8 und terminZuschlag 15 (ergab 45 Prozent pünktlich). Seit 12.11.2026: takt 10 und terminZuschlag 30 (rund 76 Prozent).",
+  "schichtDauer": 180,
+  "takt": 10,
+  "ersteLauftascheNach": 1,
+  "maxOffeneLauftaschen": 4,
+  "maxWartendProMaschine": 3,
+  "anteilVierVier": 0.3333,
+  "auflagenSchritt": 50,
+  "auflagenKlassen": [
+    { "anteil": 0.3, "von": 100, "bis": 750 },
+    { "anteil": 0.4, "von": 800, "bis": 3600 },
+    { "anteil": 0.3, "von": 3650, "bis": 12000 }
+  ],
+  "terminFaktor": 2,
+  "terminZuschlag": 30,
+  "punktePuenktlich": 100,
+  "punkteVerspaetet": -50,
+  "zeitraffer": 8
+}

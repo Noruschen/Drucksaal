@@ -47,8 +47,8 @@ Folge: Bei freien Maschinen ist bei 4/0 der Digitaldruck bis 750 Exemplare am sc
 ## Startwerte (Einstelldatei, Alexander passt sie an)
 1. Auflagen 100 bis 12'000 Exemplare, so gemischt, dass alle drei Maschinen gebraucht werden. Vorschlag: 30 Prozent klein (100 bis 750), 40 Prozent mittel (800 bis 3'600), 30 Prozent gross (3'650 bis 12'000), in Schritten von 50.
 2. Etwa ein Drittel der Aufträge ist 4/4.
-3. Alle 8 Sekunden eine neue Lauftasche.
-4. Liefertermin: schnellste mögliche Dauer bei freier Maschine mal 2, plus 15 Sekunden, ab Erscheinen.
+3. Alle 10 Sekunden eine neue Lauftasche (Alexanders erster Vorschlag: 8).
+4. Liefertermin: schnellste mögliche Dauer bei freier Maschine mal 2, plus 30 Sekunden, ab Erscheinen (erster Vorschlag: plus 15).
 5. Höchstens 3 wartende Aufträge pro Maschine und höchstens 4 offene Lauftaschen. Sind 4 offen, kommt keine neue, die Fristen laufen weiter.
 6. Punkte: pünktlich plus 100, verspätet minus 50.
 7. Zeitraffer nach Schichtende: 8-fach (Vorschlag).
@@ -71,8 +71,10 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 12.11.2026 | Annahme G: War die gewählte Maschine schon die früheste, steht das in der Auswertung so. |
 | 12.11.2026 | Sind 4 Lauftaschen offen, fällt der Takt aus. Abgelaufene Lauftaschen bleiben rot liegen und lassen sich weiter zuteilen. |
 | 12.11.2026 | Zusätzliche Bibliothek: nur Vitest (Testwerkzeug, kommt nicht ins Spiel). |
-| 13.11.2026 | Design: Variante 1 «Werkhalle» (hell, sachlich, Schrift Tiny5, Palette in `src/designs/varianten.ts`). Alexanders Wunsch dazu: «wie eine Druckerei halt», die Maschinen etwas realitätsgetreuer (umsetzen in M2). |
-| 13.11.2026 | Alexander erlaubt das Übertragen auf «main» für die Veröffentlichung. |
+| 12.11.2026 | Design: Variante 1 «Werkhalle» (hell, sachlich, Schrift Tiny5, Palette in `src/designs/varianten.ts`). Alexanders Wunsch dazu: «wie eine Druckerei halt», die Maschinen etwas realitätsgetreuer (umsetzen in M2). |
+| 12.11.2026 | Alexander erlaubt das Übertragen auf «main» für die Veröffentlichung. |
+| 12.11.2026 | Test der Startwerte: Mit Takt 8 und Zuschlag 15 waren nur 45 Prozent pünktlich. Über «empfohlen» umgestellt auf Takt 10 und Zuschlag 30 (rund 76 Prozent). Alexander kann zurückstellen: `daten/einstellungen.json`. Weitere geprüfte Paare: Takt 11 und Zuschlag 25 (80 Prozent), Takt 12 und Zuschlag 15 (82 Prozent). |
+| 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.
 
@@ -127,3 +129,4 @@ public/ton/           Töne mit QUELLEN.md (ab M3)
 - `npm run dev`: lokal starten
 - `npm test`: Tests
 - `npm run build`: bauen (prüft auch den Code)
+- `VITE_ERKUNDUNG=1 npx vitest run tests/startwerte-erkundung.test.ts`: Startwerte durchspielen und Alternativen vergleichen
