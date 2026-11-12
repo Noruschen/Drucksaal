@@ -1,0 +1,16 @@
+{
+  "name": "Druckerei",
+  "short_name": "Druckerei",
+  "description": "Pixelart-Spiel: Als Produktionsleiter Lauftaschen auf drei Druckmaschinen verteilen.",
+  "lang": "de-CH",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#2b3445",
+  "theme_color": "#2b3445",
+  "icons": [
+    { "src": "grafik/symbol_home_192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "grafik/symbol_home_512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

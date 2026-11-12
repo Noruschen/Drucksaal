@@ -45,7 +45,7 @@ const zeilen: string[] = [];
 
 for (const bild of BILDER) {
   const datei = join(ziel, `${bild.name}.png`);
-  zeilen.push(`| ${bild.name}.png | ${bild.breite} x ${bild.hoehe} | ${bild.beschrieb} | ${bild.vonHand ? 'von Hand gezeichnet' : 'Skript'} |`);
+  zeilen.push(`| ${bild.name}.png | ${bild.breite * (bild.massstab ?? 1)} x ${bild.hoehe * (bild.massstab ?? 1)} | ${bild.beschrieb} | ${bild.vonHand ? 'von Hand gezeichnet' : 'Skript'} |`);
   if (bild.vonHand && existsSync(datei)) continue;
   const rgba = new Uint8Array(bild.breite * bild.hoehe * 4);
   const leinwand: Leinwand = {
@@ -64,7 +64,20 @@ for (const bild of BILDER) {
     },
   };
   bild.zeichne(leinwand);
-  writeFileSync(datei, png(bild.breite, bild.hoehe, rgba));
+  const n = bild.massstab ?? 1;
+  if (n === 1) {
+    writeFileSync(datei, png(bild.breite, bild.hoehe, rgba));
+  } else {
+    // Ganzzahlig vergrössern, jeder Pixel wird zu einem Quadrat aus n mal n Pixeln.
+    const gross = new Uint8Array(bild.breite * n * bild.hoehe * n * 4);
+    for (let y = 0; y < bild.hoehe * n; y++) {
+      for (let x = 0; x < bild.breite * n; x++) {
+        const von = (Math.floor(y / n) * bild.breite + Math.floor(x / n)) * 4;
+        gross.set(rgba.subarray(von, von + 4), (y * bild.breite * n + x) * 4);
+      }
+    }
+    writeFileSync(datei, png(bild.breite * n, bild.hoehe * n, gross));
+  }
 }
 
 const palette = [...erlaubt].sort();

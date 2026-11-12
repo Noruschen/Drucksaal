@@ -10,8 +10,8 @@ Stand: 12.11.2026
 | Schritt 3 | Projektgerüst, CLAUDE.md, Veröffentlichung eingerichtet, erster Commit | erledigt, noch nicht veröffentlicht |
 | Schritt 4 | Testseite mit vier Designs | erledigt, gewählt: Variante 1 «Werkhalle» |
 | M1 | Spielbare Schicht mit Platzhaltern, Auswertung, Tests der Kontrollwerte, Test der Startwerte, veröffentlicht | gebaut und getestet. Veröffentlicht, sobald das Repository öffentlich ist |
-| M2 | Pixelart im gewählten Design, alle Grafiken, Maschinen bewegen sich | gebaut und getestet (auf Alexanders Wunsch vorgezogen), **wartet auf «weiter»** |
-| M3 | Bestleistung speichern, Home-Bildschirm, Ton, Feinschliff | offen |
+| M2 | Pixelart im gewählten Design, alle Grafiken, Maschinen bewegen sich | gebaut und getestet (auf Alexanders Wunsch vorgezogen) |
+| M3 | Bestleistung speichern, Home-Bildschirm, Ton, Feinschliff (Drucker-Figur, Punktemeldung) | gebaut und getestet, **wartet auf Alexanders Test am iPhone** |
 
 ## Offen bei Alexander
 1. Repository auf öffentlich stellen, danach «Settings», «Pages», «Source»: «GitHub Actions».

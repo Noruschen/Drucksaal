@@ -10,11 +10,13 @@ import {
   SM52,
   offsetBreite,
   zeichneDigitaldruck,
+  zeichneDrucker,
   zeichneFarbigkeit,
   zeichneHalle,
   zeichneLauftasche,
   zeichneOffset,
   zeichneSchaltflaeche,
+  zeichneSymbol,
   zeichneUhr,
   type Leinwand,
   type Stil,
@@ -31,6 +33,10 @@ export interface Bild {
   hoehe: number;
   beschrieb: string;
   vonHand?: boolean;
+  /** Vergrösserung beim Schreiben der Datei (nur für die Symbole des Home-Bildschirms) */
+  massstab?: number;
+  /** false = wird nicht ins Spiel geladen */
+  imSpiel?: boolean;
   zeichne: (l: Leinwand) => void;
 }
 
@@ -117,4 +123,16 @@ export const BILDER: Bild[] = [
     beschrieb: 'Schaltfläche «Zurück» und «Weiter», nicht wählbar (grau)',
     zeichne: (l) => zeichneSchaltflaeche(l, { ...STIL, farben: { ...F, knopf: F.maschineDunkel, knopfHell: '#7c8aa0', knopfDunkel: '#3d4a5e' } }, 0, 0, 70, 30),
   },
+  ...[0, 1, 2].flatMap((b) =>
+    [false, true].map((traegt): Bild => ({
+      name: `drucker_${b === 0 ? 'steht' : `geht_${b}`}${traegt ? '_tasche' : ''}`,
+      breite: 10,
+      hoehe: 16,
+      beschrieb: `Drucker (Figur), ${b === 0 ? 'steht' : `geht, Bewegungsbild ${b} von 2`}${traegt ? ', trägt eine Lauftasche' : ''}`,
+      zeichne: (l) => zeichneDrucker(l, F, 0, 0, b, traegt),
+    })),
+  ),
+  { name: 'symbol_home_180', breite: 36, hoehe: 36, massstab: 5, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm am iPhone (Datei 180 x 180)', zeichne: (l) => zeichneSymbol(l, F, 36) },
+  { name: 'symbol_home_192', breite: 32, hoehe: 32, massstab: 6, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm (Datei 192 x 192)', zeichne: (l) => zeichneSymbol(l, F, 32) },
+  { name: 'symbol_home_512', breite: 32, hoehe: 32, massstab: 16, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm (Datei 512 x 512)', zeichne: (l) => zeichneSymbol(l, F, 32) },
 ];

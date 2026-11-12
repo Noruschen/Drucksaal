@@ -6,6 +6,7 @@ import { vergleiche, werteAus } from '../src/logik/auswertung';
 import { simuliere } from '../src/logik/simulation';
 import { zufallMitStartwert } from '../src/logik/zufall';
 import type { Einstellungen } from '../src/logik/typen';
+import { BESTLEISTUNG_VERSION, istNeueBestleistung, leseBestleistung, neueBestleistung } from '../src/logik/bestleistung';
 
 const m = (id: string) => ZAHLENMODELL.maschinen.find((x) => x.id === id)!;
 const TOLERANZ = 0.1;
@@ -188,5 +189,26 @@ describe('Test der Startwerte', () => {
     expect(r.auftraege).toBeGreaterThan(0);
     expect(r.quote).toBeGreaterThanOrEqual(0);
     expect(r.quote).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('Bestleistung', () => {
+  it('wird mit Versionsnummer gespeichert und wieder gelesen', () => {
+    const b = neueBestleistung(1250, 14, 3, '12.11.2026');
+    expect(b.version).toBe(BESTLEISTUNG_VERSION);
+    expect(leseBestleistung(JSON.stringify(b))).toEqual(b);
+  });
+  it('verwirft kaputte Daten und andere Versionen', () => {
+    expect(leseBestleistung(null)).toBeNull();
+    expect(leseBestleistung('kein JSON')).toBeNull();
+    expect(leseBestleistung(JSON.stringify({ version: BESTLEISTUNG_VERSION + 1, punkte: 900 }))).toBeNull();
+    expect(leseBestleistung(JSON.stringify({ version: BESTLEISTUNG_VERSION, punkte: 'viel' }))).toBeNull();
+  });
+  it('nur ein höherer Punktestand ist eine neue Bestleistung', () => {
+    const b = neueBestleistung(500, 6, 2, '12.11.2026');
+    expect(istNeueBestleistung(100, null)).toBe(true);
+    expect(istNeueBestleistung(600, b)).toBe(true);
+    expect(istNeueBestleistung(500, b)).toBe(false);
+    expect(istNeueBestleistung(-50, b)).toBe(false);
   });
 });

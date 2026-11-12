@@ -5,6 +5,8 @@ import { maschinenName, werteAus, type Auswertung } from '../logik/auswertung';
 import { Schicht } from '../logik/schicht';
 import type { Auftrag, Farbigkeit } from '../logik/typen';
 import { BILDER, MASCHINE_H } from '../grafik/bilder.ts';
+import { ladeBestleistung, meldeErgebnis, setzeTon, tonAn } from './speicher';
+import { spiele } from './ton';
 import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
 
 // Meilenstein M2: Pixelart im Design «Werkhalle». Alle Bilder kommen als PNG aus public/grafik/.
@@ -31,7 +33,7 @@ export class LadeSzene extends Phaser.Scene {
   }
 
   preload(): void {
-    for (const b of BILDER) this.load.image(b.name, `${import.meta.env.BASE_URL}grafik/${b.name}.png`);
+    for (const b of BILDER) if (b.imSpiel !== false) this.load.image(b.name, `${import.meta.env.BASE_URL}grafik/${b.name}.png`);
   }
 
   create(): void {
@@ -43,6 +45,7 @@ export class LadeSzene extends Phaser.Scene {
 
 export class StartSzene extends Phaser.Scene {
   private knopf: Rechteck = { x: 100, y: 138, b: 120, h: 32 };
+  private kTon: Rechteck = { x: 244, y: 139, b: 70, h: 30 };
 
   constructor() {
     super('Start');
@@ -69,9 +72,24 @@ export class StartSzene extends Phaser.Scene {
     );
     schrift(this, 160, 55, `Eine Schicht dauert ${EINSTELLUNGEN.schichtDauer % 60 === 0 ? EINSTELLUNGEN.schichtDauer / 60 : minSek(EINSTELLUNGEN.schichtDauer)} Minuten.`, FARBEN.textAufPapier, 'mitte');
     schrift(this, 160, 147, 'Schicht starten', FARBEN.knopfText, 'mitte', 10);
+    bild(this, this.kTon.x, this.kTon.y, 'schaltflaeche_blaettern');
+    const tTon = schrift(this, this.kTon.x + 35, 148, tonAn() ? 'Ton: an' : 'Ton: aus', FARBEN.knopfText, 'mitte');
+    const best = ladeBestleistung();
+    if (best) {
+      schrift(this, 6, 142, 'Bestleistung', FARBEN.text);
+      schrift(this, 6, 153, `${tausender(best.punkte).replace('-', 'minus ')} Punkte`, FARBEN.text, 'links', 10);
+      if (best.datum) schrift(this, 6, 166, best.datum, FARBEN.text, 'links', 8);
+    }
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      if (trifft(this.knopf, p.worldX, p.worldY)) this.scene.start('Schicht');
+      if (trifft(this.knopf, p.worldX, p.worldY)) {
+        spiele('start');
+        this.scene.start('Schicht');
+      } else if (trifft(this.kTon, p.worldX, p.worldY)) {
+        setzeTon(!tonAn());
+        setze(tTon, tonAn() ? 'Ton: an' : 'Ton: aus');
+        spiele('zuteilen');
+      }
     });
   }
 }
@@ -107,6 +125,30 @@ interface MaschinenTeile {
   plaettchen: Text[];
 }
 
+/** Drucker an der Maschine: holt die Lauftasche und trägt sie zur Maschine. Reine Darstellung, ohne Einfluss auf die Zeiten. */
+interface Figur {
+  bild: Bildobjekt;
+  x: number;
+  y: number;
+  heimX: number;
+  heimY: number;
+  traegt: boolean;
+  nachLinks: boolean;
+  strecke: number;
+  /** Wegpunkte: Beim Ankommen nimmt die Figur die Lauftasche auf oder legt sie ab. */
+  wege: { x: number; y: number; traegtDanach: boolean }[];
+}
+
+/** Standplatz des Druckers je Maschine, gemessen ab dem linken Rand der Maschinenfläche. */
+const STANDPLATZ: Record<string, number> = { digital: 9, sm52: 15, ra76: 5 };
+const SCHRITT_TEMPO = 85;
+
+interface Meldung {
+  text: Text;
+  alter: number;
+  startY: number;
+}
+
 interface TaschenTeile {
   bild: Bildobjekt;
   auflage: Text;
@@ -136,6 +178,12 @@ export class SchichtSzene extends Phaser.Scene {
   private blinken: number[] = [];
   private endePause = 0;
   private uhrzeit = 0;
+  private figuren: Figur[] = [];
+  private meldungen: Meldung[] = [];
+  /** Nummer des laufenden Auftrags je Maschine, um den Wechsel zum nächsten zu erkennen */
+  private laufendNummer: (number | null)[] = [];
+  private gewertet = 0;
+  private endeGemeldet = false;
 
   constructor() {
     super('Schicht');
@@ -152,6 +200,11 @@ export class SchichtSzene extends Phaser.Scene {
     this.uhrzeit = 0;
     this.mTeile = [];
     this.lTeile = [];
+    this.figuren = [];
+    this.meldungen = [];
+    this.laufendNummer = this.schicht.maschinen.map(() => null);
+    this.gewertet = 0;
+    this.endeGemeldet = false;
 
     const grund = new Maler(this.add.graphics());
     grund.r(0, 0, BREITE, HOEHE, FARBEN.leiste);
@@ -179,6 +232,9 @@ export class SchichtSzene extends Phaser.Scene {
           return schrift(this, p.x + Math.floor(p.b / 2), p.y, '', FARBEN.textAufPapier, 'mitte', 8);
         }),
       });
+      const heimX = f.x + (STANDPLATZ[ma.daten.id] ?? 6);
+      const heimY = BODEN_Y + 1;
+      this.figuren.push({ bild: bild(this, heimX - 5, heimY - 16, 'drucker_steht', 4), x: heimX, y: heimY, heimX, heimY, traegt: false, nachLinks: false, strecke: 0, wege: [] });
     });
     for (let j = 0; j < this.plaetze.length; j++) {
       const f = taschenFeld(j);
@@ -227,9 +283,80 @@ export class SchichtSzene extends Phaser.Scene {
   private teileZu(maschinenIndex: number): void {
     if (this.auswahl === null) return;
     const m = this.schicht.maschinen[maschinenIndex];
-    const antwort = this.schicht.zuteilen(this.auswahl, m.daten.id);
-    if (antwort.ok) this.auswahl = null;
-    else if (antwort.grund === 'voll') this.blinken[maschinenIndex] = 0.6;
+    const platz = this.plaetze.indexOf(this.auswahl);
+    const nummer = this.auswahl;
+    const antwort = this.schicht.zuteilen(nummer, m.daten.id);
+    if (antwort.ok) {
+      this.auswahl = null;
+      spiele('zuteilen');
+      // Der Drucker holt die Lauftasche am unteren Rand des Drucksaals ab.
+      const t = taschenFeld(Math.max(0, platz));
+      this.hole(maschinenIndex, t.x + t.b / 2, 122);
+      // Startet der Auftrag sofort, ist das kein Wechsel aus der Warteschlange.
+      if (m.laufend?.zuteilung.auftrag.nummer === nummer) this.laufendNummer[maschinenIndex] = nummer;
+    } else if (antwort.grund === 'voll') {
+      this.blinken[maschinenIndex] = 0.6;
+      spiele('abgelehnt');
+    }
+  }
+
+  /** Schickt den Drucker einer Maschine los: hin zum Abholort, mit der Lauftasche zurück an seinen Platz. */
+  private hole(maschinenIndex: number, x: number, y: number): void {
+    const fig = this.figuren[maschinenIndex];
+    // Staut es sich, lässt er ältere Gänge aus und holt nur noch die neueste Lauftasche.
+    if (fig.wege.length >= 4) fig.wege.length = 0;
+    fig.wege.push({ x: Math.max(8, Math.min(BREITE - 8, x)), y, traegtDanach: true }, { x: fig.heimX, y: fig.heimY, traegtDanach: false });
+  }
+
+  private bewegeFiguren(dt: number): void {
+    for (const fig of this.figuren) {
+      let rest = SCHRITT_TEMPO * dt * (1 + fig.wege.length / 3);
+      while (rest > 0 && fig.wege.length > 0) {
+        const ziel = fig.wege[0];
+        const dx = ziel.x - fig.x;
+        const dy = ziel.y - fig.y;
+        const weit = Math.hypot(dx, dy);
+        if (Math.abs(dx) > 0.5) fig.nachLinks = dx < 0;
+        if (weit <= rest) {
+          fig.x = ziel.x;
+          fig.y = ziel.y;
+          fig.traegt = ziel.traegtDanach;
+          fig.strecke += weit;
+          rest -= weit;
+          fig.wege.shift();
+        } else {
+          fig.x += (dx / weit) * rest;
+          fig.y += (dy / weit) * rest;
+          fig.strecke += rest;
+          rest = 0;
+        }
+      }
+      const geht = fig.wege.length > 0;
+      if (!geht) fig.nachLinks = false;
+      const name = `drucker_${geht ? `geht_${1 + (Math.floor(fig.strecke / 5) % 2)}` : 'steht'}${fig.traegt ? '_tasche' : ''}`;
+      setzeBild(fig.bild, name);
+      fig.bild.setFlipX(fig.nachLinks);
+      fig.bild.setPosition(Math.round(fig.x) - 5, Math.round(fig.y) - 16);
+    }
+  }
+
+  /** Kurze Meldung über der Maschine, wenn ein Auftrag fertig ist. */
+  private melde(maschinenIndex: number, puenktlich: boolean): void {
+    const f = maschinenFeld(maschinenIndex);
+    const e = EINSTELLUNGEN;
+    const inhalt = puenktlich ? `plus ${e.punktePuenktlich}` : `minus ${Math.abs(e.punkteVerspaetet)}`;
+    const text = schrift(this, f.x + f.b / 2, 52, inhalt, puenktlich ? '#1f7a30' : FARBEN.schlecht, 'mitte', 11).setDepth(7);
+    this.meldungen.push({ text, alter: 0, startY: 52 });
+  }
+
+  private pflegeMeldungen(dt: number): void {
+    for (const m of this.meldungen) {
+      m.alter += dt;
+      m.text.setY(Math.round(m.startY - m.alter * 6));
+      m.text.setAlpha(Math.max(0, Math.min(1, 2.4 - m.alter * 1.6)));
+    }
+    for (const m of this.meldungen.filter((x) => x.alter > 1.5)) m.text.destroy();
+    this.meldungen = this.meldungen.filter((x) => x.alter <= 1.5);
   }
 
   private runter(x: number, y: number): void {
@@ -276,6 +403,32 @@ export class SchichtSzene extends Phaser.Scene {
       }
     }
     for (let i = 0; i < this.blinken.length; i++) this.blinken[i] = Math.max(0, this.blinken[i] - delta / 1000);
+
+    // Fertige Aufträge melden (Ton und kurze Anzeige über der Maschine).
+    for (; this.gewertet < s.ergebnisse.length; this.gewertet++) {
+      const e = s.ergebnisse[this.gewertet];
+      if (e.maschine === null) continue;
+      this.melde(s.maschinen.findIndex((x) => x.daten.id === e.maschine), e.puenktlich);
+      spiele(e.puenktlich ? 'puenktlich' : 'verspaetet');
+    }
+    if (s.abschnitt !== 'schicht' && !this.endeGemeldet) {
+      this.endeGemeldet = true;
+      spiele('schichtende');
+    }
+    // Startet der nächste wartende Auftrag, holt der Drucker dessen Lauftasche aus der Reihe unter der Maschine.
+    s.maschinen.forEach((ma, i) => {
+      const nummer = ma.laufend?.zuteilung.auftrag.nummer ?? null;
+      if (nummer !== this.laufendNummer[i]) {
+        if (nummer !== null) {
+          const p = plaettchen(maschinenFeld(i), 1);
+          this.hole(i, p.x + p.b / 2, 112);
+        }
+        this.laufendNummer[i] = nummer;
+      }
+    });
+    const echt = delta / 1000;
+    this.bewegeFiguren(echt * (s.abschnitt === 'zeitraffer' ? 3 : 1));
+    this.pflegeMeldungen(echt);
 
     // Lauftaschen behalten ihren Platz, damit man nicht daneben tippt.
     const offen = new Set(s.offen.map((a) => a.nummer));
@@ -424,6 +577,7 @@ export class AuswertungSzene extends Phaser.Scene {
   private kZurueck: Rechteck = { x: 4, y: 146, b: 70, h: 30 };
   private kWeiter: Rechteck = { x: 78, y: 146, b: 70, h: 30 };
   private kNochmals: Rechteck = { x: 206, y: 146, b: 110, h: 30 };
+  private bestText = '';
 
   constructor() {
     super('Auswertung');
@@ -432,6 +586,15 @@ export class AuswertungSzene extends Phaser.Scene {
   init(daten: { auswertung: Auswertung }): void {
     this.auswertung = daten.auswertung;
     this.seite = 0;
+    const w = daten.auswertung;
+    if (TEMPO > 1) {
+      // Mit der Prüfhilfe ?tempo= zählt die Schicht nicht für die Bestleistung.
+      this.bestText = 'Prüflauf: zählt nicht für die Bestleistung';
+      return;
+    }
+    const meldung = meldeErgebnis(w.punkte, w.puenktlich, w.verspaetet);
+    this.bestText = meldung.neu ? 'Neue Bestleistung!' : `Bestleistung: ${tausender(meldung.best.punkte).replace('-', 'minus ')} Punkte`;
+    if (meldung.neu) spiele('bestleistung');
   }
 
   private get seiten(): number {
@@ -449,7 +612,8 @@ export class AuswertungSzene extends Phaser.Scene {
     schrift(this, 4, 2, 'Auswertung der Schicht', FARBEN.text);
     schrift(this, BREITE - 4, 2, punkteText(w.punkte), FARBEN.text, 'rechts');
     schrift(this, 4, 18, `pünktlich: ${w.puenktlich}      verspätet: ${w.verspaetet}`, FARBEN.textAufBoden);
-    for (let i = 0; i < PRO_SEITE * 2; i++) this.zeilen.push(schrift(this, 8, 31 + Math.floor(i / 2) * 22 + (i % 2) * 10, '', FARBEN.textAufPapier));
+    schrift(this, BREITE - 4, 18, this.bestText, FARBEN.textAufBoden, 'rechts');
+    for (let i = 0; i < PRO_SEITE * 2; i++) this.zeilen.push(schrift(this, 8, 30 + Math.floor(i / 2) * 22 + (i % 2) * 9, '', FARBEN.textAufPapier));
     this.bZurueck = bild(this, this.kZurueck.x, this.kZurueck.y, 'schaltflaeche_blaettern_aus');
     this.bWeiter = bild(this, this.kWeiter.x, this.kWeiter.y, 'schaltflaeche_blaettern_aus');
     bild(this, this.kNochmals.x, this.kNochmals.y, 'schaltflaeche_nochmals');

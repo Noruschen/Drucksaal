@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BREITE, FARBEN, HOEHE, SCHRIFT, ansicht } from './hilfen';
+import { bereiteTonVor } from './ton';
 import { AuswertungSzene, LadeSzene, SchichtSzene, StartSzene } from './szenen';
 
 // Phaser-Befehle nach dem Skills-Ordner im Paket (node_modules/phaser/skills, Version 4.2.1):
@@ -57,6 +58,7 @@ function sperreGesten(): void {
 
 async function start(): Promise<void> {
   sperreGesten();
+  bereiteTonVor();
   const datei = new FontFace(SCHRIFT.familie, `url(${import.meta.env.BASE_URL}schrift/${SCHRIFT.datei})`);
   try {
     await datei.load();

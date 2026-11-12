@@ -18,6 +18,8 @@ export interface Farben {
   maschineDunkel: string;
   umriss: string;
   akzent: string;
+  /** Hautfarbe der Figur */
+  haut: string;
   papier: string;
   papierSchatten: string;
   leiste: string;
@@ -337,4 +339,59 @@ export function zeichneBalken(l: Leinwand, f: Farben, x: number, y: number, b: n
   l.rechteck(x, y, b, h, f.umriss);
   l.rechteck(x + 1, y + 1, b - 2, h - 2, f.maschineDunkel);
   l.rechteck(x + 1, y + 1, Math.round((b - 2) * anteil), h - 2, farbe);
+}
+
+/**
+ * Drucker (Figur), 10 x 16. bild: 0 = steht, 1 und 2 = geht. traegt = hält eine Lauftasche.
+ * Die Figur schaut nach rechts, für links wird das Bild im Spiel gespiegelt.
+ */
+export function zeichneDrucker(l: Leinwand, f: Farben, x: number, y: number, bild: number, traegt: boolean): void {
+  // Kopf mit Mütze
+  l.rechteck(x + 3, y, 4, 1, f.umriss);
+  l.rechteck(x + 2, y + 1, 6, 1, f.umriss);
+  l.rechteck(x + 3, y + 2, 4, 3, f.haut);
+  l.rechteck(x + 6, y + 3, 1, 1, f.umriss);
+  // Arbeitskleid
+  l.rechteck(x + 2, y + 5, 6, 6, f.knopfDunkel);
+  l.rechteck(x + 3, y + 5, 4, 1, f.knopf);
+  // Arme
+  if (traegt) {
+    l.rechteck(x + 6, y + 6, 3, 2, f.knopfDunkel);
+    l.rechteck(x + 5, y + 4, 5, 5, f.umriss);
+    l.rechteck(x + 6, y + 5, 3, 3, f.papier);
+    l.rechteck(x + 8, y + 8, 1, 1, f.haut);
+  } else {
+    l.rechteck(x + 1, y + 6, 1, 4, f.knopfDunkel);
+    l.rechteck(x + 8, y + 6, 1, 4, f.knopfDunkel);
+    l.rechteck(x + 1, y + 10, 1, 1, f.haut);
+    l.rechteck(x + 8, y + 10, 1, 1, f.haut);
+  }
+  // Beine
+  if (bild === 1) {
+    l.rechteck(x + 2, y + 11, 2, 4, f.umriss);
+    l.rechteck(x + 6, y + 11, 2, 4, f.umriss);
+    l.rechteck(x + 1, y + 15, 3, 1, f.umriss);
+    l.rechteck(x + 6, y + 15, 3, 1, f.umriss);
+  } else if (bild === 2) {
+    l.rechteck(x + 4, y + 11, 2, 4, f.umriss);
+    l.rechteck(x + 4, y + 15, 3, 1, f.umriss);
+  } else {
+    l.rechteck(x + 3, y + 11, 2, 4, f.umriss);
+    l.rechteck(x + 5, y + 11, 2, 4, f.umriss);
+    l.rechteck(x + 2, y + 15, 3, 1, f.umriss);
+    l.rechteck(x + 5, y + 15, 3, 1, f.umriss);
+  }
+}
+
+/** Symbol für den Home-Bildschirm: Bogen mit den vier Druckfarben. Quadrat mit Kantenlänge g (mindestens 32). */
+export function zeichneSymbol(l: Leinwand, f: Farben, g: number): void {
+  const r = Math.floor((g - 32) / 2);
+  l.rechteck(0, 0, g, g, f.leiste);
+  l.rechteck(r + 6, r + 3, 20, 26, f.umriss);
+  l.rechteck(r + 7, r + 4, 18, 24, f.papier);
+  l.rechteck(r + 9, r + 6, 6, 6, f.c);
+  l.rechteck(r + 17, r + 6, 6, 6, f.m);
+  l.rechteck(r + 9, r + 14, 6, 6, f.y);
+  l.rechteck(r + 17, r + 14, 6, 6, f.k);
+  l.rechteck(r + 9, r + 23, 14, 2, f.papierSchatten);
 }

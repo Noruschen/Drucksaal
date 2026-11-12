@@ -36,9 +36,18 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | schaltflaeche_nochmals.png | 110 x 30 | Schaltfläche «Nochmals» (grün) | Skript |
 | schaltflaeche_blaettern.png | 70 x 30 | Schaltfläche «Zurück» und «Weiter» | Skript |
 | schaltflaeche_blaettern_aus.png | 70 x 30 | Schaltfläche «Zurück» und «Weiter», nicht wählbar (grau) | Skript |
+| drucker_steht.png | 10 x 16 | Drucker (Figur), steht | Skript |
+| drucker_steht_tasche.png | 10 x 16 | Drucker (Figur), steht, trägt eine Lauftasche | Skript |
+| drucker_geht_1.png | 10 x 16 | Drucker (Figur), geht, Bewegungsbild 1 von 2 | Skript |
+| drucker_geht_1_tasche.png | 10 x 16 | Drucker (Figur), geht, Bewegungsbild 1 von 2, trägt eine Lauftasche | Skript |
+| drucker_geht_2.png | 10 x 16 | Drucker (Figur), geht, Bewegungsbild 2 von 2 | Skript |
+| drucker_geht_2_tasche.png | 10 x 16 | Drucker (Figur), geht, Bewegungsbild 2 von 2, trägt eine Lauftasche | Skript |
+| symbol_home_180.png | 180 x 180 | Symbol für den Home-Bildschirm am iPhone (Datei 180 x 180) | Skript |
+| symbol_home_192.png | 192 x 192 | Symbol für den Home-Bildschirm (Datei 192 x 192) | Skript |
+| symbol_home_512.png | 512 x 512 | Symbol für den Home-Bildschirm (Datei 512 x 512) | Skript |
 
 ## Farbpalette «Werkhalle»
 
-`#1aa7e0` `#20242e` `#2678a3` `#2b3445` `#3fa7d6` `#49b35a` `#56657a` `#7b8695` `#8d98a6` `#8fd3f0` `#9eadbd` `#c9d3dd` `#cfd3d0` `#d93a8a` `#d94a3d` `#e6ebf0` `#eaf4fb` `#f2a530` `#f2c230` `#f4d51e` `#fbfbf6` `#ffffff`
+`#1aa7e0` `#20242e` `#2678a3` `#2b3445` `#3fa7d6` `#49b35a` `#56657a` `#7b8695` `#8d98a6` `#8fd3f0` `#9eadbd` `#c9d3dd` `#cfd3d0` `#d93a8a` `#d94a3d` `#e6ebf0` `#e8b98f` `#eaf4fb` `#f2a530` `#f2c230` `#f4d51e` `#fbfbf6` `#ffffff`
 
 Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#2f8540` `#3d4a5e` `#7c8aa0` `#8fd69b` `#f6c9c2`
