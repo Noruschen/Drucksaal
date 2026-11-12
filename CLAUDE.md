@@ -71,8 +71,8 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 12.11.2026 | Annahme G: War die gewählte Maschine schon die früheste, steht das in der Auswertung so. |
 | 12.11.2026 | Sind 4 Lauftaschen offen, fällt der Takt aus. Abgelaufene Lauftaschen bleiben rot liegen und lassen sich weiter zuteilen. |
 | 12.11.2026 | Zusätzliche Bibliothek: nur Vitest (Testwerkzeug, kommt nicht ins Spiel). |
-| offen | Design: Wahl aus vier Varianten (designs.html). Hier eintragen, sobald Alexander gewählt hat. |
-| offen | Erlaubnis, auf «main» zu übertragen (nötig für die Veröffentlichung). |
+| 13.11.2026 | Design: Variante 1 «Werkhalle» (hell, sachlich, Schrift Tiny5, Palette in `src/designs/varianten.ts`). Alexanders Wunsch dazu: «wie eine Druckerei halt», die Maschinen etwas realitätsgetreuer (umsetzen in M2). |
+| 13.11.2026 | Alexander erlaubt das Übertragen auf «main» für die Veröffentlichung. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.
 
