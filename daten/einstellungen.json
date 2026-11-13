@@ -1,8 +1,8 @@
 {
-  "hinweis": "Startwerte zum Einstellen. Zeiten in Sekunden, Auflagen in Exemplaren. Alexanders erster Vorschlag war takt 8 und terminZuschlag 15 (ergab 45 Prozent pünktlich). Seit 12.11.2026: takt 10 und terminZuschlag 30. Seit 13.11.2026 liegen zum Schichtbeginn 3 Lauftaschen bereit (klein, mittel, gross), dafür takt 11 (rund 75 Prozent).",
+  "hinweis": "Startwerte zum Einstellen. Zeiten in Sekunden, Auflagen in Exemplaren. Alexanders erster Vorschlag war takt 8 und terminZuschlag 15 (ergab 45 Prozent pünktlich). Seit 12.11.2026: takt 10 und terminZuschlag 30. Seit 13.11.2026 liegen zum Schichtbeginn 3 Lauftaschen bereit (klein, mittel, gross), dafür takt 11. Seit den neuen Rüstzeiten und Auflagenklassen: takt 9 (rund 81 Prozent).",
   "schichtDauer": 180,
-  "takt": 11,
-  "ersteLauftascheNach": 11,
+  "takt": 9,
+  "ersteLauftascheNach": 9,
   "startLauftaschen": 3,
   "hilferufAnteil": 0.2,
   "maxOffeneLauftaschen": 4,
@@ -10,9 +10,9 @@
   "anteilVierVier": 0.3333,
   "auflagenSchritt": 50,
   "auflagenKlassen": [
-    { "anteil": 0.3, "von": 100, "bis": 750 },
-    { "anteil": 0.4, "von": 800, "bis": 3600 },
-    { "anteil": 0.3, "von": 3650, "bis": 12000 }
+    { "anteil": 0.3, "von": 100, "bis": 500 },
+    { "anteil": 0.4, "von": 550, "bis": 2400 },
+    { "anteil": 0.3, "von": 2450, "bis": 12000 }
   ],
   "terminFaktor": 2,
   "terminZuschlag": 30,

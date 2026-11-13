@@ -48,9 +48,9 @@ Kontrollwerte für die Tests (Toleranz 0,1 s):
 Folge: Bei freien Maschinen ist bei 4/0 der Digitaldruck bis 525 Exemplare am schnellsten, die SM 52 von 525 bis 2'400, darüber die RA 76. Bei 4/4 liegen die Schwellen bei 525 und 1'680 Exemplaren.
 
 ## Startwerte (Einstelldatei, Alexander passt sie an)
-1. Auflagen 100 bis 12'000 Exemplare, so gemischt, dass alle drei Maschinen gebraucht werden. Vorschlag: 30 Prozent klein (100 bis 750), 40 Prozent mittel (800 bis 3'600), 30 Prozent gross (3'650 bis 12'000), in Schritten von 50.
+1. Auflagen 100 bis 12'000 Exemplare, so gemischt, dass alle drei Maschinen gebraucht werden. Seit 13.11.2026 passend zu den neuen Schwellen: 30 Prozent klein (100 bis 500), 40 Prozent mittel (550 bis 2'400), 30 Prozent gross (2'450 bis 12'000), in Schritten von 50.
 2. Etwa ein Drittel der Aufträge ist 4/4.
-3. Alle 11 Sekunden eine neue Lauftasche (Alexanders erster Vorschlag: 8). Zum Schichtbeginn liegen 3 Lauftaschen bereit: klein, mittel, gross.
+3. Alle 9 Sekunden eine neue Lauftasche (Alexanders erster Vorschlag: 8). Zum Schichtbeginn liegen 3 Lauftaschen bereit: klein, mittel, gross.
 4. Liefertermin: schnellste mögliche Dauer bei freier Maschine mal 2, plus 30 Sekunden, ab Erscheinen (erster Vorschlag: plus 15).
 5. Höchstens 3 wartende Aufträge pro Maschine und höchstens 4 offene Lauftaschen. Sind 4 offen, kommt keine neue, die Fristen laufen weiter.
 6. Punkte: pünktlich plus 100, verspätet minus 50.
@@ -99,6 +99,8 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 13.11.2026 | Polygraf auf Alexanders Wunsch: Schicht dauert 1 Minute 30 Sekunden. Neu der Anruf des Kunden: Bei im Schnitt jeder fünften Lauftasche (`aenderungAnteil` 0.2 in `daten/vorstufe.json`) ruft der Kunde an, sobald die Seite fertig ist. Die Lauftasche ändert sich, die Seite muss neu aufgebaut werden und zählt erst, wenn die Änderung umgesetzt ist. Annahmen von Claude: Das Zeitlimit beginnt für die Änderung neu, und dieselbe Lauftasche wird höchstens einmal geändert. Prüfhilfe: `?aenderung=1` lässt den Kunden bei jeder Lauftasche anrufen (zählt nicht für die Bestleistung). |
 | 13.11.2026 | Produktionsleiter auf Alexanders Wunsch: Bei 20 Prozent der Aufträge (`hilferufAnteil` in `daten/einstellungen.json`) ruft der Drucker mitten im Fortdruck «Hilfe!» in einer Sprechblase. Der Fortdruck dieser Maschine steht, bis man den Drucker antippt. Das Zahlenmodell bleibt unberührt, der Stillstand kommt als Wartezeit dazu. Annahmen von Claude: Der Hilferuf kommt zufällig zwischen 20 und 80 Prozent der Druckzeit, höchstens einmal pro Auftrag. Ohne gewählte Lauftasche hilft auch ein Tipp irgendwo auf die Maschine. Der Test der Startwerte bleibt mit 74 Prozent im Ziel (die automatische Spielweise hilft sofort). Prüfhilfe: `?hilfe=1` löst den Hilferuf bei jedem Auftrag aus. |
 | 13.11.2026 | Alexander ändert das Zahlenmodell: Rüstzeit SM 52 12 s (vorher 15), RA 76 22 s (vorher 30). Bei 4/4 im zweiten Durchgang SM 52 7 s, RA 76 11 s (vorher je die volle Rüstzeit). Eingetragen in `daten/maschinen.json` (`ruestzeitZweiterDurchgang`), Kontrollwerte und Tests angepasst. Der Test der Startwerte ergibt damit 84 Prozent pünktlich (Ziel 70 bis 90). Die Auflagenklassen (klein bis 750, mittel bis 3'600) passen nicht mehr genau zu den neuen Schwellen (525 und 2'400): offen, ob sie angepasst werden. |
+| 13.11.2026 | Auflagenklassen auf Alexanders Auftrag an die neuen Schwellen angepasst: klein 100 bis 500, mittel 550 bis 2'400, gross 2'450 bis 12'000 (vorher bis 750, bis 3'600, ab 3'650). |
+| 13.11.2026 | Mit den neuen Rüstzeiten und Auflagenklassen ergab der Test 93 Prozent pünktlich (über dem Ziel). Über «empfohlen» Takt von 11 auf 9 Sekunden gestellt: 81 Prozent. Takt 10 ergäbe 88 Prozent. |
 | 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.
