@@ -44,9 +44,7 @@ export class LadeSzene extends Phaser.Scene {
 // ---------------------------------------------------------------- Startbild
 
 export class StartSzene extends Phaser.Scene {
-  // Antippbar: die Schaltfläche «Beruf auswählen» und die beiden Personen im Drucksaal.
-  private kProduktion: Rechteck = { x: 0, y: 16, b: 104, h: 109 };
-  private kLeitstand: Rechteck = { x: 216, y: 16, b: 104, h: 109 };
+  // Das Startbild zeigt nur den Drucksaal mit Logo. Die Personen sieht man erst in der Berufswahl.
   private kBeruf: Rechteck = { x: 100, y: 138, b: 120, h: 32 };
 
   constructor() {
@@ -71,32 +69,14 @@ export class StartSzene extends Phaser.Scene {
     schild.r(102, 21, 116, 27, FARBEN.papier);
     bild(this, 108, 26, 'logo_wallimann', 3);
 
-    // Personen: gerahmtes Porträt mit Namensschild
-    const person = (x: number, portrait: string, name: string): void => {
-      schild.r(x - 2, 21, 44, 50, FARBEN.akzent);
-      bild(this, x, 23, portrait, 3);
-      // Das Schild richtet sich nach der echten Breite des Textes, damit nichts übersteht.
-      const text = schrift(this, 0, 73, name, FARBEN.knopfText, 'mitte', 10);
-      const breite = Math.ceil(text.width) + 12;
-      const links = Math.round(Math.max(2, Math.min(BREITE - breite - 2, x + 20 - breite / 2)));
-      schild.r(links, 72, breite, 14, FARBEN.umriss);
-      schild.r(links + 1, 73, breite - 2, 12, FARBEN.akzent);
-      text.setX(links + breite / 2);
-    };
-    person(18, 'portrait_produktionsleiter', 'Produktionsleiter');
-    person(262, 'portrait_medientechnologe', 'Medientechnologe');
-
     bild(this, this.kBeruf.x, this.kBeruf.y, 'schaltflaeche_start');
     schrift(this, 160, 147, 'Beruf auswählen', FARBEN.knopfText, 'mitte', 10);
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      const zu = (bereich: Bereich): void => {
+      if (trifft(this.kBeruf, p.worldX, p.worldY)) {
         spiele('zuteilen');
-        this.scene.start('Berufswahl', { bereich });
-      };
-      if (trifft(this.kBeruf, p.worldX, p.worldY)) zu('vorstufe');
-      else if (trifft(this.kProduktion, p.worldX, p.worldY)) zu('produktion');
-      else if (trifft(this.kLeitstand, p.worldX, p.worldY)) zu('leitstand');
+        this.scene.start('Berufswahl', { nummer: 0 });
+      }
     });
   }
 }
