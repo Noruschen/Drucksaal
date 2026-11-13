@@ -1,0 +1,31 @@
+{
+  "hinweis": "Startwerte für den Bereich Ausrüster (Weiterverarbeitung). Spielwerte, von Alexander am 13.11.2026 bestätigt, keine Fachwerte. Zeiten in Sekunden, Auflagen in Exemplaren. Massstab: 1 Spielsekunde entspricht 1 echten Minute.",
+  "dauer": 180,
+  "takt": 18,
+  "annahmeBis": 120,
+  "startPaletten": 2,
+  "maxWartend": 4,
+  "falzen": { "name": "MBO", "ruestzeit": 8, "leistung": 200 },
+  "heften": { "name": "Martini Hefter", "ruestzeit": 12, "leistung": 120 },
+  "wartePlaetzeFalzen": 1,
+  "ablagePlaetze": 2,
+  "auflageVon": 500,
+  "auflageBis": 4000,
+  "auflageSchritt": 100,
+  "anteilHeften": 0.5,
+  "groessen": [
+    { "bis": 1500, "plaetze": 1 },
+    { "bis": 3000, "plaetze": 2 },
+    { "bis": 999999, "plaetze": 3 }
+  ],
+  "lagerPlaetze": 6,
+  "lastwagenPlaetze": 3,
+  "fahrzeit": 20,
+  "terminFaktor": 2,
+  "terminZuschlag": 40,
+  "eilAnteil": 0.2,
+  "eilFaktor": 1.2,
+  "eilZuschlag": 30,
+  "punktePuenktlich": 100,
+  "punkteVerspaetet": -50
+}

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { anzeigeSekunden, dauer, phasen, schnellsteDauer, tausender } from '../src/logik/dauer';
 import { EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL as ECHTES_MODELL } from '../src/logik/daten';
 import { Vorstufe } from '../src/logik/vorstufe';
+import { AUSRUESTUNG } from '../src/logik/daten';
+import { Ausruestung, simuliereAusruestung, type AusruestungEinstellungen } from '../src/logik/ausruestung';
 import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
@@ -447,5 +449,151 @@ describe('Vorstufe (Bereich Polygraf)', () => {
     const leer = neu();
     leer.schritt(200);
     expect(leer.auswertung()).toMatchObject({ fertigeSeiten: 0, verspaetet: 1, punkte: -50, offenVerspaetet: true });
+  });
+});
+
+describe('Ausrüstung (Bereich Ausrüster)', () => {
+  // Feste Werte, damit die Tests nicht kippen, wenn die Einstelldatei angepasst wird.
+  const fest: AusruestungEinstellungen = {
+    ...AUSRUESTUNG,
+    dauer: 180,
+    takt: 9999,
+    startPaletten: 0,
+    falzen: { name: 'MBO', ruestzeit: 8, leistung: 200 },
+    heften: { name: 'Martini Hefter', ruestzeit: 12, leistung: 120 },
+    wartePlaetzeFalzen: 1,
+    ablagePlaetze: 2,
+    groessen: [
+      { bis: 2000, plaetze: 1 },
+      { bis: 6000, plaetze: 2 },
+      { bis: 999999, plaetze: 3 },
+    ],
+    annahmeBis: 180,
+    eilFaktor: 1.2,
+    eilZuschlag: 20,
+    lagerPlaetze: 6,
+    lastwagenPlaetze: 3,
+    fahrzeit: 20,
+    terminFaktor: 2,
+    terminZuschlag: 40,
+    eilAnteil: 0,
+    punktePuenktlich: 100,
+    punkteVerspaetet: -50,
+  };
+  const neu = (e: AusruestungEinstellungen = fest) => new Ausruestung(e, zufallMitStartwert(2));
+  const lege = (a: Ausruestung, auflage: number, heften: boolean, eil = false) => {
+    const p = a.paletteMit(auflage, heften, eil);
+    a.eingang.push(p);
+    return p;
+  };
+
+  it('Zahlenmodell: 3\'000 Exemplare falzen 23 s, heften 37 s', () => {
+    const a = neu();
+    nah(a.dauerAn(fest.falzen, 3000), 23);
+    nah(a.dauerAn(fest.heften, 3000), 37);
+    nah(a.bearbeitungszeit(3000, true), 60);
+  });
+  it('Grössen: bis 2\'000 ein Platz, bis 6\'000 zwei, darüber drei', () => {
+    const a = neu();
+    expect([500, 2000, 2100, 6000, 6100, 8000].map((n) => a.plaetzeFuer(n))).toEqual([1, 1, 2, 2, 3, 3]);
+  });
+  it('nur falzen: nach dem Falzen direkt ins Lager', () => {
+    const a = neu();
+    const p = lege(a, 3000, false);
+    expect(a.zurFalzmaschine(p.nummer)).toBe(true);
+    a.schritt(22.5);
+    expect(a.lager.length).toBe(0);
+    a.schritt(1);
+    expect(a.lager.map((x) => x.nummer)).toEqual([p.nummer]);
+    expect(a.heften.laufend).toBeNull();
+  });
+  it('falzen und heften: zuerst Falzmaschine, dann Sammelhefter, dann Lager', () => {
+    const a = neu();
+    const p = lege(a, 3000, true);
+    a.zurFalzmaschine(p.nummer);
+    a.schritt(23.5);
+    expect(a.heften.laufend?.palette.nummer).toBe(p.nummer);
+    expect(a.lager.length).toBe(0);
+    a.schritt(37);
+    expect(a.lager.map((x) => x.nummer)).toEqual([p.nummer]);
+  });
+  it('Falzmaschine: 1 läuft, 1 wartet, die dritte Palette bleibt im Wareneingang', () => {
+    const a = neu();
+    const p = [lege(a, 1000, false), lege(a, 1000, false), lege(a, 1000, false)];
+    expect(a.zurFalzmaschine(p[0].nummer)).toBe(true);
+    expect(a.zurFalzmaschine(p[1].nummer)).toBe(true);
+    expect(a.zurFalzmaschine(p[2].nummer)).toBe(false);
+    expect(a.eingang.length).toBe(1);
+  });
+  it('volle Ablage vor dem Sammelhefter blockiert die Falzmaschine', () => {
+    const a = neu({ ...fest, ablagePlaetze: 1 });
+    // Der erste Auftrag belegt den Hefter lange, der zweite füllt die Ablage, der dritte bleibt auf der Falzmaschine liegen.
+    const p = [lege(a, 8000, true), lege(a, 500, true), lege(a, 500, true)];
+    a.zurFalzmaschine(p[0].nummer);
+    a.zurFalzmaschine(p[1].nummer);
+    a.schritt(49);
+    a.zurFalzmaschine(p[2].nummer);
+    a.schritt(30);
+    expect(a.heften.laufend?.palette.nummer).toBe(p[0].nummer);
+    expect(a.ablage.map((x) => x.nummer)).toEqual([p[1].nummer]);
+    expect(a.falzen.blockiert?.nummer).toBe(p[2].nummer);
+    expect(a.falzen.stillstand).toBeGreaterThan(5);
+  });
+  it('Lastwagen: 3 Plätze, ein grosser Auftrag oder drei kleine', () => {
+    const a = neu();
+    const gross = a.paletteMit(7000, false);
+    const klein = [a.paletteMit(1000, false), a.paletteMit(1000, false), a.paletteMit(1000, false)];
+    a.lager.push(klein[0], gross, klein[1]);
+    expect(a.lade(gross.nummer)).toBe(true);
+    expect(a.lade(klein[0].nummer)).toBe(false);
+    expect(a.entlade(gross.nummer)).toBe(true);
+    a.lager.push(klein[2]);
+    expect(klein.map((k) => a.lade(k.nummer))).toEqual([true, true, true]);
+    expect(a.lade(gross.nummer)).toBe(false);
+  });
+  it('geliefert ist bei der Abfahrt: pünktlich plus 100, verspätet minus 50, der Lastwagen ist 20 s weg', () => {
+    const a = neu();
+    const frueh = a.paletteMit(1000, false);
+    const spaet = a.paletteMit(1000, false);
+    spaet.termin = 5;
+    a.lager.push(frueh, spaet);
+    a.schritt(10);
+    a.lade(frueh.nummer);
+    a.lade(spaet.nummer);
+    expect(a.abfahrt()).toBe(true);
+    expect(a.punkte).toBe(50);
+    expect(a.leerePlaetze).toBe(1);
+    expect(a.lastwagenDa).toBe(false);
+    expect(a.abfahrt()).toBe(false);
+    a.schritt(19);
+    expect(a.lastwagenDa).toBe(false);
+    a.schritt(1.5);
+    expect(a.lastwagenDa).toBe(true);
+  });
+  it('leer fährt der Lastwagen nicht', () => {
+    expect(neu().abfahrt()).toBe(false);
+  });
+  it('Schichtende: was nicht abgefahren ist, zählt als verspätet', () => {
+    const a = neu();
+    const p = lege(a, 1000, false);
+    lege(a, 1000, true);
+    a.zurFalzmaschine(p.nummer);
+    a.schritt(200);
+    expect(a.fertig).toBe(true);
+    const w = a.auswertung();
+    expect(w).toMatchObject({ puenktlich: 0, verspaetet: 2, nichtGeliefert: 2, punkte: -100, fahrten: 0 });
+  });
+  it('Eilauftrag hat einen kürzeren Liefertermin', () => {
+    const a = neu();
+    const normal = a.paletteMit(3000, false);
+    const eil = a.paletteMit(3000, false, true);
+    nah(normal.termin, 23 * 2 + 40);
+    nah(eil.termin, 23 * fest.eilFaktor + fest.eilZuschlag);
+    expect(eil.termin).toBeLessThan(normal.termin);
+  });
+  it('Test der Startwerte: automatische Spielweise', () => {
+    const r = simuliereAusruestung(AUSRUESTUNG, 200, (s) => zufallMitStartwert(100 + s));
+    console.log(`Ausrüster: ${r.quote.toFixed(1)} Prozent pünktlich, ${r.paletten.toFixed(1)} Paletten, ${r.fahrten.toFixed(1)} Fahrten pro Schicht`);
+    expect(r.paletten).toBeGreaterThan(5);
   });
 });

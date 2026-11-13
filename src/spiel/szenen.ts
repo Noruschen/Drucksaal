@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
-import { EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL } from '../logik/daten';
+import { AUSRUESTUNG, EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL } from '../logik/daten';
 import { maschinenName, werteAus, type Auswertung } from '../logik/auswertung';
 import { Schicht } from '../logik/schicht';
 import type { Auftrag, Farbigkeit } from '../logik/typen';
@@ -101,6 +101,7 @@ const BERUFE: Beruf[] = [
   { bereich: 'vorstufe', name: 'Polygraf', portrait: 'portrait_polygraf', zeilen: ['Medienvorstufe:', 'Seiten nachbauen'], platz: 'vorstufenplatz', raum: 'buero', einheit: 'Punkte' },
   { bereich: 'produktion', name: 'Produktionsleiter', portrait: 'portrait_produktionsleiter', zeilen: ['Planung:', 'Lauftaschen verteilen'], platz: 'arbeitsplatz', raum: 'buero', einheit: 'Punkte' },
   { bereich: 'leitstand', name: 'Medientechnologe', portrait: 'portrait_medientechnologe', zeilen: ['Leitstand der RA 76:', 'Farbe und Passer'], platz: 'ra76_steht_1', raum: 'saal', einheit: 'Gutbogen' },
+  { bereich: 'ausruestung', name: 'Ausrüster', portrait: 'portrait_ausruester', zeilen: ['Weiterverarbeitung:', 'falzen, heften, liefern'], platz: 'mbo_steht_1', raum: 'saal', einheit: 'Punkte' },
 ];
 
 export class BerufswahlSzene extends Phaser.Scene {
@@ -127,7 +128,9 @@ export class BerufswahlSzene extends Phaser.Scene {
     m.r(0, 0, BREITE, HOEHE, FARBEN.leiste);
     if (beruf.raum === 'saal') {
       bild(this, 0, 16, 'drucksaal');
-      bild(this, 182, 74, beruf.platz);
+      // Maschinenbilder sind verschieden breit: rechtsbündig vor den Pfeil stellen, auf den Boden.
+      const maschine = bild(this, 0, 0, beruf.platz);
+      maschine.setPosition(284 - maschine.width, 122 - maschine.height);
     } else {
       // Büro: warme Wand, Boden mit Sockelleiste
       m.r(0, 16, BREITE, 76, '#e9e1d2');
@@ -238,6 +241,18 @@ export class EinfuehrungSzene extends Phaser.Scene {
         ],
         start: 'Fortdruck starten',
         szene: 'Leitstand',
+      },
+      ausruestung: {
+        titel: 'Ausrüster',
+        zeilen: [
+          `Paletten falzen an der ${AUSRUESTUNG.falzen.name}: Palette antippen, dann die Maschine.`,
+          `«falzen + heften» geht danach von selbst zum ${AUSRUESTUNG.heften.name}.`,
+          `Fertiges im Lager antippen lädt den Lastwagen (${AUSRUESTUNG.lastwagenPlaetze} Plätze), dann «Abfahrt».`,
+          `Abgefahren vor dem Liefertermin: plus ${AUSRUESTUNG.punktePuenktlich}. Sonst: minus ${Math.abs(AUSRUESTUNG.punkteVerspaetet)}.`,
+          `Eine Schicht dauert ${minuten(AUSRUESTUNG.dauer)} Minuten. Eilaufträge sind rot.`,
+        ],
+        start: 'Schicht starten',
+        szene: 'Ausruestung',
       },
       vorstufe: {
         titel: 'Polygraf',

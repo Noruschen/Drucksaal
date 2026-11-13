@@ -3,6 +3,7 @@ import { BREITE, FARBEN, HOEHE, SCHRIFT, ansicht } from './hilfen';
 import { bereiteTonVor } from './ton';
 import { AuswertungSzene, BerufswahlSzene, EinfuehrungSzene, LadeSzene, SchichtSzene, StartSzene } from './szenen';
 import { VorstufeAuswertungSzene, VorstufeSzene } from './vorstufeSzenen';
+import { AusruestungAuswertungSzene, AusruestungSzene } from './ausruestungSzenen';
 import { LeitstandAuswertungSzene, LeitstandSzene } from './leitstandSzenen';
 
 // Phaser-Befehle nach dem Skills-Ordner im Paket (node_modules/phaser/skills, Version 4.2.1):
@@ -84,7 +85,7 @@ async function start(): Promise<void> {
       zoom,
       expandParent: false,
     },
-    scene: [LadeSzene, StartSzene, BerufswahlSzene, EinfuehrungSzene, SchichtSzene, AuswertungSzene, LeitstandSzene, LeitstandAuswertungSzene, VorstufeSzene, VorstufeAuswertungSzene],
+    scene: [LadeSzene, StartSzene, BerufswahlSzene, EinfuehrungSzene, SchichtSzene, AuswertungSzene, LeitstandSzene, LeitstandAuswertungSzene, VorstufeSzene, VorstufeAuswertungSzene, AusruestungSzene, AusruestungAuswertungSzene],
   });
   window.addEventListener('resize', passeGroesseAn);
   window.addEventListener('orientationchange', () => setTimeout(passeGroesseAn, 200));

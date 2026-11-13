@@ -7,10 +7,17 @@ import { VARIANTEN } from '../designs/varianten.ts';
 import {
   DIGITAL_ECHT_BREITE,
   MF,
+  WF,
   RA76_BREITE,
   SM52_BREITE,
   zeichneArbeitsplatz,
   zeichneDigital,
+  zeichneFalzmaschine,
+  zeichneLastwagenHeck,
+  zeichnePalette,
+  zeichnePortraitAusruester,
+  zeichneSammelhefter,
+  type Laufzustand,
   zeichnePortraitMedientechnologe,
   zeichnePortraitPolygraf,
   zeichneSeitenelement,
@@ -77,6 +84,15 @@ function maschinenBilder(id: string, name: string, breite: number, zeichne: (l: 
   }
   return liste;
 }
+
+/** Zustände und Bewegungsbilder der Maschinen in der Weiterverarbeitung */
+const LAUFBILDER: { zustand: Laufzustand; text: string; bild: number; von: number }[] = [
+  { zustand: 'steht', text: 'steht', bild: 0, von: 1 },
+  { zustand: 'ruestet', text: 'rüstet', bild: 0, von: 2 },
+  { zustand: 'ruestet', text: 'rüstet', bild: 1, von: 2 },
+  { zustand: 'laeuft', text: 'läuft', bild: 0, von: 2 },
+  { zustand: 'laeuft', text: 'läuft', bild: 1, von: 2 },
+];
 
 function taschenStil(papier: string, rand: string): Stil {
   return { ...STIL, farben: { ...F, papier, umriss: rand } };
@@ -161,6 +177,23 @@ export const BILDER: Bild[] = [
     zeichne: (l) => zeichneSeitenelement(l, art),
   })),
   ...(['links', 'rechts'] as const).map((r): Bild => ({ name: `taste_blaettern_${r}`, breite: 30, hoehe: 40, beschrieb: `Wahl des Berufs: nach ${r} blättern`, zeichne: (l) => zeichneTaste(l, F, 30, 40, r) })),
+  { name: 'portrait_ausruester', breite: 40, hoehe: 46, beschrieb: 'Porträt Ausrüster für die Wahl des Berufs (nach Foto)', zeichne: (l) => zeichnePortraitAusruester(l) },
+  ...LAUFBILDER.map(({ zustand, text, bild: nr, von }): Bild => ({
+    name: `mbo_${zustand}_${nr + 1}`,
+    breite: 64,
+    hoehe: 42,
+    beschrieb: `Falzmaschine «MBO», ${text}${von > 1 ? `, Bewegungsbild ${nr + 1} von ${von}` : ''}`,
+    zeichne: (l) => zeichneFalzmaschine(l, zustand, nr),
+  })),
+  ...LAUFBILDER.map(({ zustand, text, bild: nr, von }): Bild => ({
+    name: `hefter_${zustand}_${nr + 1}`,
+    breite: 124,
+    hoehe: 38,
+    beschrieb: `Sammelhefter «Martini Hefter», ${text}${von > 1 ? `, Bewegungsbild ${nr + 1} von ${von}` : ''}`,
+    zeichne: (l) => zeichneSammelhefter(l, zustand, nr),
+  })),
+  ...[1, 2, 3].map((g): Bild => ({ name: `palette_${g}`, breite: 26, hoehe: 20, beschrieb: `Palette mit Bogenstapel, Grösse ${g} (${g} ${g === 1 ? 'Platz' : 'Plätze'})`, zeichne: (l) => zeichnePalette(l, g) })),
+  { name: 'lastwagen_heck', breite: 46, hoehe: 44, beschrieb: 'Heck des roten Lastwagens an der Rampe, mit dem «a» aus dem Schriftzug', zeichne: (l) => zeichneLastwagenHeck(l) },
   { name: 'portrait_medientechnologe', breite: 40, hoehe: 46, beschrieb: 'Porträt Medientechnologe für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitMedientechnologe(l) },
   { name: 'portrait_produktionsleiter', breite: 40, hoehe: 46, beschrieb: 'Porträt Produktionsleiter für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitProduktionsleiter(l) },
   {
@@ -174,4 +207,4 @@ export const BILDER: Bild[] = [
 ];
 
 /** Zusätzliche feste Farben der Maschinen, für die Palette in der Bilderliste. */
-export const MASCHINENFARBEN: string[] = Object.values(MF);
+export const MASCHINENFARBEN: string[] = [...Object.values(MF), ...Object.values(WF)];

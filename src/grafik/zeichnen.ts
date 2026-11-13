@@ -893,3 +893,206 @@ export function zeichneSeitenelement(l: Leinwand, art: Seitenelement): void {
     l.rechteck(27, 5, 4, 20, MF.k);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Bereich Ausrüster: Falzmaschine «MBO», Sammelhefter «Martini Hefter», Palette, Lastwagen.
+// Nach Alexanders Fotos (13.11.2026), ohne Herstellerlogos.
+// ---------------------------------------------------------------------------
+
+/** Farben der Weiterverarbeitung. Sie gehören zur Palette «Werkhalle». */
+export const WF = {
+  blau: '#5b9bd5',
+  blauDunkel: '#3f7fbd',
+  blauHell: '#8cbce6',
+  band: '#49b35a',
+  holz: '#b98a56',
+  holzDunkel: '#8a6239',
+  rot: '#d20a11',
+  rotDunkel: '#9c070c',
+  rotHell: '#e8474d',
+} as const;
+
+export type Laufzustand = 'steht' | 'ruestet' | 'laeuft';
+
+function lampeLauf(z: Laufzustand, bild: number): string {
+  if (z === 'steht') return MF.schlecht;
+  if (z === 'ruestet') return bild === 0 ? MF.warnung : MF.anthrazitDunkel;
+  return MF.gut;
+}
+
+/** Falzmaschine von der Seite, 64 x 42: weisse Haube mit dunklen Fenstern, anthrazit unten, heller Anleger rechts. */
+export function zeichneFalzmaschine(l: Leinwand, z: Laufzustand, bild = 0): void {
+  l.rechteck(0, 40, 64, 2, MF.schatten);
+  // Unterbau mit Falzwerk
+  l.rechteck(2, 22, 34, 18, MF.anthrazit);
+  l.rechteck(2, 36, 34, 4, MF.anthrazitDunkel);
+  l.rechteck(6, 26, 8, 4, MF.anthrazitDunkel);
+  l.rechteck(18, 26, 8, 4, MF.anthrazitDunkel);
+  // Grüne Rollen, drehen im Lauf
+  const versatz = z === 'laeuft' && bild === 1 ? 2 : 0;
+  l.rechteck(7 + versatz, 31, 3, 1, WF.band);
+  l.rechteck(19 + versatz, 31, 3, 1, WF.band);
+  l.rechteck(28, 31, 3, 1, lampeLauf(z, bild));
+  // Weisse Haube mit zwei dunklen Fenstern
+  l.rechteck(4, 8, 28, 15, MF.rahmen);
+  l.rechteck(6, 6, 22, 2, MF.rahmen);
+  l.rechteck(7, 10, 10, 9, MF.glas);
+  l.rechteck(20, 10, 9, 9, MF.glas);
+  if (z === 'laeuft') {
+    l.rechteck(8 + bild * 4, 12, 4, 1, MF.papier);
+    l.rechteck(21 + bild * 3, 15, 4, 1, MF.papier);
+  } else if (z === 'ruestet' && bild === 1) {
+    l.rechteck(7, 10, 10, 9, MF.anthrazitHell);
+  } else {
+    l.rechteck(8, 11, 3, 1, MF.anthrazitHell);
+  }
+  // Mittelteil mit Handrad
+  l.rechteck(36, 16, 12, 24, MF.anthrazit);
+  l.rechteck(36, 14, 12, 2, MF.anthrazitHell);
+  l.rechteck(39, 20, 5, 5, MF.anthrazitDunkel);
+  l.rechteck(41, 22, 1, 1, MF.silber);
+  // Heller Rahmen des Anlegers mit Bogenstapel
+  l.rechteck(48, 6, 2, 34, MF.silber);
+  l.rechteck(60, 6, 2, 34, MF.silber);
+  l.rechteck(48, 6, 14, 2, MF.silber);
+  l.rechteck(48, 24, 14, 2, MF.silberHell);
+  const hoch = z === 'laeuft' ? 10 - bild * 2 : 12;
+  stapel(l, 50, 38, 10, hoch);
+  if (z === 'laeuft') l.rechteck(46 + bild, 23, 6, 1, MF.papier);
+  // Bedienfeld
+  l.rechteck(44, 8, 6, 8, MF.anthrazitDunkel);
+  l.rechteck(45, 9, 4, 5, z === 'steht' ? MF.glas : z === 'ruestet' && bild === 1 ? MF.weiss : MF.blau);
+}
+
+/** Sammelhefter von der Seite, 124 x 38: lange blaue Linie mit drei Anlegern, Heftstation und Auslage. */
+export function zeichneSammelhefter(l: Leinwand, z: Laufzustand, bild = 0): void {
+  l.rechteck(0, 36, 124, 2, MF.schatten);
+  // Bildschirm auf Ständer
+  l.rechteck(0, 4, 2, 32, WF.blau);
+  l.rechteck(0, 2, 12, 9, MF.anthrazitDunkel);
+  l.rechteck(1, 3, 10, 7, z === 'steht' ? MF.glas : MF.papier);
+  if (z !== 'steht') l.rechteck(2, 5, 4 + bild * 3, 1, MF.gut);
+  // Auslage mit grünem Band und Dreischneider
+  l.rechteck(16, 20, 22, 16, WF.blau);
+  l.rechteck(16, 18, 22, 2, WF.blauHell);
+  l.rechteck(18, 22, 12, 8, MF.glas);
+  l.rechteck(6, 30, 12, 2, WF.band);
+  l.rechteck(6, 32, 2, 4, WF.blauDunkel);
+  l.rechteck(14, 28, 4, 3, WF.band);
+  if (z === 'laeuft') {
+    // Fertige Hefte laufen aus
+    l.rechteck(8 + bild * 4, 29, 3, 1, MF.papier);
+    l.rechteck(20 + bild * 3, 24, 4, 1, MF.papier);
+  }
+  // Heftstation mit Bedienfeld
+  l.rechteck(38, 12, 16, 24, WF.blau);
+  l.rechteck(38, 10, 16, 2, WF.blauHell);
+  l.rechteck(41, 14, 9, 7, MF.papier);
+  l.rechteck(42, 15, 7, 5, z === 'steht' ? MF.glas : z === 'ruestet' && bild === 1 ? MF.weiss : MF.blau);
+  l.rechteck(51, 12, 2, 3, lampeLauf(z, bild));
+  // Sammelkette mit drei Anlegern
+  l.rechteck(54, 24, 58, 12, WF.blau);
+  l.rechteck(54, 22, 58, 2, MF.silber);
+  l.rechteck(54, 34, 58, 2, WF.blauDunkel);
+  for (let i = 0; i < 3; i++) {
+    const x = 58 + i * 15;
+    l.rechteck(x, 12, 12, 10, WF.blau);
+    l.rechteck(x, 10, 12, 2, WF.blauHell);
+    l.rechteck(x + 2, 6, 8, 5, MF.silber);
+    l.rechteck(x + 2, 14, 8, 6, MF.glas);
+    // Gefalzte Bogen im Anleger, im Lauf abwechselnd
+    const voll = z !== 'laeuft' || (i + bild) % 2 === 0;
+    l.rechteck(x + 3, voll ? 4 : 5, 6, voll ? 2 : 1, MF.papier);
+    if (z === 'laeuft' && (i + bild) % 2 === 1) l.rechteck(x + 4, 22, 4, 1, MF.papier);
+    if (z === 'ruestet' && i % 2 === bild) l.rechteck(x + 2, 14, 8, 6, MF.anthrazitHell);
+  }
+  // Umschlaganleger am Ende
+  l.rechteck(104, 14, 14, 10, WF.blau);
+  l.rechteck(104, 12, 14, 2, WF.blauHell);
+  l.rechteck(106, 16, 10, 6, MF.glas);
+  l.rechteck(118, 26, 6, 8, MF.silberDunkel);
+}
+
+/** Palette mit Bogenstapel von der Seite, 26 x 20. groesse 1 bis 3 bestimmt die Höhe des Stapels. */
+export function zeichnePalette(l: Leinwand, groesse: number): void {
+  const hoch = 3 + groesse * 3;
+  l.rechteck(0, 16, 26, 1, WF.holzDunkel);
+  l.rechteck(0, 17, 26, 1, WF.holz);
+  l.rechteck(0, 18, 4, 2, WF.holzDunkel);
+  l.rechteck(11, 18, 4, 2, WF.holzDunkel);
+  l.rechteck(22, 18, 4, 2, WF.holzDunkel);
+  stapel(l, 2, 16, 22, hoch);
+  l.rechteck(2, 16 - hoch, 22, 1, MF.silberDunkel);
+}
+
+/** Das «a» aus dem Schriftzug «wallimann», 13 x 12, als Pixelmuster. */
+const BUCHSTABE_A = [
+  '....######...',
+  '..#########..',
+  '..##########.',
+  '.###.....###.',
+  '.###......###',
+  '###.......###',
+  '###.......###',
+  '####.....####',
+  '.###.....####',
+  '.############',
+  '..###########',
+  '....######..#',
+];
+
+/** Heck des roten Lastwagens an der Rampe, 46 x 44, mit dem «a» auf dem Aufbau. */
+export function zeichneLastwagenHeck(l: Leinwand): void {
+  l.rechteck(0, 42, 46, 2, MF.schatten);
+  // Aufbau
+  l.rechteck(6, 4, 40, 30, WF.rot);
+  l.rechteck(6, 4, 40, 2, WF.rotHell);
+  l.rechteck(6, 32, 40, 2, WF.rotDunkel);
+  l.rechteck(6, 4, 2, 30, WF.rotDunkel);
+  l.rechteck(8, 8, 2, 22, '#7d0509');
+  // Ladebrücke zur Rampe
+  l.rechteck(0, 30, 8, 3, MF.silberDunkel);
+  l.rechteck(0, 33, 2, 9, MF.silberDunkel);
+  // Rad
+  l.rechteck(24, 32, 12, 12, MF.anthrazitDunkel);
+  l.rechteck(28, 36, 4, 4, MF.silberDunkel);
+  BUCHSTABE_A.forEach((zeile, y) => {
+    for (let x = 0; x < zeile.length; x++) if (zeile[x] === '#') l.rechteck(22 + x, 12 + y, 1, 1, MF.weiss);
+  });
+}
+
+/** Porträt Ausrüster: dunkles, nach hinten gekämmtes Haar mit Grau, langer dunkler Vollbart, schwarzes Polo. Nach Alexanders Foto. */
+export function zeichnePortraitAusruester(l: Leinwand): void {
+  const haar = '#2a2827';
+  const grau = '#6e6b68';
+  const bart = '#1f1c1b';
+  poloUndHals(l);
+  l.rechteck(11, 10, 18, 19, PF.haut);
+  l.rechteck(9, 17, 2, 5, PF.haut);
+  l.rechteck(29, 17, 2, 5, PF.haut);
+  // Haar nach hinten gekämmt, an den Seiten grau
+  l.rechteck(11, 4, 18, 7, haar);
+  l.rechteck(13, 3, 14, 1, haar);
+  l.rechteck(12, 11, 3, 1, haar);
+  l.rechteck(25, 11, 3, 1, haar);
+  l.rechteck(10, 7, 2, 8, grau);
+  l.rechteck(28, 7, 2, 8, grau);
+  for (const [x, y] of [[14, 5], [17, 4], [20, 5], [23, 4], [16, 7], [22, 8], [19, 9]]) l.rechteck(x, y, 2, 1, '#4a4745');
+  // Kräftige Augenbrauen, dunkle Augen
+  l.rechteck(13, 15, 5, 1, bart);
+  l.rechteck(22, 15, 5, 1, bart);
+  l.rechteck(14, 17, 3, 2, PF.weiss);
+  l.rechteck(23, 17, 3, 2, PF.weiss);
+  l.rechteck(15, 17, 2, 2, '#3b2416');
+  l.rechteck(24, 17, 2, 2, '#3b2416');
+  l.rechteck(19, 18, 2, 4, PF.hautSchatten);
+  // Langer Vollbart
+  l.rechteck(11, 20, 2, 12, bart);
+  l.rechteck(27, 20, 2, 12, bart);
+  l.rechteck(12, 23, 16, 13, bart);
+  l.rechteck(14, 36, 12, 2, bart);
+  l.rechteck(16, 38, 8, 1, bart);
+  l.rechteck(15, 22, 10, 1, bart);
+  l.rechteck(17, 25, 6, 1, PF.lippe);
+  for (const [x, y] of [[13, 30], [26, 31], [15, 34], [23, 35], [19, 37]]) l.rechteck(x, y, 1, 1, grau);
+}
