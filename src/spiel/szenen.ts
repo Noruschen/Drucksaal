@@ -75,12 +75,13 @@ export class StartSzene extends Phaser.Scene {
     const person = (x: number, portrait: string, name: string): void => {
       schild.r(x - 2, 21, 44, 50, FARBEN.akzent);
       bild(this, x, 23, portrait, 3);
-      const mitte = x + 20;
-      const breite = 74;
-      const links = Math.max(2, Math.min(BREITE - breite - 2, mitte - breite / 2));
+      // Das Schild richtet sich nach der echten Breite des Textes, damit nichts übersteht.
+      const text = schrift(this, 0, 73, name, FARBEN.knopfText, 'mitte', 10);
+      const breite = Math.ceil(text.width) + 12;
+      const links = Math.round(Math.max(2, Math.min(BREITE - breite - 2, x + 20 - breite / 2)));
       schild.r(links, 72, breite, 14, FARBEN.umriss);
       schild.r(links + 1, 73, breite - 2, 12, FARBEN.akzent);
-      schrift(this, links + breite / 2, 73, name, FARBEN.knopfText, 'mitte', 10);
+      text.setX(links + breite / 2);
     };
     person(18, 'portrait_produktionsleiter', 'Produktionsleiter');
     person(262, 'portrait_medientechnologe', 'Medientechnologe');
@@ -149,8 +150,10 @@ export class EinfuehrungSzene extends Phaser.Scene {
           `Nur wenn alles stimmt, entstehen Gutbogen. Dauer: ${minuten(LEITSTAND.dauer)} Minuten.`,
         ];
     const hell = new Maler(this.add.graphics().setDepth(2));
-    hell.r(24, 20, 272, 48, FARBEN.papier, 0.92);
-    zeilen.forEach((z, i) => schrift(this, 160, 22 + i * 11, z, FARBEN.textAufPapier, 'mitte'));
+    // Das Textfeld richtet sich nach der breitesten Zeile, damit kein Text übersteht.
+    const texte = zeilen.map((z, i) => schrift(this, 160, 22 + i * 11, z, FARBEN.textAufPapier, 'mitte'));
+    const feldBreite = Math.min(BREITE - 8, Math.ceil(Math.max(...texte.map((t) => t.width))) + 16);
+    hell.r(Math.round(160 - feldBreite / 2), 20, feldBreite, 48, FARBEN.papier, 0.92);
     bild(this, this.kStart.x, this.kStart.y, 'schaltflaeche_start');
     bild(this, this.kZurueck.x, this.kZurueck.y, 'schaltflaeche_blaettern');
     schrift(this, 160, 147, produktion ? 'Schicht starten' : 'Fortdruck starten', FARBEN.knopfText, 'mitte', 10);
