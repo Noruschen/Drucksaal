@@ -241,8 +241,8 @@ export class EinfuehrungSzene extends Phaser.Scene {
         zeilen: [
           'Die Lauftasche zeigt die Seite mit Titel, Text, Foto und Grafik.',
           'Baue sie am Rechner nach: Element antippen, dann das Feld antippen.',
-          `Fertig in ${VORSTUFE.zeitlimit} Sekunden: plus ${VORSTUFE.punktePuenktlich}. Später: minus ${Math.abs(VORSTUFE.punkteVerspaetet)}.`,
-          `Eine Schicht dauert ${minuten(VORSTUFE.dauer)} Minuten.`,
+          'Achtung: Manchmal ruft der Kunde an und ändert die fertige Seite.',
+          `Fertig in ${VORSTUFE.zeitlimit} s: plus ${VORSTUFE.punktePuenktlich}. Später: minus ${Math.abs(VORSTUFE.punkteVerspaetet)}. Schicht: ${minuten(VORSTUFE.dauer)} Minuten.`,
         ],
         start: 'Schicht starten',
         szene: 'Vorstufe',

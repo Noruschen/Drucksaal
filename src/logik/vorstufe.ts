@@ -9,6 +9,8 @@ export interface VorstufeEinstellungen {
   dauer: number;
   /** Zeit pro Lauftasche in Sekunden, danach gilt sie als verspätet */
   zeitlimit: number;
+  /** Anteil der Lauftaschen, bei denen der Kunde nach dem Fertigstellen eine Änderung verlangt (0.2 = im Schnitt jede fünfte) */
+  aenderungAnteil?: number;
   punktePuenktlich: number;
   punkteVerspaetet: number;
   /** Raster der Seite */
@@ -27,6 +29,8 @@ export interface Vorlage {
   erschienen: number;
   /** Bis zu dieser Spielzeit gilt die Lauftasche als pünktlich */
   limit: number;
+  /** true = der Kunde hat diese Lauftasche schon einmal geändert */
+  geaendert: boolean;
 }
 
 export interface VorstufeAuswertung {
@@ -39,6 +43,8 @@ export interface VorstufeAuswertung {
   offenVerspaetet: boolean;
   /** Wie oft eine fertig belegte Seite nicht mit der Vorlage übereinstimmte */
   fehlversuche: number;
+  /** Wie oft der Kunde eine fertige Seite geändert hat */
+  aenderungen: number;
   /** Durchschnittliche Zeit pro fertige Seite in Sekunden, 0 ohne fertige Seite */
   schnitt: number;
 }
@@ -46,6 +52,8 @@ export interface VorstufeAuswertung {
 export type Ablage =
   | { art: 'gesetzt' }
   | { art: 'fertig'; puenktlich: boolean }
+  /** Seite stimmte, aber der Kunde ruft an: Die Lauftasche hat sich geändert und zählt erst nach der Änderung. */
+  | { art: 'aenderung' }
   /** Alle Elemente gesetzt, aber falsch: Diese Felder wurden wieder geleert. */
   | { art: 'falsch'; felder: number[] }
   | { art: 'nichts' };
@@ -56,6 +64,7 @@ export class Vorstufe {
   puenktlich = 0;
   verspaetet = 0;
   fehlversuche = 0;
+  aenderungen = 0;
   vorlage: Vorlage;
   /** Was der Spieler am Rechner gesetzt hat */
   arbeit: Seite;
@@ -105,7 +114,7 @@ export class Vorstufe {
       });
       if (!vorher || seite.some((wert, i) => wert !== vorher[i])) break;
     }
-    return { nummer: this.naechsteNummer++, seite, erschienen: this.zeit, limit: this.zeit + e.zeitlimit };
+    return { nummer: this.naechsteNummer++, seite, erschienen: this.zeit, limit: this.zeit + e.zeitlimit, geaendert: false };
   }
 
   /** Wo liegt ein Element auf der Arbeitsseite? -1 = noch nicht gesetzt. */
@@ -140,6 +149,16 @@ export class Vorstufe {
       this.fehlversuche++;
       for (const i of falsch) this.arbeit[i] = null;
       return { art: 'falsch', felder: falsch };
+    }
+    // Seite stimmt. Manchmal ruft jetzt der Kunde an und ändert den Auftrag: Dann zählt die Seite noch nicht.
+    if (!this.vorlage.geaendert && this.zufall() < (e.aenderungAnteil ?? 0)) {
+      const geaendert = this.neueVorlage(this.vorlage.seite);
+      this.naechsteNummer--;
+      // Gleiche Lauftasche, neue Seite. Das Zeitlimit beginnt für die Änderung neu.
+      this.vorlage = { ...geaendert, nummer: this.vorlage.nummer, erschienen: this.vorlage.erschienen, geaendert: true };
+      this.arbeit = this.leereSeite();
+      this.aenderungen++;
+      return { art: 'aenderung' };
     }
     // Seite stimmt: werten und nächste Lauftasche holen.
     const puenktlich = this.zeit <= this.vorlage.limit + 1e-6;
@@ -182,6 +201,7 @@ export class Vorstufe {
       fertigeSeiten,
       offenVerspaetet: this.offenVerspaetet,
       fehlversuche: this.fehlversuche,
+      aenderungen: this.aenderungen,
       schnitt: fertigeSeiten > 0 ? this.zeitSumme / fertigeSeiten : 0,
     };
   }

@@ -282,7 +282,8 @@ describe('Leitstand (Bereich Medientechnologe)', () => {
 });
 
 describe('Vorstufe (Bereich Polygraf)', () => {
-  const neu = () => new Vorstufe({ ...VORSTUFE, dauer: 180, zeitlimit: 20, punktePuenktlich: 100, punkteVerspaetet: -50 }, zufallMitStartwert(4));
+  const fest = { ...VORSTUFE, dauer: 180, zeitlimit: 20, aenderungAnteil: 0, punktePuenktlich: 100, punkteVerspaetet: -50 };
+  const neu = () => new Vorstufe(fest, zufallMitStartwert(4));
   /** Baut die Vorlage richtig nach. */
   const baueNach = (v: Vorstufe) => {
     const ziel = [...v.vorlage.seite];
@@ -327,6 +328,34 @@ describe('Vorstufe (Bereich Polygraf)', () => {
     expect(v.arbeit[belegt[0]]).toBeNull();
     expect(v.arbeit[belegt[2]]).toBe(ziel[belegt[2]]);
     expect(v.vorlage.nummer).toBe(1);
+  });
+  it('Änderung durch den Kunden: Die fertige Seite zählt erst, wenn die Änderung umgesetzt ist', () => {
+    const v = new Vorstufe({ ...fest, aenderungAnteil: 1 }, zufallMitStartwert(4));
+    const vorher = [...v.vorlage.seite];
+    v.schritt(8);
+    expect(baueNach(v)).toEqual({ art: 'aenderung' });
+    expect(v.punkte).toBe(0);
+    expect(v.puenktlich).toBe(0);
+    expect(v.vorlage.nummer).toBe(1);
+    expect(v.vorlage.geaendert).toBe(true);
+    expect(v.vorlage.seite).not.toEqual(vorher);
+    expect(v.arbeit.every((x) => x === null)).toBe(true);
+    // Das Zeitlimit beginnt für die Änderung neu.
+    expect(v.vorlage.limit).toBeCloseTo(28, 5);
+    v.schritt(10);
+    // Dieselbe Lauftasche wird nur einmal geändert.
+    expect(baueNach(v)).toEqual({ art: 'fertig', puenktlich: true });
+    expect(v.punkte).toBe(100);
+    expect(v.vorlage.nummer).toBe(2);
+    expect(v.auswertung()).toMatchObject({ fertigeSeiten: 1, aenderungen: 1 });
+  });
+  it('im Schnitt wird etwa jede fünfte Lauftasche geändert', () => {
+    const v = new Vorstufe({ ...fest, dauer: 100000, aenderungAnteil: 0.2 }, zufallMitStartwert(9));
+    for (let i = 0; i < 600; i++) baueNach(v);
+    const w = v.auswertung();
+    const anteil = w.aenderungen / w.fertigeSeiten;
+    expect(anteil).toBeGreaterThan(0.14);
+    expect(anteil).toBeLessThan(0.26);
   });
   it('ein Element lässt sich verschieben und wegnehmen', () => {
     const v = neu();

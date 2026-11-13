@@ -16,6 +16,8 @@ type Bildobjekt = Phaser.GameObjects.Image;
 // Prüfhilfe wie in den anderen Bereichen: ?tempo=10 lässt die Schicht schneller laufen.
 const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get('tempo')) || 1);
 
+const IMMER_AENDERN = new URLSearchParams(window.location.search).get('aenderung') === '1';
+
 const NAMEN: Record<string, string> = { titel: 'Titel', text: 'Text', foto: 'Foto', grafik: 'Grafik' };
 const ZELLE_B = 36;
 const ZELLE_H = 30;
@@ -63,18 +65,26 @@ export class VorstufeSzene extends Phaser.Scene {
   private falschZeit = 0;
   private meldungen: Meldung[] = [];
   private endePause = 0;
+  /** Restzeit der Meldung «Der Kunde ruft an» */
+  private anrufZeit = 0;
+  private tAnruf!: Text;
+  /** Liegt über allen Bildern, für die Meldung des Anrufs */
+  private vorn!: Maler;
 
   constructor() {
     super('Vorstufe');
   }
 
   create(): void {
-    this.spiel = new Vorstufe(VORSTUFE, Math.random);
+    // Prüfhilfe: Mit ?aenderung=1 in der Adresse ruft der Kunde bei jeder Lauftasche an. Zählt nicht für die Bestleistung.
+    this.spiel = new Vorstufe(IMMER_AENDERN ? { ...VORSTUFE, aenderungAnteil: 1 } : VORSTUFE, Math.random);
+    if (IMMER_AENDERN) (window as unknown as { druckereiPruefung?: Vorstufe }).druckereiPruefung = this.spiel;
     this.auswahl = null;
     this.falsch = [];
     this.falschZeit = 0;
     this.meldungen = [];
     this.endePause = 0;
+    this.anrufZeit = 0;
 
     const grund = new Maler(this.add.graphics());
     grund.r(0, 0, BREITE, HOEHE, '#b9a98c');
@@ -106,6 +116,9 @@ export class VorstufeSzene extends Phaser.Scene {
     this.tRest = schrift(this, 23, 138, '', FARBEN.textAufPapier);
     schrift(this, ARBEIT.x, 127, 'Element antippen, dann das Feld antippen.', FARBEN.textAufPapier, 'links', 8);
     schrift(this, ARBEIT.x, 138, 'Ein gesetztes Element antippen nimmt es wieder auf.', FARBEN.textAufPapier, 'links', 8);
+
+    this.tAnruf = schrift(this, 217, 62, 'Der Kunde ruft an: Es gibt Änderungen!\nDie Lauftasche hat sich geändert.\nBaue die Seite neu auf.', '#ffffff', 'mitte', 10).setAlign('center').setDepth(9).setVisible(false);
+    this.vorn = new Maler(this.add.graphics().setDepth(8));
 
     this.vorlageBilder = [];
     this.arbeitBilder = [];
@@ -154,6 +167,10 @@ export class VorstufeSzene extends Phaser.Scene {
       if (antwort.art === 'fertig') {
         spiele(antwort.puenktlich ? 'puenktlich' : 'verspaetet');
         this.melde(antwort.puenktlich);
+      } else if (antwort.art === 'aenderung') {
+        // Die Seite stimmte, aber der Kunde ändert den Auftrag: Sie zählt erst nach der Änderung.
+        this.anrufZeit = 3;
+        spiele('schichtende');
       } else if (antwort.art === 'falsch') {
         this.falsch = antwort.felder;
         this.falschZeit = 0.6;
@@ -186,6 +203,7 @@ export class VorstufeSzene extends Phaser.Scene {
       }
     }
     this.falschZeit = Math.max(0, this.falschZeit - echt);
+    this.anrufZeit = Math.max(0, this.anrufZeit - echt);
     for (const m of this.meldungen) {
       m.alter += echt;
       m.text.setY(Math.round(m.startY - m.alter * 8));
@@ -210,7 +228,15 @@ export class VorstufeSzene extends Phaser.Scene {
     setze(this.tPunkte, `Punkte ${tausender(s.punkte).replace('-', 'minus ')}`);
 
     // Lauftasche: Vorlage und Zeitlimit
-    setze(this.tAuftrag, `Lauftasche ${s.vorlage.nummer}`);
+    setze(this.tAuftrag, `Lauftasche ${s.vorlage.nummer}${s.vorlage.geaendert ? ': geändert' : ''}`, s.vorlage.geaendert ? FARBEN.schlecht : FARBEN.textAufPapier);
+    // Meldung über der Lauftasche, solange der Anruf läuft
+    const anruf = this.anrufZeit > 0;
+    this.tAnruf.setVisible(anruf);
+    this.vorn.leeren();
+    if (anruf) {
+      this.vorn.r(124, 56, 186, 50, FARBEN.umriss);
+      this.vorn.r(125, 57, 184, 48, FARBEN.schlecht);
+    }
     const rest = s.restzeit;
     const zuSpaet = rest <= 0;
     setze(this.tRest, zuSpaet ? `zu spät seit ${anzeigeSekunden(-rest)} s` : `noch ${anzeigeSekunden(rest)} s`, zuSpaet ? FARBEN.schlecht : FARBEN.textAufPapier);
@@ -260,7 +286,7 @@ export class VorstufeAuswertungSzene extends Phaser.Scene {
   init(daten: { auswertung: VorstufeAuswertung }): void {
     this.auswertung = daten.auswertung;
     const w = daten.auswertung;
-    if (TEMPO > 1) {
+    if (TEMPO > 1 || IMMER_AENDERN) {
       this.bestText = 'Prüflauf: zählt nicht für die Bestleistung';
       return;
     }
@@ -285,6 +311,7 @@ export class VorstufeAuswertungSzene extends Phaser.Scene {
     schrift(this, 10, 54, `Davon im Zeitlimit von ${VORSTUFE.zeitlimit} Sekunden: ${w.puenktlich}`, FARBEN.textAufPapier);
     schrift(this, 10, 66, `Fehlversuche (Seite stimmte nicht mit der Lauftasche überein): ${w.fehlversuche}`, FARBEN.textAufPapier);
     schrift(this, 10, 78, w.schnitt > 0 ? `Zeit pro Seite im Schnitt: ${anzeigeSekunden(w.schnitt)} Sekunden` : 'Noch keine Seite fertig gebaut.', FARBEN.textAufPapier);
+    schrift(this, 170, 36, `Änderungen durch den Kunden: ${w.aenderungen}`, FARBEN.textAufPapier, 'links', 10);
     if (w.offenVerspaetet) schrift(this, 10, 90, 'Die letzte Lauftasche war am Schichtende über dem Zeitlimit: zählt als verspätet.', FARBEN.textAufPapier);
     const tipp =
       seiten === 0
