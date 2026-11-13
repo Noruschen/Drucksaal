@@ -1,16 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { anzeigeSekunden, dauer, phasen, schnellsteDauer, tausender } from '../src/logik/dauer';
-import { EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL } from '../src/logik/daten';
+import { EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL as ECHTES_MODELL } from '../src/logik/daten';
 import { Vorstufe } from '../src/logik/vorstufe';
 import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
 import { simuliere } from '../src/logik/simulation';
 import { zufallMitStartwert } from '../src/logik/zufall';
-import type { Einstellungen } from '../src/logik/typen';
+import type { Einstellungen, Zahlenmodell } from '../src/logik/typen';
 import { BESTLEISTUNG_VERSION, istNeueBestleistung, leseBestleistung, neueBestleistung } from '../src/logik/bestleistung';
 
-const m = (id: string) => ZAHLENMODELL.maschinen.find((x) => x.id === id)!;
+// Die Kontrollwerte prüfen das echte Zahlenmodell aus daten/maschinen.json.
+const m = (id: string) => ECHTES_MODELL.maschinen.find((x) => x.id === id)!;
+
+// Alle anderen Tests (Warteschlange, Termin, Punkte, Auswertung) rechnen mit einem festen Prüfmodell,
+// damit sie nicht kippen, wenn Alexander das Zahlenmodell anpasst.
+const ZAHLENMODELL: Zahlenmodell = {
+  maschinen: [
+    { id: 'digital', name: 'Digitaldruck', ruestzeit: 5, leistung: 50, vierVier: { durchgaenge: 1, leistungsFaktor: 0.5 } },
+    { id: 'sm52', name: 'SM 52', ruestzeit: 15, leistung: 150, vierVier: { durchgaenge: 2, leistungsFaktor: 1 } },
+    { id: 'ra76', name: 'RA 76', ruestzeit: 30, leistung: 400, vierVier: { durchgaenge: 2, leistungsFaktor: 1 } },
+  ],
+};
 const TOLERANZ = 0.1;
 const nah = (ist: number, soll: number) => expect(Math.abs(ist - soll)).toBeLessThanOrEqual(TOLERANZ);
 
@@ -32,29 +43,43 @@ const ohneTakt: Einstellungen = {
 const neueSchicht = (e: Einstellungen = ohneTakt) => new Schicht(ZAHLENMODELL, e, zufallMitStartwert(7));
 
 describe('Kontrollwerte des Zahlenmodells (Toleranz 0,1 s)', () => {
-  it('4/0, 750 Exemplare: Digitaldruck 20 s, SM 52 20 s', () => {
+  // Stand 13.11.2026: Rüstzeit Digitaldruck 5 s, SM 52 12 s, RA 76 22 s. Bei 4/4 im zweiten Durchgang SM 52 7 s, RA 76 11 s.
+  it('Rüstzeiten: Digitaldruck 5 s, SM 52 12 s, RA 76 22 s', () => {
+    expect(m('digital').ruestzeit).toBe(5);
+    expect(m('sm52').ruestzeit).toBe(12);
+    expect(m('ra76').ruestzeit).toBe(22);
+  });
+  it('4/0, 750 Exemplare: Digitaldruck 20 s, SM 52 17 s', () => {
     nah(dauer(m('digital'), 750, '4/0'), 20);
-    nah(dauer(m('sm52'), 750, '4/0'), 20);
+    nah(dauer(m('sm52'), 750, '4/0'), 17);
   });
-  it('4/0, 3\'600 Exemplare: SM 52 39 s, RA 76 39 s', () => {
-    nah(dauer(m('sm52'), 3600, '4/0'), 39);
-    nah(dauer(m('ra76'), 3600, '4/0'), 39);
+  it('4/0, 3\'600 Exemplare: SM 52 36 s, RA 76 31 s', () => {
+    nah(dauer(m('sm52'), 3600, '4/0'), 36);
+    nah(dauer(m('ra76'), 3600, '4/0'), 31);
   });
-  it('4/0, 10\'000 Exemplare: RA 76 55 s', () => {
-    nah(dauer(m('ra76'), 10000, '4/0'), 55);
+  it('4/0, 10\'000 Exemplare: RA 76 47 s', () => {
+    nah(dauer(m('ra76'), 10000, '4/0'), 47);
   });
-  it('4/4, 3\'600 Exemplare: SM 52 78 s, RA 76 78 s', () => {
-    nah(dauer(m('sm52'), 3600, '4/4'), 78);
-    nah(dauer(m('ra76'), 3600, '4/4'), 78);
+  it('4/4, 3\'600 Exemplare: SM 52 67 s (12 + 24 + 7 + 24), RA 76 51 s (22 + 9 + 11 + 9)', () => {
+    nah(dauer(m('sm52'), 3600, '4/4'), 67);
+    nah(dauer(m('ra76'), 3600, '4/4'), 51);
+    expect(phasen(m('sm52'), 3600, '4/4').map((p) => p.dauer)).toEqual([12, 24, 7, 24]);
+    expect(phasen(m('ra76'), 3600, '4/4').map((p) => p.dauer)).toEqual([22, 9, 11, 9]);
   });
   it('4/4 im Digitaldruck: Rüstzeit gleich, Leistung 25 Exemplare pro Sekunde', () => {
     nah(dauer(m('digital'), 500, '4/4'), 5 + 500 / 25);
   });
-  it('Schwellen bei 4/4: rund 940 und 3\'600 Exemplare', () => {
-    expect(dauer(m('digital'), 900, '4/4')).toBeLessThan(dauer(m('sm52'), 900, '4/4'));
-    expect(dauer(m('digital'), 950, '4/4')).toBeGreaterThan(dauer(m('sm52'), 950, '4/4'));
-    expect(dauer(m('sm52'), 3550, '4/4')).toBeLessThan(dauer(m('ra76'), 3550, '4/4'));
-    expect(dauer(m('sm52'), 3650, '4/4')).toBeGreaterThan(dauer(m('ra76'), 3650, '4/4'));
+  it('Schwellen bei 4/0: 525 und 2\'400 Exemplare', () => {
+    expect(dauer(m('digital'), 500, '4/0')).toBeLessThan(dauer(m('sm52'), 500, '4/0'));
+    expect(dauer(m('digital'), 550, '4/0')).toBeGreaterThan(dauer(m('sm52'), 550, '4/0'));
+    expect(dauer(m('sm52'), 2350, '4/0')).toBeLessThan(dauer(m('ra76'), 2350, '4/0'));
+    expect(dauer(m('sm52'), 2450, '4/0')).toBeGreaterThan(dauer(m('ra76'), 2450, '4/0'));
+  });
+  it('Schwellen bei 4/4: 525 und 1\'680 Exemplare', () => {
+    expect(dauer(m('digital'), 500, '4/4')).toBeLessThan(dauer(m('sm52'), 500, '4/4'));
+    expect(dauer(m('digital'), 550, '4/4')).toBeGreaterThan(dauer(m('sm52'), 550, '4/4'));
+    expect(dauer(m('sm52'), 1650, '4/4')).toBeLessThan(dauer(m('ra76'), 1650, '4/4'));
+    expect(dauer(m('sm52'), 1700, '4/4')).toBeGreaterThan(dauer(m('ra76'), 1700, '4/4'));
   });
   it('4/4 auf SM 52: vier Phasen (rüsten, Schöndruck, rüsten, Widerdruck)', () => {
     expect(phasen(m('sm52'), 3600, '4/4').map((p) => p.bezeichnung)).toEqual(['rüstet', 'Schöndruck', 'rüstet', 'Widerdruck']);
@@ -235,7 +260,7 @@ describe('Schichtbeginn', () => {
 
 describe('Test der Startwerte', () => {
   it('spielt viele Schichten mit der Spielweise «früheste Fertigzeit» durch', () => {
-    const r = simuliere(ZAHLENMODELL, EINSTELLUNGEN, 300);
+    const r = simuliere(ECHTES_MODELL, EINSTELLUNGEN, 300);
     console.log(
       `Startwerte: ${r.quote.toFixed(1)} Prozent pünktlich, ${r.auftraegeProSchicht.toFixed(1)} Aufträge pro Schicht, ` +
         `${(r.nichtVerteilt / r.schichten).toFixed(1)} nicht verteilt pro Schicht (Ziel: 70 bis 90 Prozent)`,

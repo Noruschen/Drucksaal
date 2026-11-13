@@ -1,5 +1,5 @@
 {
-  "hinweis": "Zahlenmodell, von Alexander bestätigt. Nicht ändern. Massstab: 1 Spielsekunde entspricht 1 echten Minute.",
+  "hinweis": "Zahlenmodell, von Alexander bestätigt. Nicht ändern. Massstab: 1 Spielsekunde entspricht 1 echten Minute. Stand 13.11.2026: Rüstzeit SM 52 12 s und RA 76 22 s, bei 4/4 im zweiten Durchgang 7 s und 11 s.",
   "maschinen": [
     {
       "id": "digital",
@@ -11,16 +11,16 @@
     {
       "id": "sm52",
       "name": "SM 52",
-      "ruestzeit": 15,
+      "ruestzeit": 12,
       "leistung": 150,
-      "vierVier": { "durchgaenge": 2, "leistungsFaktor": 1 }
+      "vierVier": { "durchgaenge": 2, "leistungsFaktor": 1, "ruestzeitZweiterDurchgang": 7 }
     },
     {
       "id": "ra76",
       "name": "RA 76",
-      "ruestzeit": 30,
+      "ruestzeit": 22,
       "leistung": 400,
-      "vierVier": { "durchgaenge": 2, "leistungsFaktor": 1 }
+      "vierVier": { "durchgaenge": 2, "leistungsFaktor": 1, "ruestzeitZweiterDurchgang": 11 }
     }
   ]
 }

@@ -25,26 +25,27 @@ Bereich Polygraf (seit 13.11.2026): Der Spieler baut in der Medienvorstufe Seite
 
 ## Zahlenmodell (von Alexander bestätigt, NICHT ändern)
 Massstab: 1 Spielsekunde entspricht 1 echten Minute.
+Stand 13.11.2026: Alexander hat die Rüstzeiten von SM 52 und RA 76 geändert (vorher 15 s und 30 s, bei 4/4 beides doppelt).
 
-| Maschine | Rüstzeit | Leistung bei 4/0 |
-|---|---|---|
-| Digitaldruck | 5 s | 50 Exemplare pro Sekunde |
-| SM 52 | 15 s | 150 Exemplare pro Sekunde |
-| RA 76 | 30 s | 400 Exemplare pro Sekunde |
+| Maschine | Rüstzeit | Rüstzeit zweiter Durchgang bei 4/4 | Leistung bei 4/0 |
+|---|---|---|---|
+| Digitaldruck | 5 s | kein zweiter Durchgang | 50 Exemplare pro Sekunde |
+| SM 52 | 12 s | 7 s | 150 Exemplare pro Sekunde |
+| RA 76 | 22 s | 11 s | 400 Exemplare pro Sekunde |
 
 Farbigkeit 4/4:
-- SM 52 und RA 76: Schön- und Widerdruck in zwei Durchgängen. Rüstzeit und Laufzeit doppelt so lang wie bei 4/0.
+- SM 52 und RA 76: Schön- und Widerdruck in zwei Durchgängen. Die Laufzeit ist doppelt so lang wie bei 4/0. Gerüstet wird zweimal: zuerst mit der normalen Rüstzeit, für den Widerdruck mit der kürzeren Rüstzeit aus der Tabelle.
 - Digitaldruck: beidseitig in einem Durchgang. Rüstzeit gleich, Leistung 25 Exemplare pro Sekunde.
 
 Formel: Dauer = Rüstzeit + Auflage geteilt durch Leistung. Die Logik rechnet mit Dezimalzahlen, die Anzeige rundet auf ganze Sekunden auf.
 
 Kontrollwerte für die Tests (Toleranz 0,1 s):
-- 4/0, 750 Exemplare: Digitaldruck 20 s, SM 52 20 s.
-- 4/0, 3'600 Exemplare: SM 52 39 s, RA 76 39 s.
-- 4/0, 10'000 Exemplare: RA 76 55 s.
-- 4/4, 3'600 Exemplare: SM 52 78 s, RA 76 78 s.
+- 4/0, 750 Exemplare: Digitaldruck 20 s, SM 52 17 s.
+- 4/0, 3'600 Exemplare: SM 52 36 s, RA 76 31 s.
+- 4/0, 10'000 Exemplare: RA 76 47 s.
+- 4/4, 3'600 Exemplare: SM 52 67 s (12 + 24 + 7 + 24), RA 76 51 s (22 + 9 + 11 + 9).
 
-Folge: Bei freien Maschinen ist bei 4/0 der Digitaldruck bis 750 Exemplare am schnellsten, die SM 52 von 750 bis 3'600, darüber die RA 76. Bei 4/4 liegt die erste Schwelle bei rund 940, die zweite bei 3'600.
+Folge: Bei freien Maschinen ist bei 4/0 der Digitaldruck bis 525 Exemplare am schnellsten, die SM 52 von 525 bis 2'400, darüber die RA 76. Bei 4/4 liegen die Schwellen bei 525 und 1'680 Exemplaren.
 
 ## Startwerte (Einstelldatei, Alexander passt sie an)
 1. Auflagen 100 bis 12'000 Exemplare, so gemischt, dass alle drei Maschinen gebraucht werden. Vorschlag: 30 Prozent klein (100 bis 750), 40 Prozent mittel (800 bis 3'600), 30 Prozent gross (3'650 bis 12'000), in Schritten von 50.
@@ -97,6 +98,7 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 13.11.2026 | Startbild ohne Porträts (Alexanders Wunsch): Es zeigt nur den Drucksaal mit Logo, Arbeitsplatz und den drei Maschinen sowie «Beruf auswählen». Die Personen sieht man erst in der Berufswahl. |
 | 13.11.2026 | Polygraf auf Alexanders Wunsch: Schicht dauert 1 Minute 30 Sekunden. Neu der Anruf des Kunden: Bei im Schnitt jeder fünften Lauftasche (`aenderungAnteil` 0.2 in `daten/vorstufe.json`) ruft der Kunde an, sobald die Seite fertig ist. Die Lauftasche ändert sich, die Seite muss neu aufgebaut werden und zählt erst, wenn die Änderung umgesetzt ist. Annahmen von Claude: Das Zeitlimit beginnt für die Änderung neu, und dieselbe Lauftasche wird höchstens einmal geändert. Prüfhilfe: `?aenderung=1` lässt den Kunden bei jeder Lauftasche anrufen (zählt nicht für die Bestleistung). |
 | 13.11.2026 | Produktionsleiter auf Alexanders Wunsch: Bei 20 Prozent der Aufträge (`hilferufAnteil` in `daten/einstellungen.json`) ruft der Drucker mitten im Fortdruck «Hilfe!» in einer Sprechblase. Der Fortdruck dieser Maschine steht, bis man den Drucker antippt. Das Zahlenmodell bleibt unberührt, der Stillstand kommt als Wartezeit dazu. Annahmen von Claude: Der Hilferuf kommt zufällig zwischen 20 und 80 Prozent der Druckzeit, höchstens einmal pro Auftrag. Ohne gewählte Lauftasche hilft auch ein Tipp irgendwo auf die Maschine. Der Test der Startwerte bleibt mit 74 Prozent im Ziel (die automatische Spielweise hilft sofort). Prüfhilfe: `?hilfe=1` löst den Hilferuf bei jedem Auftrag aus. |
+| 13.11.2026 | Alexander ändert das Zahlenmodell: Rüstzeit SM 52 12 s (vorher 15), RA 76 22 s (vorher 30). Bei 4/4 im zweiten Durchgang SM 52 7 s, RA 76 11 s (vorher je die volle Rüstzeit). Eingetragen in `daten/maschinen.json` (`ruestzeitZweiterDurchgang`), Kontrollwerte und Tests angepasst. Der Test der Startwerte ergibt damit 84 Prozent pünktlich (Ziel 70 bis 90). Die Auflagenklassen (klein bis 750, mittel bis 3'600) passen nicht mehr genau zu den neuen Schwellen (525 und 2'400): offen, ob sie angepasst werden. |
 | 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.

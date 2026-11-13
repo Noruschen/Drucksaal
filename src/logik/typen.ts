@@ -14,6 +14,8 @@ export interface Maschinendaten {
     durchgaenge: number;
     /** Faktor auf die Leistung bei 4/4 (Digitaldruck 0.5) */
     leistungsFaktor: number;
+    /** Rüstzeit für den zweiten Durchgang (Widerdruck) in Sekunden. Ohne Angabe gilt die normale Rüstzeit. */
+    ruestzeitZweiterDurchgang?: number;
   };
 }
 

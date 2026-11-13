@@ -18,7 +18,9 @@ export function phasen(m: Maschinendaten, auflage: number, farbigkeit: Farbigkei
   const namen = ['Schöndruck', 'Widerdruck'];
   const liste: Phase[] = [];
   for (let i = 0; i < m.vierVier.durchgaenge; i++) {
-    liste.push({ art: 'ruesten', bezeichnung: 'rüstet', dauer: m.ruestzeit });
+    // Für den Widerdruck ist das Rüsten kürzer, wenn das Zahlenmodell es so angibt.
+    const ruesten = i === 0 ? m.ruestzeit : (m.vierVier.ruestzeitZweiterDurchgang ?? m.ruestzeit);
+    liste.push({ art: 'ruesten', bezeichnung: 'rüstet', dauer: ruesten });
     liste.push({ art: 'drucken', bezeichnung: namen[i] ?? 'Fortdruck', dauer: auflage / leistung });
   }
   return liste;
