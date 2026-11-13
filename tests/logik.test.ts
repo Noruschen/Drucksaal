@@ -18,6 +18,7 @@ const nah = (ist: number, soll: number) => expect(Math.abs(ist - soll)).toBeLess
 const ohneTakt: Einstellungen = {
   ...EINSTELLUNGEN,
   ersteLauftascheNach: 9999,
+  startLauftaschen: 0,
   schichtDauer: 180,
   terminFaktor: 2,
   terminZuschlag: 15,
@@ -177,6 +178,19 @@ describe('Auswertung', () => {
       prognose: { digital: null, sm52: 30, ra76: 40 },
     });
     expect(v).toEqual({ besteMaschine: 'sm52', warBesteWahl: true, frueherUm: 0 });
+  });
+});
+
+describe('Schichtbeginn', () => {
+  it('startet mit drei Lauftaschen: klein, mittel und gross', () => {
+    const s = new Schicht(ZAHLENMODELL, { ...ohneTakt, startLauftaschen: 3 }, zufallMitStartwert(5));
+    expect(s.offen.length).toBe(3);
+    const k = ohneTakt.auflagenKlassen;
+    s.offen.forEach((a, i) => {
+      expect(a.auflage).toBeGreaterThanOrEqual(k[i].von);
+      expect(a.auflage).toBeLessThanOrEqual(k[i].bis);
+      expect(a.erschienen).toBe(0);
+    });
   });
 });
 

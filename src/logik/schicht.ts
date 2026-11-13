@@ -40,6 +40,9 @@ export class Schicht {
   ) {
     this.maschinen = modell.maschinen.map((daten) => ({ daten, laufend: null, wartend: [] }));
     this.naechsterTakt = einstellungen.ersteLauftascheNach;
+    // Zum Schichtbeginn liegen schon Lauftaschen bereit: je eine aus den ersten Auflagenklassen (klein, mittel, gross).
+    const anzahl = Math.min(einstellungen.startLauftaschen ?? 0, einstellungen.auflagenKlassen.length, einstellungen.maxOffeneLauftaschen);
+    for (let i = 0; i < anzahl; i++) this.lauftascheAuflegen(this.auftragAusKlasse(einstellungen.auflagenKlassen[i]));
   }
 
   get abschnitt(): Abschnitt {
@@ -74,6 +77,12 @@ export class Schicht {
       }
       wurf -= k.anteil;
     }
+    return this.auftragAusKlasse(klasse);
+  }
+
+  /** Erzeugt einen Auftrag aus einer bestimmten Auflagenklasse (klein, mittel, gross). */
+  private auftragAusKlasse(klasse: { von: number; bis: number }): Auftrag {
+    const e = this.einstellungen;
     const stufen = Math.floor((klasse.bis - klasse.von) / e.auflagenSchritt) + 1;
     const auflage = klasse.von + Math.floor(this.zufall() * stufen) * e.auflagenSchritt;
     const farbigkeit: Farbigkeit = this.zufall() < e.anteilVierVier ? '4/4' : '4/0';

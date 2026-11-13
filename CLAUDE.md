@@ -48,7 +48,7 @@ Folge: Bei freien Maschinen ist bei 4/0 der Digitaldruck bis 750 Exemplare am sc
 ## Startwerte (Einstelldatei, Alexander passt sie an)
 1. Auflagen 100 bis 12'000 Exemplare, so gemischt, dass alle drei Maschinen gebraucht werden. Vorschlag: 30 Prozent klein (100 bis 750), 40 Prozent mittel (800 bis 3'600), 30 Prozent gross (3'650 bis 12'000), in Schritten von 50.
 2. Etwa ein Drittel der Aufträge ist 4/4.
-3. Alle 10 Sekunden eine neue Lauftasche (Alexanders erster Vorschlag: 8).
+3. Alle 11 Sekunden eine neue Lauftasche (Alexanders erster Vorschlag: 8). Zum Schichtbeginn liegen 3 Lauftaschen bereit: klein, mittel, gross.
 4. Liefertermin: schnellste mögliche Dauer bei freier Maschine mal 2, plus 30 Sekunden, ab Erscheinen (erster Vorschlag: plus 15).
 5. Höchstens 3 wartende Aufträge pro Maschine und höchstens 4 offene Lauftaschen. Sind 4 offen, kommt keine neue, die Fristen laufen weiter.
 6. Punkte: pünktlich plus 100, verspätet minus 50.
@@ -89,6 +89,7 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 13.11.2026 | Bestleistung je Bereich getrennt gespeichert. |
 | 13.11.2026 | Wahl des Bereichs über zwei Porträtkarten statt Schaltflächen: Alexander hat zwei Fotos geliefert, die Porträts sind danach als Pixelart gezeichnet (40 x 46, `zeichnePortrait...` in `src/grafik/zeichnen.ts`). Porträt 1 ist der Medientechnologe, Porträt 2 der Produktionsleiter. Die Fotos liegen nicht im Projekt. |
 | 13.11.2026 | Startbild auf Alexanders Wunsch: Drucksaal mit Logo und den drei Maschinen bleibt. Die Personen stehen im Drucksaal statt auf Karten: links der Produktionsleiter über einem Computer-Arbeitsplatz neben dem Digitaldruck, rechts der Medientechnologe über der RA 76. Antippbar ist jeweils die ganze linke und rechte Spalte. Der Ton-Schalter liegt unten in der Mitte. |
+| 13.11.2026 | Alexander wünscht: Der Bereich Produktionsleiter startet gleich mit 3 Lauftaschen (klein, mittel, gross), damit alle drei Maschinen sofort besetzt werden können. Umgesetzt über `startLauftaschen` in `daten/einstellungen.json`. Der Test fiel damit auf 68 Prozent pünktlich, darum Takt von 10 auf 11 Sekunden (75 Prozent). Die nächste Lauftasche kommt nach 11 Sekunden. |
 | 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.

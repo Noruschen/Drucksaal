@@ -1,8 +1,9 @@
 {
-  "hinweis": "Startwerte zum Einstellen. Zeiten in Sekunden, Auflagen in Exemplaren. Alexanders erster Vorschlag war takt 8 und terminZuschlag 15 (ergab 45 Prozent pünktlich). Seit 12.11.2026: takt 10 und terminZuschlag 30 (rund 76 Prozent).",
+  "hinweis": "Startwerte zum Einstellen. Zeiten in Sekunden, Auflagen in Exemplaren. Alexanders erster Vorschlag war takt 8 und terminZuschlag 15 (ergab 45 Prozent pünktlich). Seit 12.11.2026: takt 10 und terminZuschlag 30. Seit 13.11.2026 liegen zum Schichtbeginn 3 Lauftaschen bereit (klein, mittel, gross), dafür takt 11 (rund 75 Prozent).",
   "schichtDauer": 180,
-  "takt": 10,
-  "ersteLauftascheNach": 1,
+  "takt": 11,
+  "ersteLauftascheNach": 11,
+  "startLauftaschen": 3,
   "maxOffeneLauftaschen": 4,
   "maxWartendProMaschine": 3,
   "anteilVierVier": 0.3333,

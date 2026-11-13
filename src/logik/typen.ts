@@ -31,6 +31,8 @@ export interface Einstellungen {
   schichtDauer: number;
   takt: number;
   ersteLauftascheNach: number;
+  /** So viele Lauftaschen liegen zum Schichtbeginn bereit: je eine aus den ersten Auflagenklassen */
+  startLauftaschen?: number;
   maxOffeneLauftaschen: number;
   maxWartendProMaschine: number;
   anteilVierVier: number;
