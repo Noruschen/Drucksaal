@@ -9,6 +9,7 @@ import {
   MF,
   RA76_BREITE,
   SM52_BREITE,
+  zeichneArbeitsplatz,
   zeichneDigital,
   zeichnePortraitMedientechnologe,
   zeichnePortraitProduktionsleiter,
@@ -146,6 +147,7 @@ export const BILDER: Bild[] = [
     beschrieb: 'Schaltfläche «Nochmals», schmal (grün)',
     zeichne: (l) => zeichneSchaltflaeche(l, { ...STIL, farben: { ...F, knopf: F.gut, knopfHell: '#8fd69b', knopfDunkel: '#2f8540' } }, 0, 0, 70, 30),
   },
+  { name: 'arbeitsplatz', breite: 34, hoehe: 30, beschrieb: 'Computer-Arbeitsplatz des Produktionsleiters (Tisch, Bildschirm mit Planung, Stuhl)', zeichne: (l) => zeichneArbeitsplatz(l) },
   { name: 'portrait_medientechnologe', breite: 40, hoehe: 46, beschrieb: 'Porträt Medientechnologe für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitMedientechnologe(l) },
   { name: 'portrait_produktionsleiter', breite: 40, hoehe: 46, beschrieb: 'Porträt Produktionsleiter für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitProduktionsleiter(l) },
   {

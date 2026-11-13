@@ -764,3 +764,31 @@ export function zeichnePortraitProduktionsleiter(l: Leinwand): void {
   l.rechteck(16, 25, 8, 2, PF.weiss);
   l.rechteck(16, 27, 8, 1, PF.lippe);
 }
+
+/** Computer-Arbeitsplatz des Produktionsleiters: Tisch mit Bildschirm (Planung), Tastatur und Stuhl. 34 x 30. */
+export function zeichneArbeitsplatz(l: Leinwand): void {
+  // Schatten am Boden
+  l.rechteck(0, 28, 34, 2, MF.schatten);
+  // Stuhl
+  l.rechteck(1, 12, 2, 12, MF.anthrazit);
+  l.rechteck(1, 20, 9, 2, MF.anthrazit);
+  l.rechteck(5, 22, 1, 5, MF.anthrazitDunkel);
+  l.rechteck(2, 27, 7, 1, MF.anthrazitDunkel);
+  // Tisch
+  l.rechteck(9, 15, 25, 2, MF.silberHell);
+  l.rechteck(9, 17, 25, 1, MF.silberDunkel);
+  l.rechteck(11, 18, 2, 10, MF.silberDunkel);
+  l.rechteck(30, 18, 2, 10, MF.silberDunkel);
+  l.rechteck(24, 18, 6, 8, MF.silber);
+  l.rechteck(26, 21, 2, 1, MF.silberDunkel);
+  // Bildschirm mit Planung
+  l.rechteck(13, 2, 18, 11, MF.anthrazitDunkel);
+  l.rechteck(14, 3, 16, 9, MF.weiss);
+  l.rechteck(15, 4, 6, 1, MF.blau);
+  l.rechteck(15, 6, 10, 1, MF.gut);
+  l.rechteck(15, 8, 7, 1, MF.warnung);
+  l.rechteck(15, 10, 12, 1, MF.gut);
+  l.rechteck(21, 13, 2, 2, MF.anthrazitDunkel);
+  // Tastatur
+  l.rechteck(13, 14, 9, 1, MF.anthrazit);
+}

@@ -88,6 +88,7 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 13.11.2026 | Neuer Bereich Medientechnologe (Leitstand im Fortdruck): Vier Farben (Cyan, Magenta, Yellow, Black) laufen vom Sollwert weg, Tasten für mehr und weniger Farbe. Passerkreuz Magenta unter dem Fadenzähler mit Steuerkreuz. Nur wenn alles in der Toleranz liegt, entstehen Gutbogen, sonst Makulatur. Logik in `src/logik/leitstand.ts`, Startwerte in `daten/leitstand.json` (Spielwerte, keine Fachwerte). Damit sind «Makulatur» und die Rolle am Leitstand aus der Liste «Später» vorgezogen. |
 | 13.11.2026 | Bestleistung je Bereich getrennt gespeichert. |
 | 13.11.2026 | Wahl des Bereichs über zwei Porträtkarten statt Schaltflächen: Alexander hat zwei Fotos geliefert, die Porträts sind danach als Pixelart gezeichnet (40 x 46, `zeichnePortrait...` in `src/grafik/zeichnen.ts`). Porträt 1 ist der Medientechnologe, Porträt 2 der Produktionsleiter. Die Fotos liegen nicht im Projekt. |
+| 13.11.2026 | Startbild auf Alexanders Wunsch: Drucksaal mit Logo und den drei Maschinen bleibt. Die Personen stehen im Drucksaal statt auf Karten: links der Produktionsleiter über einem Computer-Arbeitsplatz neben dem Digitaldruck, rechts der Medientechnologe über der RA 76. Antippbar ist jeweils die ganze linke und rechte Spalte. Der Ton-Schalter liegt unten in der Mitte. |
 | 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.

@@ -44,10 +44,10 @@ export class LadeSzene extends Phaser.Scene {
 // ---------------------------------------------------------------- Auswahl des Bereichs
 
 export class StartSzene extends Phaser.Scene {
-  // Karten mit den Porträts: antippen führt in den Bereich.
-  private kLeitstand: Rechteck = { x: 3, y: 128, b: 118, h: 50 };
-  private kProduktion: Rechteck = { x: 124, y: 128, b: 118, h: 50 };
-  private kTon: Rechteck = { x: 246, y: 138, b: 70, h: 30 };
+  // Antippbare Bereiche: links der Arbeitsplatz des Produktionsleiters, rechts der Medientechnologe an der RA 76.
+  private kProduktion: Rechteck = { x: 0, y: 16, b: 104, h: 164 };
+  private kLeitstand: Rechteck = { x: 216, y: 16, b: 104, h: 164 };
+  private kTon: Rechteck = { x: 125, y: 142, b: 70, h: 30 };
 
   constructor() {
     super('Start');
@@ -57,41 +57,55 @@ export class StartSzene extends Phaser.Scene {
     const m = new Maler(this.add.graphics());
     m.r(0, 0, BREITE, HOEHE, FARBEN.leiste);
     bild(this, 0, 16, 'drucksaal');
-    ZAHLENMODELL.maschinen.forEach((ma, i) => bild(this, 5 + i * 104, 74, `${ma.id}_steht_1`));
-    schrift(this, 160, 2, 'Wähle deinen Bereich', FARBEN.text, 'mitte', 10);
+    schrift(this, 160, 2, 'Wähle deinen Bereich: Person antippen', FARBEN.text, 'mitte', 10);
+
+    // Drucksaal: Arbeitsplatz, Digitaldruck, SM 52, RA 76 (die Maschinenbilder sind 102 breit, die Maschine steht in der Mitte)
+    bild(this, 6, 92, 'arbeitsplatz');
+    bild(this, 44 - 15, 74, 'digital_steht_1');
+    bild(this, 124 - 13, 74, 'sm52_steht_1');
+    bild(this, 208 - 2, 74, 'ra76_steht_1');
+
     // Firmenschild an der Wand
     const schild = new Maler(this.add.graphics().setDepth(2));
     schild.r(101, 20, 118, 29, FARBEN.umriss);
     schild.r(102, 21, 116, 27, FARBEN.papier);
     bild(this, 108, 26, 'logo_wallimann', 3);
 
+    // Personen: gerahmtes Porträt mit Namensschild
+    const person = (x: number, portrait: string, name: string): void => {
+      schild.r(x - 2, 21, 44, 50, FARBEN.akzent);
+      bild(this, x, 23, portrait, 3);
+      const mitte = x + 20;
+      const breite = 74;
+      const links = Math.max(2, Math.min(BREITE - breite - 2, mitte - breite / 2));
+      schild.r(links, 72, breite, 14, FARBEN.umriss);
+      schild.r(links + 1, 73, breite - 2, 12, FARBEN.akzent);
+      schrift(this, links + breite / 2, 73, name, FARBEN.knopfText, 'mitte', 10);
+    };
+    person(18, 'portrait_produktionsleiter', 'Produktionsleiter');
+    person(262, 'portrait_medientechnologe', 'Medientechnologe');
+
+    // Fussleiste: Aufgabe und Bestleistung je Bereich, in der Mitte der Ton
     const bestP = ladeBestleistung('produktion');
     const bestL = ladeBestleistung('leitstand');
-    const karte = (k: Rechteck, portrait: string, titel: string, zeile: string, best: string): void => {
-      schild.r(k.x, k.y, k.b, k.h, FARBEN.umriss);
-      schild.r(k.x + 1, k.y + 1, k.b - 2, k.h - 2, FARBEN.akzent);
-      schild.r(k.x + 1, k.y + k.h - 4, k.b - 2, 3, FARBEN.knopfDunkel);
-      bild(this, k.x + 3, k.y + 2, portrait, 3);
-      schrift(this, k.x + 46, k.y + 3, titel, FARBEN.knopfText, 'links', 10);
-      schrift(this, k.x + 46, k.y + 17, zeile, FARBEN.knopfText, 'links', 8);
-      if (best) schrift(this, k.x + 46, k.y + 30, best, FARBEN.knopfText, 'links', 8);
-    };
-    karte(this.kLeitstand, 'portrait_medientechnologe', 'Medientechnologe', 'Farbe und Passer', bestL ? `Beste: ${tausender(bestL.punkte)} Gutbogen` : '');
-    karte(this.kProduktion, 'portrait_produktionsleiter', 'Produktionsleiter', 'Lauftaschen verteilen', bestP ? `Beste: ${tausender(bestP.punkte).replace('-', 'minus ')} Punkte` : '');
+    schrift(this, 6, 130, 'Lauftaschen verteilen', FARBEN.text);
+    if (bestP) schrift(this, 6, 142, `Bestleistung: ${tausender(bestP.punkte).replace('-', 'minus ')} Punkte`, FARBEN.text, 'links', 8);
+    schrift(this, BREITE - 6, 130, 'Farbe und Passer am Leitstand', FARBEN.text, 'rechts');
+    if (bestL) schrift(this, BREITE - 6, 142, `Bestleistung: ${tausender(bestL.punkte)} Gutbogen`, FARBEN.text, 'rechts', 8);
     bild(this, this.kTon.x, this.kTon.y, 'schaltflaeche_blaettern');
     const tTon = schrift(this, this.kTon.x + 35, this.kTon.y + 9, tonAn() ? 'Ton: an' : 'Ton: aus', FARBEN.knopfText, 'mitte');
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      if (trifft(this.kProduktion, p.worldX, p.worldY)) {
+      if (trifft(this.kTon, p.worldX, p.worldY)) {
+        setzeTon(!tonAn());
+        setze(tTon, tonAn() ? 'Ton: an' : 'Ton: aus');
+        spiele('zuteilen');
+      } else if (trifft(this.kProduktion, p.worldX, p.worldY)) {
         spiele('zuteilen');
         this.scene.start('Einfuehrung', { bereich: 'produktion' });
       } else if (trifft(this.kLeitstand, p.worldX, p.worldY)) {
         spiele('zuteilen');
         this.scene.start('Einfuehrung', { bereich: 'leitstand' });
-      } else if (trifft(this.kTon, p.worldX, p.worldY)) {
-        setzeTon(!tonAn());
-        setze(tTon, tonAn() ? 'Ton: an' : 'Ton: aus');
-        spiele('zuteilen');
       }
     });
   }
