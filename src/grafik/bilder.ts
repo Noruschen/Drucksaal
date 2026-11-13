@@ -144,6 +144,14 @@ export const BILDER: Bild[] = [
     beschrieb: 'Schaltfläche «Nochmals», schmal (grün)',
     zeichne: (l) => zeichneSchaltflaeche(l, { ...STIL, farben: { ...F, knopf: F.gut, knopfHell: '#8fd69b', knopfDunkel: '#2f8540' } }, 0, 0, 70, 30),
   },
+  {
+    name: 'logo_wallimann',
+    breite: 104,
+    hoehe: 17,
+    vonHand: true,
+    beschrieb: 'Logo Wallimann als Pixelart (roter Schriftzug). Umgerechnet aus dem Logo von wallimann.ch, nicht vom Skript gezeichnet',
+    zeichne: () => undefined,
+  },
 ];
 
 /** Zusätzliche feste Farben der Maschinen, für die Palette in der Bilderliste. */

@@ -17,32 +17,43 @@ type Text = Phaser.GameObjects.Text;
 const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get('tempo')) || 1);
 
 const KANALFARBEN = [MF.c, MF.m, MF.y, MF.k];
-const SPALTE = 47;
-const ANZEIGE_OBEN = 52;
-const ANZEIGE_HOEHE = 72;
-const LUPE = { x: 258, y: 57, r: 27 };
+
+// Aufbau wie ein Leitstand an der RA 76:
+// oben links der Wallscreen mit den vier Farben, rechts der Monitor mit dem Passer,
+// davor das Pult mit dem Bogen und dem Steuerkreuz.
+const WALLSCREEN: Rechteck = { x: 4, y: 18, b: 212, h: 104 };
+const MONITOR: Rechteck = { x: 220, y: 18, b: 96, h: 66 };
+const SPALTE = 52;
+const ANZEIGE_OBEN = 24;
+const ANZEIGE_HOEHE = 92;
+const LUPE = { x: 268, y: 56, r: 24 };
 /** Länge eines Arms des Passerkreuzes */
-const ARM = 13;
+const ARM = 11;
 /** Ein Schritt des Passers in Spielpixeln: so gewählt, dass das Kreuz auch bei der grössten Verschiebung im Fadenzähler bleibt */
 const PASSER_PIXEL = Math.max(1, Math.floor((LUPE.r - ARM - 1) / LEITSTAND.passerMax));
 
+function spalteLinks(i: number): number {
+  return 7 + i * SPALTE;
+}
+
+/** Mitte des Farbstreifens */
 function spaltenMitte(i: number): number {
-  return 28 + i * SPALTE;
+  return spalteLinks(i) + 9;
 }
 
 function tasteMehr(i: number): Rechteck {
-  return { x: spaltenMitte(i) - 20, y: 19, b: 40, h: 30 };
+  return { x: spalteLinks(i) + 20, y: 23, b: 30, h: 30 };
 }
 
 function tasteWeniger(i: number): Rechteck {
-  return { x: spaltenMitte(i) - 20, y: 127, b: 40, h: 30 };
+  return { x: spalteLinks(i) + 20, y: 87, b: 30, h: 30 };
 }
 
 const STEUERKREUZ: { name: string; feld: Rechteck; dx: number; dy: number }[] = [
-  { name: 'hoch', feld: { x: 243, y: 88, b: 30, h: 30 }, dx: 0, dy: -1 },
-  { name: 'links', feld: { x: 212, y: 118, b: 30, h: 30 }, dx: -1, dy: 0 },
-  { name: 'rechts', feld: { x: 274, y: 118, b: 30, h: 30 }, dx: 1, dy: 0 },
-  { name: 'runter', feld: { x: 243, y: 148, b: 30, h: 30 }, dx: 0, dy: 1 },
+  { name: 'hoch', feld: { x: 253, y: 87, b: 30, h: 30 }, dx: 0, dy: -1 },
+  { name: 'links', feld: { x: 222, y: 117, b: 30, h: 30 }, dx: -1, dy: 0 },
+  { name: 'rechts', feld: { x: 284, y: 117, b: 30, h: 30 }, dx: 1, dy: 0 },
+  { name: 'runter', feld: { x: 253, y: 147, b: 30, h: 30 }, dx: 0, dy: 1 },
 ];
 
 export class LeitstandSzene extends Phaser.Scene {
@@ -68,8 +79,27 @@ export class LeitstandSzene extends Phaser.Scene {
     const grund = new Maler(this.add.graphics());
     grund.r(0, 0, BREITE, HOEHE, MF.anthrazitDunkel);
     grund.r(0, 0, BREITE, 16, FARBEN.leiste);
-    grund.r(2, 17, 198, 161, MF.anthrazit);
-    grund.r(202, 17, 116, 161, MF.anthrazit);
+    // Wallscreen: dunkler Rahmen, helle Bedienfläche
+    grund.r(WALLSCREEN.x, WALLSCREEN.y, WALLSCREEN.b, WALLSCREEN.h, MF.glas);
+    grund.r(WALLSCREEN.x + 2, WALLSCREEN.y + 2, WALLSCREEN.b - 4, WALLSCREEN.h - 4, MF.weiss);
+    for (let i = 1; i < FARBNAMEN.length; i++) grund.r(spalteLinks(i) - 3, WALLSCREEN.y + 6, 1, WALLSCREEN.h - 12, MF.silber);
+    // Pult mit Bogen und Messleiste
+    grund.r(0, 124, 218, 56, MF.anthrazit);
+    grund.r(0, 124, 218, 2, MF.anthrazitHell);
+    grund.r(18, 130, 152, 38, MF.papier);
+    const felder = [MF.c, MF.y, '#e8782c', '#9bc53d', MF.m, '#3a9a4a'];
+    felder.forEach((farbe, i) => {
+      grund.r(22 + i * 24, 133, 22, 15, farbe);
+      grund.r(22 + i * 24, 150, 22, 15, felder[(i + 3) % felder.length]);
+    });
+    grund.r(12, 170, 164, 6, MF.silber);
+    for (let x = 14; x < 176; x += 6) grund.r(x, 170, 1, x % 30 === 14 ? 4 : 2, MF.anthrazitDunkel);
+    // Monitor auf dem Ständer, darunter das Steuerkreuz auf dem Pult
+    grund.r(218, 86, 102, 94, MF.anthrazit);
+    grund.r(218, 86, 102, 2, MF.anthrazitHell);
+    grund.r(MONITOR.x + 1, MONITOR.y, MONITOR.b - 2, MONITOR.h, MF.glas);
+    grund.r(MONITOR.x, MONITOR.y + 1, MONITOR.b, MONITOR.h - 2, MF.glas);
+    grund.r(MONITOR.x + 2, MONITOR.y + 2, MONITOR.b - 4, MONITOR.h - 4, MF.weiss);
     bild(this, 4, 3, 'uhr_hell');
     this.maler = new Maler(this.add.graphics().setDepth(2));
 
@@ -80,11 +110,12 @@ export class LeitstandSzene extends Phaser.Scene {
     FARBNAMEN.forEach((name, i) => {
       const mehr = tasteMehr(i);
       const weniger = tasteWeniger(i);
-      bild(this, mehr.x, mehr.y, 'taste_farbe_hoch');
-      bild(this, weniger.x, weniger.y, 'taste_farbe_runter');
-      schrift(this, spaltenMitte(i), 160, name, FARBEN.text, 'mitte');
+      bild(this, mehr.x, mehr.y, 'taste_passer_hoch');
+      bild(this, weniger.x, weniger.y, 'taste_passer_runter');
+      schrift(this, mehr.x + 15, 62, name, FARBEN.textAufPapier, 'mitte', 8);
     });
-    schrift(this, LUPE.x, 18, 'Fadenzähler: Passer Magenta', FARBEN.text, 'mitte');
+    schrift(this, MONITOR.x + 4, MONITOR.y + 2, 'Passer', FARBEN.textAufPapier, 'links', 8);
+    schrift(this, MONITOR.x + MONITOR.b - 4, MONITOR.y + 2, 'Magenta', MF.m, 'rechts', 8);
     for (const k of STEUERKREUZ) bild(this, k.feld.x, k.feld.y, `taste_passer_${k.name}`);
     richteAus(this);
 
@@ -157,7 +188,7 @@ export class LeitstandSzene extends Phaser.Scene {
       const cx = spaltenMitte(i);
       const f = l.farben[i];
       const gut = l.inToleranz(i);
-      m.r(cx - 10, ANZEIGE_OBEN - 2, 20, ANZEIGE_HOEHE + 4, gut ? MF.anthrazitDunkel : blinkt ? MF.schlecht : MF.anthrazitDunkel);
+      m.r(cx - 10, ANZEIGE_OBEN - 2, 20, ANZEIGE_HOEHE + 4, gut ? MF.silberDunkel : blinkt ? MF.schlecht : MF.silberDunkel);
       m.r(cx - 8, ANZEIGE_OBEN, 16, ANZEIGE_HOEHE, MF.papier);
       const band = Math.round(e.toleranz * (halb - 2));
       m.r(cx - 8, mitte - band, 16, band * 2, '#cdebd2');
@@ -188,8 +219,8 @@ export class LeitstandSzene extends Phaser.Scene {
     m.r(LUPE.x - ARM, LUPE.y - 1, ARM * 2, 2, MF.k);
     m.r(LUPE.x - 1, LUPE.y - ARM, 2, ARM * 2, MF.k);
     // Mitte des Steuerkreuzes zeigt, ob der Passer stimmt
-    m.r(246, 121, 24, 24, MF.anthrazitDunkel);
-    m.r(252, 127, 12, 12, stimmt ? MF.gut : MF.schlecht);
+    m.r(256, 120, 24, 24, MF.anthrazitDunkel);
+    m.r(262, 126, 12, 12, stimmt ? MF.gut : MF.schlecht);
   }
 }
 

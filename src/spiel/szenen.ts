@@ -57,10 +57,12 @@ export class StartSzene extends Phaser.Scene {
     m.r(0, 0, BREITE, HOEHE, FARBEN.leiste);
     bild(this, 0, 16, 'drucksaal');
     ZAHLENMODELL.maschinen.forEach((ma, i) => bild(this, 5 + i * 104, 74, `${ma.id}_steht_1`));
-    schrift(this, 160, 2, 'Druckerei Wallimann', FARBEN.text, 'mitte', 10);
-    const hell = new Maler(this.add.graphics().setDepth(2));
-    hell.r(90, 22, 140, 16, FARBEN.papier, 0.92);
-    schrift(this, 160, 24, 'Wähle deinen Bereich', FARBEN.textAufPapier, 'mitte', 10);
+    schrift(this, 160, 2, 'Wähle deinen Bereich', FARBEN.text, 'mitte', 10);
+    // Firmenschild an der Wand
+    const schild = new Maler(this.add.graphics().setDepth(2));
+    schild.r(101, 20, 118, 29, FARBEN.umriss);
+    schild.r(102, 21, 116, 27, FARBEN.papier);
+    bild(this, 108, 26, 'logo_wallimann', 3);
 
     bild(this, this.kProduktion.x, this.kProduktion.y, 'schaltflaeche_bereich');
     bild(this, this.kLeitstand.x, this.kLeitstand.y, 'schaltflaeche_bereich');

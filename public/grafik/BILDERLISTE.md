@@ -53,6 +53,7 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | taste_passer_rechts.png | 30 x 30 | Leitstand: Taste Passer nach rechts | Skript |
 | schaltflaeche_bereich.png | 118 x 32 | Schaltfläche zur Wahl des Bereichs | Skript |
 | schaltflaeche_nochmals_klein.png | 70 x 30 | Schaltfläche «Nochmals», schmal (grün) | Skript |
+| logo_wallimann.png | 104 x 17 | Logo Wallimann als Pixelart (roter Schriftzug). Umgerechnet aus dem Logo von wallimann.ch, nicht vom Skript gezeichnet | von Hand gezeichnet |
 
 ## Farbpalette «Werkhalle»
 
