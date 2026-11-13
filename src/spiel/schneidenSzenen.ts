@@ -23,6 +23,8 @@ const TIPPFELD: Rechteck = { x: 112, y: 34, b: 198, h: 108 };
 /** So nah muss ein Tipp an einer Linie liegen (Spielpixel) */
 const FANG = 9;
 const K_SCHNEIDEN: Rechteck = { x: 196, y: 147, b: 120, h: 32 };
+/** Unbedruckter Rand des Druckbogens, etwas dunkler als der weisse Rahmen der Nutzen */
+const BOGEN_GRUND = '#d3d8dd';
 const ROT = '#d94a3d';
 const GRUEN = '#2f9e44';
 
@@ -184,6 +186,34 @@ export class SchneidenSzene extends Phaser.Scene {
     this.zeichne();
   }
 
+  /** Ein Nutzen: Bild eines Hauses mit weissem Rahmen. Geschnitten wird aussen am weissen Rahmen. */
+  private zeichneNutzen(x: number, y: number, b: number, h: number): void {
+    const m = this.maler;
+    m.r(x, y, b, h, '#ffffff');
+    const r = 3; // Breite des weissen Rahmens
+    const bx = x + r;
+    const by = y + r;
+    const bb = b - 2 * r;
+    const bh = h - 2 * r;
+    const boden = Math.max(3, Math.round(bh * 0.22));
+    m.r(bx, by, bb, bh - boden, '#8ecbf0'); // Himmel
+    m.r(bx, by + bh - boden, bb, boden, '#5dae4f'); // Wiese
+    // Haus in der Mitte: Wand, Dach als Treppe, Tür und Fenster
+    const hausB = Math.max(8, Math.min(Math.round(bb * 0.55), Math.round(bh * 0.9)));
+    const wandH = Math.max(5, Math.round(bh * 0.34));
+    const hx = bx + Math.round((bb - hausB) / 2);
+    const wy = by + bh - boden - wandH + 1;
+    m.r(hx, wy, hausB, wandH, '#f1e3c4');
+    const stufen = Math.max(2, Math.min(Math.floor(hausB / 4), Math.floor((wy - by - 2) / 2)));
+    for (let i = 0; i < stufen; i++) {
+      const einzug = Math.round(((i + 1) * (hausB / 2 - 1)) / stufen) - 1;
+      m.r(hx - 1 + einzug, wy - 2 * (i + 1), hausB + 2 - 2 * einzug, 2, '#4a4f57'); // dunkles Dach, damit rote Linien sichtbar bleiben
+    }
+    const tuerB = Math.max(2, Math.round(hausB * 0.2));
+    m.r(hx + Math.round(hausB * 0.6), wy + wandH - Math.round(wandH * 0.7), tuerB, Math.round(wandH * 0.7), '#7a4a2a');
+    m.r(hx + Math.round(hausB * 0.15), wy + 2, Math.max(2, Math.round(hausB * 0.22)), Math.max(2, Math.round(wandH * 0.4)), '#3f7fbd');
+  }
+
   private zeichne(): void {
     const s = this.spiel;
     const e = SCHNEIDEN;
@@ -229,7 +259,7 @@ export class SchneidenSzene extends Phaser.Scene {
     if (a) {
       // Druckbogen mit den Nutzen
       m.r(BOGEN.x - 1, BOGEN.y - 1, BOGEN.b + 2, BOGEN.h + 2, MF.silberDunkel);
-      m.r(BOGEN.x, BOGEN.y, BOGEN.b, BOGEN.h, MF.papier);
+      m.r(BOGEN.x, BOGEN.y, BOGEN.b, BOGEN.h, BOGEN_GRUND);
       const innenX = BOGEN.x + e.rand * BOGEN.b;
       const innenY = BOGEN.y + e.rand * BOGEN.h;
       const nb = ((1 - 2 * e.rand) * BOGEN.b) / a.auftrag.spalten;
@@ -240,11 +270,7 @@ export class SchneidenSzene extends Phaser.Scene {
           const y = Math.round(innenY + zeile * nh);
           const b = Math.round(innenX + (spalte + 1) * nb) - x;
           const h = Math.round(innenY + (zeile + 1) * nh) - y;
-          m.r(x, y, b, h, '#cfe3ee');
-          m.r(x + 3, y + 3, Math.round(b * 0.5), 3, FARBEN.akzent);
-          m.r(x + 3, y + 9, b - 8, 1, MF.silberDunkel);
-          m.r(x + 3, y + 12, b - 12, 1, MF.silberDunkel);
-          if (h > 30) m.r(x + 3, y + h - 12, Math.round(b * 0.35), 8, MF.silber);
+          this.zeichneNutzen(x, y, b, h);
         }
       }
       // Linien mit Griff oben oder links

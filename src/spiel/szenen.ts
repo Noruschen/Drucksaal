@@ -246,11 +246,11 @@ export class EinfuehrungSzene extends Phaser.Scene {
       ausruestung: {
         titel: 'Ausrüster',
         zeilen: [
-          `Paletten falzen an der ${AUSRUESTUNG.falzen.name}: Palette antippen, dann die Maschine.`,
+          `Palette antippen: Sie kommt auf die Falzmaschine ${AUSRUESTUNG.falzen.name}.`,
           `«falzen + heften» geht danach von selbst zum ${AUSRUESTUNG.heften.name}.`,
           `Fertiges im Lager antippen lädt den Lastwagen (${AUSRUESTUNG.lastwagenPlaetze} Plätze), dann «Abfahrt».`,
           `Abgefahren vor dem Liefertermin: plus ${AUSRUESTUNG.punktePuenktlich}. Sonst: minus ${Math.abs(AUSRUESTUNG.punkteVerspaetet)}.`,
-          `Eine Schicht dauert ${minuten(AUSRUESTUNG.dauer)} Minuten. Eilaufträge sind rot.`,
+          `Eine Schicht dauert ${minuten(AUSRUESTUNG.dauer)} Minuten.`,
         ],
         start: 'Schicht starten',
         szene: 'Ausruestung',
@@ -259,9 +259,9 @@ export class EinfuehrungSzene extends Phaser.Scene {
         titel: 'Schneiden',
         zeilen: [
           'Palette antippen: Der Stapel kommt auf den Rüttler.',
-          'Der Monitor zeigt den Druckbogen mit den Nutzen und roten Linien.',
+          'Der Monitor zeigt den Druckbogen: Jeder Nutzen ist ein Bild mit weissem Rahmen.',
           'Tippe die richtigen Linien an (sie werden grün), dann «Schneiden».',
-          'Richtig ist jede Linie am Rand eines Nutzens, falsch jede mitten durch einen Nutzen.',
+          'Richtig ist jede rote Linie aussen am weissen Rahmen, falsch jede mitten durch ein Bild.',
           `Richtig: plus ${SCHNEIDEN.punkteRichtig}. Fehlschnitt: minus ${Math.abs(SCHNEIDEN.punkteFehlschnitt)}. Schicht: ${minuten(SCHNEIDEN.dauer)} Minuten.`,
         ],
         start: 'Schicht starten',

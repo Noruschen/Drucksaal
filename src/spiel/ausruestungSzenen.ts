@@ -196,7 +196,7 @@ export class AusruestungSzene extends Phaser.Scene {
   }
 
   /** Schickt die gewählte Palette zur Falzmaschine. */
-  private falze(): void {
+  private falze(karte?: Rechteck): void {
     if (this.auswahl === null) return;
     const platz = this.plaetze.indexOf(this.auswahl);
     if (this.spiel.zurFalzmaschine(this.auswahl)) {
@@ -205,7 +205,9 @@ export class AusruestungSzene extends Phaser.Scene {
       const f = kartenFeld(Math.max(0, platz));
       this.hole(f.x + f.b / 2, 106, 66, BODEN + 3);
     } else {
-      this.lehneAb(FELD_MBO);
+      // Falzmaschine und Warteplatz besetzt: Die Palette bleibt im Wareneingang.
+      this.auswahl = null;
+      this.lehneAb(karte ?? FELD_MBO);
     }
   }
 
@@ -215,8 +217,9 @@ export class AusruestungSzene extends Phaser.Scene {
     this.ziehen = null;
     for (let i = 0; i < this.plaetze.length; i++) {
       if (this.plaetze[i] !== null && trifft(kartenFeld(i), x, y)) {
+        // Ein Tipp genügt: Die Palette geht direkt zur Falzmaschine (kein Ziehen).
         this.auswahl = this.plaetze[i];
-        this.ziehen = { startX: x, startY: y, x, y, aktiv: false };
+        this.falze(kartenFeld(i));
         return;
       }
     }
@@ -522,7 +525,7 @@ export class AusruestungAuswertungSzene extends Phaser.Scene {
         : w.nichtGeliefert > w.puenktlich
           ? 'Tipp: Fertiges früher verladen und den Lastwagen eher losschicken.'
           : w.verspaetet > w.puenktlich
-            ? 'Tipp: Zuerst falzen, was den Martini Hefter füllt. Eilaufträge vorziehen.'
+            ? 'Tipp: Zuerst falzen, was den Martini Hefter füllt und früh fällig ist.'
             : w.fahrten > 0 && w.leerePlaetze > w.fahrten
               ? 'Tipp: Kleine Aufträge zusammen laden, wenn der Liefertermin es erlaubt.'
               : 'Sauber gearbeitet: geliefert, bevor der Liefertermin ablief.';
