@@ -2,7 +2,9 @@ import { istNeueBestleistung, leseBestleistung, neueBestleistung, type Bestleist
 
 // Lokaler Speicher des Browsers. Kein Abgleich zwischen Geräten.
 // Am iPhone haben Safari-Tab und Home-Bildschirm getrennte Speicher.
-const SCHLUESSEL_BEST = 'druckerei.bestleistung';
+/** Jeder Bereich hat seine eigene Bestleistung. */
+export type Bereich = 'produktion' | 'leitstand';
+const SCHLUESSEL_BEST: Record<Bereich, string> = { produktion: 'druckerei.bestleistung', leitstand: 'druckerei.bestleistung.leitstand' };
 const SCHLUESSEL_TON = 'druckerei.ton';
 
 function lies(schluessel: string): string | null {
@@ -22,10 +24,10 @@ function schreibe(schluessel: string, wert: string): void {
 }
 
 /** Ersatz, falls der Browser das Speichern sperrt: Die Bestleistung gilt dann bis zum Schliessen der Seite. */
-let merker: Bestleistung | null = null;
+const merker: Record<Bereich, Bestleistung | null> = { produktion: null, leitstand: null };
 
-export function ladeBestleistung(): Bestleistung | null {
-  return leseBestleistung(lies(SCHLUESSEL_BEST)) ?? merker;
+export function ladeBestleistung(bereich: Bereich): Bestleistung | null {
+  return leseBestleistung(lies(SCHLUESSEL_BEST[bereich])) ?? merker[bereich];
 }
 
 function heute(): string {
@@ -34,12 +36,12 @@ function heute(): string {
 }
 
 /** Speichert das Ergebnis, wenn es besser ist. Gibt zurück, ob es eine neue Bestleistung ist. */
-export function meldeErgebnis(punkte: number, puenktlich: number, verspaetet: number): { neu: boolean; best: Bestleistung } {
-  const bisher = ladeBestleistung();
+export function meldeErgebnis(bereich: Bereich, punkte: number, puenktlich: number, verspaetet: number): { neu: boolean; best: Bestleistung } {
+  const bisher = ladeBestleistung(bereich);
   if (istNeueBestleistung(punkte, bisher)) {
     const best = neueBestleistung(punkte, puenktlich, verspaetet, heute());
-    schreibe(SCHLUESSEL_BEST, JSON.stringify(best));
-    merker = best;
+    schreibe(SCHLUESSEL_BEST[bereich], JSON.stringify(best));
+    merker[bereich] = best;
     return { neu: true, best };
   }
   return { neu: false, best: bisher! };

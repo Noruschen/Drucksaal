@@ -45,9 +45,17 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | symbol_home_180.png | 180 x 180 | Symbol für den Home-Bildschirm am iPhone (Datei 180 x 180) | Skript |
 | symbol_home_192.png | 192 x 192 | Symbol für den Home-Bildschirm (Datei 192 x 192) | Skript |
 | symbol_home_512.png | 512 x 512 | Symbol für den Home-Bildschirm (Datei 512 x 512) | Skript |
+| taste_farbe_hoch.png | 40 x 30 | Leitstand: Taste Farbe mehr | Skript |
+| taste_farbe_runter.png | 40 x 30 | Leitstand: Taste Farbe weniger | Skript |
+| taste_passer_hoch.png | 30 x 30 | Leitstand: Taste Passer nach oben | Skript |
+| taste_passer_runter.png | 30 x 30 | Leitstand: Taste Passer nach unten | Skript |
+| taste_passer_links.png | 30 x 30 | Leitstand: Taste Passer nach links | Skript |
+| taste_passer_rechts.png | 30 x 30 | Leitstand: Taste Passer nach rechts | Skript |
+| schaltflaeche_bereich.png | 118 x 32 | Schaltfläche zur Wahl des Bereichs | Skript |
+| schaltflaeche_nochmals_klein.png | 70 x 30 | Schaltfläche «Nochmals», schmal (grün) | Skript |
 
 ## Farbpalette «Werkhalle»
 
-`#1aa7e0` `#20242e` `#2678a3` `#2b3445` `#3fa7d6` `#49b35a` `#56657a` `#7b8695` `#8d98a6` `#8fd3f0` `#9eadbd` `#c9d3dd` `#cfd3d0` `#d93a8a` `#d94a3d` `#e6ebf0` `#e8b98f` `#eaf4fb` `#f2a530` `#f2c230` `#f4d51e` `#fbfbf6` `#ffffff`
+`#14181d` `#1aa7e0` `#20242e` `#262a30` `#2678a3` `#2b3445` `#3b4148` `#3d4855` `#3fa7d6` `#434a54` `#49b35a` `#525a63` `#56657a` `#5b6470` `#7b8695` `#8d98a6` `#8f979f` `#8fd3f0` `#9eadbd` `#c9ced3` `#c9d3dd` `#cfd3d0` `#d93a8a` `#d94a3d` `#e6e9ec` `#e6ebf0` `#e8b98f` `#eaf4fb` `#f1f0ea` `#f2a530` `#f2c230` `#f4d51e` `#f4f5f6` `#fbfbf6` `#ffffff`
 
 Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#2f8540` `#3d4a5e` `#7c8aa0` `#8fd69b` `#f6c9c2`

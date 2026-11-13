@@ -6,7 +6,7 @@ import { deflateSync, crc32 } from 'node:zlib';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BILDER, STIL } from '../src/grafik/bilder.ts';
+import { BILDER, MASCHINENFARBEN, STIL } from '../src/grafik/bilder.ts';
 import type { Leinwand } from '../src/grafik/zeichnen.ts';
 
 const ziel = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'grafik');
@@ -39,7 +39,7 @@ function png(breite: number, hoehe: number, rgba: Uint8Array): Buffer {
   ]);
 }
 
-const erlaubt = new Set(Object.values(STIL.farben).map((f) => f.toLowerCase()));
+const erlaubt = new Set([...Object.values(STIL.farben), ...MASCHINENFARBEN].map((f) => f.toLowerCase()));
 const zusatz = new Set<string>();
 const zeilen: string[] = [];
 

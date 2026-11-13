@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { BREITE, FARBEN, HOEHE, SCHRIFT, ansicht } from './hilfen';
 import { bereiteTonVor } from './ton';
-import { AuswertungSzene, LadeSzene, SchichtSzene, StartSzene } from './szenen';
+import { AuswertungSzene, EinfuehrungSzene, LadeSzene, SchichtSzene, StartSzene } from './szenen';
+import { LeitstandAuswertungSzene, LeitstandSzene } from './leitstandSzenen';
 
 // Phaser-Befehle nach dem Skills-Ordner im Paket (node_modules/phaser/skills, Version 4.2.1):
 // game-setup-and-config, scale-and-responsive, scenes, cameras, text-and-bitmaptext,
@@ -82,7 +83,7 @@ async function start(): Promise<void> {
       zoom,
       expandParent: false,
     },
-    scene: [LadeSzene, StartSzene, SchichtSzene, AuswertungSzene],
+    scene: [LadeSzene, StartSzene, EinfuehrungSzene, SchichtSzene, AuswertungSzene, LeitstandSzene, LeitstandAuswertungSzene],
   });
   window.addEventListener('resize', passeGroesseAn);
   window.addEventListener('orientationchange', () => setTimeout(passeGroesseAn, 200));

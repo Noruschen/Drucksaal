@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { anzeigeSekunden, dauer, phasen, schnellsteDauer, tausender } from '../src/logik/dauer';
-import { EINSTELLUNGEN, ZAHLENMODELL } from '../src/logik/daten';
+import { EINSTELLUNGEN, LEITSTAND, ZAHLENMODELL } from '../src/logik/daten';
+import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
 import { simuliere } from '../src/logik/simulation';
@@ -210,5 +211,57 @@ describe('Bestleistung', () => {
     expect(istNeueBestleistung(600, b)).toBe(true);
     expect(istNeueBestleistung(500, b)).toBe(false);
     expect(istNeueBestleistung(-50, b)).toBe(false);
+  });
+});
+
+describe('Leitstand (Bereich Medientechnologe)', () => {
+  const ruhig: LeitstandEinstellungen = { ...LEITSTAND, dauer: 10, bogenProSekunde: 100, toleranz: 0.25, schrittFarbe: 0.1, driftAmAnfang: 0, driftAmEnde: 0, passerVon: 999, passerBis: 999, passerMax: 3 };
+  it('ohne Abweichung entstehen nur Gutbogen', () => {
+    const l = new Leitstand(ruhig, zufallMitStartwert(1));
+    l.schritt(10);
+    expect(l.fertig).toBe(true);
+    expect(l.gutbogen).toBe(1000);
+    expect(l.makulatur).toBe(0);
+    expect(l.auswertung().anteil).toBeCloseTo(100, 5);
+  });
+  it('Farbe ausserhalb der Toleranz ergibt Makulatur, bis man zurückstellt', () => {
+    const l = new Leitstand(ruhig, zufallMitStartwert(1));
+    for (let i = 0; i < 3; i++) l.stelleFarbe(0, 1);
+    expect(l.inToleranz(0)).toBe(false);
+    l.schritt(4);
+    expect(l.makulatur).toBe(400);
+    l.stelleFarbe(0, -1);
+    expect(l.inToleranz(0)).toBe(true);
+    l.schritt(6);
+    expect(l.gutbogen).toBe(600);
+    expect(l.auswertung().farbeAusserhalb[0].sekunden).toBeCloseTo(4, 1);
+  });
+  it('verschobener Passer ergibt Makulatur, das Steuerkreuz stellt ihn zurück', () => {
+    const l = new Leitstand(ruhig, zufallMitStartwert(1));
+    l.stellePasser(1, 0);
+    l.stellePasser(0, -1);
+    expect(l.passerStimmt).toBe(false);
+    l.schritt(2);
+    l.stellePasser(-1, 0);
+    l.stellePasser(0, 1);
+    expect(l.passerStimmt).toBe(true);
+    l.schritt(8);
+    expect(l.makulatur).toBe(200);
+    expect(l.gutbogen).toBe(800);
+  });
+  it('Passer bleibt im erlaubten Bereich, Farbwert zwischen -1 und +1', () => {
+    const l = new Leitstand(ruhig, zufallMitStartwert(1));
+    for (let i = 0; i < 10; i++) l.stellePasser(1, 1);
+    expect(l.passer).toEqual({ x: 3, y: 3 });
+    for (let i = 0; i < 30; i++) l.stelleFarbe(2, -1);
+    expect(l.farben[2].wert).toBe(-1);
+  });
+  it('mit den Startwerten laufen Farben und Passer von selbst weg', () => {
+    const l = new Leitstand(LEITSTAND, zufallMitStartwert(3));
+    l.schritt(LEITSTAND.dauer);
+    const w = l.auswertung();
+    expect(l.fertig).toBe(true);
+    expect(w.gutbogen + w.makulatur).toBe(LEITSTAND.dauer * LEITSTAND.bogenProSekunde);
+    expect(w.makulatur).toBeGreaterThan(0);
   });
 });

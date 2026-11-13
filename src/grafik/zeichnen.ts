@@ -395,3 +395,247 @@ export function zeichneSymbol(l: Leinwand, f: Farben, g: number): void {
   l.rechteck(r + 17, r + 14, 6, 6, f.k);
   l.rechteck(r + 9, r + 23, 14, 2, f.papierSchatten);
 }
+
+// ---------------------------------------------------------------------------
+// Maschinen nach Alexanders Fotos (13.11.2026): RA 76 anthrazit mit hohen weissen
+// Rahmen und schwarzem Glas auf dunklem Podest, SM 52 silbern mit dunklem Sockel,
+// Digitaldruck weiss mit dunkler Front. Ohne Herstellerlogos.
+// ---------------------------------------------------------------------------
+
+/** Feste Farben der Maschinen. Sie gehören zur Palette «Werkhalle». */
+export const MF = {
+  anthrazit: '#3b4148',
+  anthrazitHell: '#525a63',
+  anthrazitDunkel: '#262a30',
+  glas: '#14181d',
+  glasGlanz: '#3d4855',
+  rahmen: '#f1f0ea',
+  podest: '#434a54',
+  podestHell: '#5b6470',
+  silber: '#c9ced3',
+  silberHell: '#e6e9ec',
+  silberDunkel: '#8f979f',
+  weiss: '#f4f5f6',
+  schatten: '#7b8695',
+  blau: '#3fa7d6',
+  papier: '#fbfbf6',
+  papierSchatten: '#cfd3d0',
+  c: '#1aa7e0',
+  m: '#d93a8a',
+  y: '#f4d51e',
+  k: '#20242e',
+  gut: '#49b35a',
+  warnung: '#f2a530',
+  schlecht: '#d94a3d',
+} as const;
+
+function lampeEcht(z: Zustand, bild: number): string {
+  if (z === 'steht') return MF.schlecht;
+  if (z === 'ruestet') return bild === 0 ? MF.warnung : MF.anthrazitDunkel;
+  return MF.gut;
+}
+
+function stapel(l: Leinwand, x: number, y: number, b: number, h: number): void {
+  l.rechteck(x, y - h, b, h, MF.papier);
+  for (let i = 2; i < h; i += 2) l.rechteck(x, y - i, b, 1, MF.papierSchatten);
+}
+
+/** Leitstand: Pult mit grossem Bildschirm, darauf der Bogen. Breite b, (x, y) links unten. */
+function leitstandEcht(l: Leinwand, x: number, y: number, b: number, z: Zustand, bild: number): void {
+  l.rechteck(x, y - 11, b, 11, MF.anthrazitDunkel);
+  l.rechteck(x, y - 11, b, 1, MF.anthrazitHell);
+  // Bogen auf dem Pult
+  l.rechteck(x + 2, y - 12, 2, 1, MF.c);
+  l.rechteck(x + 4, y - 12, 2, 1, MF.y);
+  l.rechteck(x + 6, y - 12, 2, 1, MF.m);
+  // Bildschirm
+  l.rechteck(x + 1, y - 23, b - 2, 9, MF.anthrazit);
+  l.rechteck(x + 2, y - 22, b - 4, 7, z === 'steht' ? MF.glas : MF.weiss);
+  if (z !== 'steht') {
+    l.rechteck(x + 3, y - 21 + bild, 2, 2, MF.c);
+    l.rechteck(x + 5, y - 20 - bild + 1, 2, 2, MF.m);
+    l.rechteck(x + 3, y - 18, b - 6, 1, MF.gut);
+  }
+}
+
+export const RA76_BREITE = 98;
+
+/**
+ * RA 76 von der Bedienseite: Leitstand, Auslage (silbern mit blauem Lichtband), vier Druckwerke
+ * (anthrazit, hoher weisser Rahmen mit schwarzem Glas) auf dunklem Podest, Anleger.
+ * Der Bogen läuft von rechts nach links. (x, y) links unten, bild = 0 oder 1.
+ */
+export function zeichneRA76(l: Leinwand, x: number, y: number, z: Zustand, bild = 0): void {
+  l.rechteck(x - 1, y, RA76_BREITE + 2, 2, MF.schatten);
+  leitstandEcht(l, x, y, 11, z, bild);
+
+  // Auslage
+  const ax = x + 13;
+  l.rechteck(ax, y - 27, 18, 24, MF.silber);
+  l.rechteck(ax, y - 27, 18, 1, MF.silberHell);
+  l.rechteck(ax, y - 13, 18, 10, MF.anthrazitDunkel);
+  l.rechteck(ax + 2, y - 12, 14, 8, MF.glas);
+  stapel(l, ax + 3, y - 4, 12, z === 'druckt' ? 4 + bild : 2);
+  if (z === 'druckt') l.rechteck(ax + 3 + (bild === 0 ? 5 : 1), y - 11, 6, 1, MF.papier);
+  l.rechteck(ax + 14, y - 25, 1, 10, z === 'steht' ? MF.silberDunkel : MF.blau);
+  l.rechteck(ax + 2, y - 25, 3, 3, lampeEcht(z, bild));
+  l.rechteck(ax + 17, y - 26, 1, 23, MF.silberDunkel);
+
+  // Druckwerke auf dem Podest
+  const marken = [MF.y, MF.m, MF.c, MF.k];
+  for (let i = 0; i < 4; i++) {
+    const ux = ax + 18 + i * 13;
+    l.rechteck(ux, y - 37, 13, 34, MF.anthrazit);
+    l.rechteck(ux, y - 37, 13, 1, MF.anthrazitHell);
+    l.rechteck(ux + 12, y - 36, 1, 33, MF.anthrazitDunkel);
+    // Weisser Rahmen mit runden Ecken, darin das schwarze Glas
+    l.rechteck(ux + 2, y - 35, 9, 30, MF.rahmen);
+    l.rechteck(ux + 2, y - 35, 1, 1, MF.anthrazit);
+    l.rechteck(ux + 10, y - 35, 1, 1, MF.anthrazit);
+    l.rechteck(ux + 2, y - 6, 1, 1, MF.anthrazit);
+    l.rechteck(ux + 10, y - 6, 1, 1, MF.anthrazit);
+    l.rechteck(ux + 3, y - 34, 7, 28, MF.glas);
+    l.rechteck(ux + 4, y - 32, 5, 2, marken[i]);
+    l.rechteck(ux + 10, y - 21, 1, 1, MF.anthrazitDunkel);
+    if (z === 'ruestet' && i % 2 === bild) {
+      // Schutz offen: Plattenwechsel
+      l.rechteck(ux + 3, y - 27, 7, 12, MF.anthrazitHell);
+      l.rechteck(ux + 3, y - 22, 7, 1, MF.blau);
+    } else if (z === 'druckt') {
+      // Spiegelung wandert über das Glas
+      const versatz = (i + bild) % 2 === 0 ? 0 : 6;
+      l.rechteck(ux + 4, y - 27 + versatz, 1, 5, MF.glasGlanz);
+      l.rechteck(ux + 5, y - 25 + versatz, 1, 5, MF.glasGlanz);
+    } else {
+      l.rechteck(ux + 4, y - 26, 1, 8, MF.glasGlanz);
+    }
+  }
+
+  // Anleger
+  const nx = ax + 18 + 52;
+  l.rechteck(nx, y - 27, 15, 27, MF.anthrazit);
+  l.rechteck(nx, y - 27, 15, 1, MF.anthrazitHell);
+  l.rechteck(nx + 2, y - 23, 11, 20, MF.glas);
+  stapel(l, nx + 3, y - 3, 9, z === 'druckt' ? 12 - bild : 16);
+  l.rechteck(nx + 1, y - 30, 10, 3, MF.anthrazitDunkel);
+  if (z === 'druckt') l.rechteck(nx - 1 + bild, y - 24, 4, 1, MF.papier);
+
+  // Podest unter Auslage und Druckwerken
+  l.rechteck(ax - 1, y - 3, 72, 3, MF.podest);
+  l.rechteck(ax - 1, y - 3, 72, 1, MF.podestHell);
+}
+
+export const SM52_BREITE = 76;
+
+/** SM 52 von der Seite: Leitstand, Auslage, vier Druckwerke (silbern, dunkler Sockel), Anleger. */
+export function zeichneSM52(l: Leinwand, x: number, y: number, z: Zustand, bild = 0): void {
+  l.rechteck(x - 1, y, SM52_BREITE + 2, 2, MF.schatten);
+  // Kleines Pult mit Bildschirm
+  l.rechteck(x, y - 10, 9, 10, MF.silberDunkel);
+  l.rechteck(x, y - 10, 9, 1, MF.silberHell);
+  l.rechteck(x + 1, y - 18, 7, 6, MF.anthrazit);
+  l.rechteck(x + 2, y - 17, 5, 4, z === 'steht' ? MF.glas : bild === 0 ? MF.blau : MF.weiss);
+  l.rechteck(x + 4, y - 12, 1, 2, MF.anthrazit);
+
+  // Auslage
+  const ax = x + 10;
+  l.rechteck(ax, y - 18, 14, 18, MF.silber);
+  l.rechteck(ax, y - 18, 14, 1, MF.silberHell);
+  l.rechteck(ax + 8, y - 22, 6, 4, MF.silber);
+  l.rechteck(ax, y - 5, 14, 5, MF.anthrazit);
+  l.rechteck(ax + 2, y - 15, 10, 10, MF.glas);
+  stapel(l, ax + 3, y - 5, 8, z === 'druckt' ? 4 + bild : 2);
+  if (z === 'druckt') l.rechteck(ax + 3 + (bild === 0 ? 3 : 0), y - 14, 5, 1, MF.papier);
+  l.rechteck(ax + 2, y - 21, 2, 3, lampeEcht(z, bild));
+
+  // Druckwerke
+  const marken = [MF.y, MF.m, MF.c, MF.k];
+  for (let i = 0; i < 4; i++) {
+    const ux = ax + 14 + i * 10;
+    l.rechteck(ux, y - 25, 10, 25, MF.silber);
+    l.rechteck(ux + 1, y - 27, 8, 2, MF.silberHell);
+    l.rechteck(ux, y - 25, 1, 18, MF.silberHell);
+    l.rechteck(ux + 9, y - 25, 1, 25, MF.silberDunkel);
+    l.rechteck(ux, y - 7, 10, 7, MF.anthrazit);
+    l.rechteck(ux + 2, y - 23, 6, 2, marken[i]);
+    const offen = z === 'ruestet' && i % 2 === bild;
+    l.rechteck(ux + 2, y - 19, 6, 10, offen ? MF.glas : MF.silberDunkel);
+    if (offen) l.rechteck(ux + 2, y - 15, 6, 1, MF.blau);
+    else if (z === 'druckt') l.rechteck(ux + 3 + ((i + bild) % 2) * 3, y - 17, 1, 6, MF.silberHell);
+    else l.rechteck(ux + 3, y - 17, 1, 6, MF.silber);
+    l.rechteck(ux + 2, y - 4, 6, 1, MF.anthrazitHell);
+  }
+
+  // Anleger
+  const nx = ax + 14 + 40;
+  l.rechteck(nx, y - 19, 12, 19, MF.silber);
+  l.rechteck(nx, y - 19, 12, 1, MF.silberHell);
+  l.rechteck(nx, y - 5, 12, 5, MF.anthrazit);
+  l.rechteck(nx + 2, y - 16, 8, 11, MF.glas);
+  stapel(l, nx + 3, y - 5, 6, z === 'druckt' ? 6 - bild : 9);
+  l.rechteck(nx + 1, y - 22, 8, 3, MF.anthrazit);
+  if (z === 'druckt') l.rechteck(nx - 2 + bild, y - 17, 4, 1, MF.papier);
+}
+
+export const DIGITAL_ECHT_BREITE = 72;
+
+/** Digitaldruckmaschine von vorn: Papiermagazin, Druckmodul (weiss mit dunkler Front, Bedienfeld), Stapelauslage. */
+export function zeichneDigital(l: Leinwand, x: number, y: number, z: Zustand, bild = 0): void {
+  l.rechteck(x - 1, y, DIGITAL_ECHT_BREITE + 2, 2, MF.schatten);
+
+  // Papiermagazin mit Schubladen
+  l.rechteck(x, y - 27, 20, 27, MF.weiss);
+  l.rechteck(x, y - 27, 20, 2, MF.anthrazit);
+  l.rechteck(x + 19, y - 25, 1, 25, MF.silber);
+  for (const sy of [19, 12, 5]) {
+    l.rechteck(x + 2, y - sy, 16, 1, MF.silberDunkel);
+    l.rechteck(x + 8, y - sy + 2, 4, 1, MF.silberDunkel);
+  }
+  if (z === 'ruestet' && bild === 1) {
+    l.rechteck(x + 2, y - 18, 16, 5, MF.silber);
+    l.rechteck(x + 3, y - 17, 14, 2, MF.papier);
+  }
+
+  // Druckmodul: unten weiss, oben dunkle Front mit blauem Band
+  const dx = x + 21;
+  l.rechteck(dx, y - 32, 30, 32, MF.weiss);
+  l.rechteck(dx, y - 32, 30, 13, MF.anthrazit);
+  l.rechteck(dx, y - 20, 30, 1, z === 'steht' ? MF.anthrazitHell : MF.blau);
+  l.rechteck(dx + 3, y - 29, 16, 7, MF.glas);
+  if (z === 'druckt') l.rechteck(dx + 4 + (bild === 0 ? 0 : 8), y - 28, 6, 5, MF.glasGlanz);
+  l.rechteck(dx + 24, y - 30, 3, 3, lampeEcht(z, bild));
+  [MF.c, MF.m, MF.y, MF.k].forEach((farbe, i) => l.rechteck(dx + 4 + i * 5, y - 15, 3, 4, farbe));
+  l.rechteck(dx + 2, y - 8, 26, 1, MF.silber);
+  l.rechteck(dx + 12, y - 6, 6, 1, MF.silberDunkel);
+  l.rechteck(dx + 29, y - 18, 1, 18, MF.silber);
+  // Bedienfeld auf Arm
+  l.rechteck(dx + 19, y - 41, 11, 8, MF.anthrazitDunkel);
+  l.rechteck(dx + 20, y - 40, 9, 6, z === 'steht' ? MF.glas : z === 'ruestet' && bild === 1 ? MF.weiss : MF.blau);
+  l.rechteck(dx + 24, y - 33, 2, 1, MF.anthrazitDunkel);
+
+  // Stapelauslage
+  const sx = x + 52;
+  l.rechteck(sx, y - 24, 20, 24, MF.weiss);
+  l.rechteck(sx, y - 24, 20, 2, MF.anthrazit);
+  l.rechteck(sx + 2, y - 20, 16, 13, MF.glas);
+  stapel(l, sx + 3, y - 7, 14, z === 'druckt' ? 4 + bild : 2);
+  if (z === 'druckt' && bild === 0) l.rechteck(sx + 3, y - 19, 9, 1, MF.papier);
+  l.rechteck(sx + 2, y - 4, 16, 1, MF.silberDunkel);
+}
+
+/** Taste mit Pfeil für den Leitstand. */
+export function zeichneTaste(l: Leinwand, f: Farben, b: number, h: number, richtung: 'hoch' | 'runter' | 'links' | 'rechts'): void {
+  l.rechteck(1, 0, b - 2, h, f.umriss);
+  l.rechteck(0, 1, b, h - 2, f.umriss);
+  l.rechteck(1, 1, b - 2, h - 2, MF.podestHell);
+  l.rechteck(1, h - 4, b - 2, 3, MF.podest);
+  l.rechteck(2, 1, b - 4, 1, MF.silberDunkel);
+  const mx = Math.floor(b / 2);
+  const my = Math.floor(h / 2) - 1;
+  for (let i = 0; i < 6; i++) {
+    if (richtung === 'hoch') l.rechteck(mx - i, my - 3 + i, i * 2, 1, MF.weiss);
+    else if (richtung === 'runter') l.rechteck(mx - i, my + 3 - i, i * 2, 1, MF.weiss);
+    else if (richtung === 'links') l.rechteck(mx - 3 + i, my - i, 1, i * 2, MF.weiss);
+    else l.rechteck(mx + 3 - i, my - i, 1, i * 2, MF.weiss);
+  }
+}

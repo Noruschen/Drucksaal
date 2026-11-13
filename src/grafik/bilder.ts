@@ -5,16 +5,18 @@
 
 import { VARIANTEN } from '../designs/varianten.ts';
 import {
-  DIGITAL_BREITE,
-  RA76,
-  SM52,
-  offsetBreite,
-  zeichneDigitaldruck,
+  DIGITAL_ECHT_BREITE,
+  MF,
+  RA76_BREITE,
+  SM52_BREITE,
+  zeichneDigital,
+  zeichneRA76,
+  zeichneSM52,
+  zeichneTaste,
   zeichneDrucker,
   zeichneFarbigkeit,
   zeichneHalle,
   zeichneLauftasche,
-  zeichneOffset,
   zeichneSchaltflaeche,
   zeichneSymbol,
   zeichneUhr,
@@ -54,9 +56,6 @@ const ZUSTAENDE: { zustand: Zustand; kurz: string; text: string; bilder: number 
   { zustand: 'druckt', kurz: 'druckt', text: 'druckt', bilder: 2 },
 ];
 
-/** Maschinen bekommen einen feinen Umriss, damit sie sich von der hellen Wand abheben. */
-const MASCHINEN_STIL: Stil = { ...STIL, umriss: true, farben: { ...F, umriss: F.bodenFuge } };
-
 function maschinenBilder(id: string, name: string, breite: number, zeichne: (l: Leinwand, x: number, y: number, z: Zustand, bild: number) => void): Bild[] {
   const liste: Bild[] = [];
   for (const z of ZUSTAENDE) {
@@ -85,9 +84,9 @@ export const BILDER: Bild[] = [
     beschrieb: 'Drucksaal als Hintergrund: Wand mit Fensterband, Boden mit gelber Markierung',
     zeichne: (l) => zeichneHalle(l, STIL, HALLE_B, 0, HALLE_WAND, HALLE_H),
   },
-  ...maschinenBilder('digital', 'Digitaldruckmaschine', DIGITAL_BREITE, (l, x, y, z, b) => zeichneDigitaldruck(l, MASCHINEN_STIL, x, y, z, b)),
-  ...maschinenBilder('sm52', 'SM 52', offsetBreite(SM52), (l, x, y, z, b) => zeichneOffset(l, MASCHINEN_STIL, x, y, SM52, z, b)),
-  ...maschinenBilder('ra76', 'RA 76', offsetBreite(RA76), (l, x, y, z, b) => zeichneOffset(l, MASCHINEN_STIL, x, y, RA76, z, b)),
+  ...maschinenBilder('digital', 'Digitaldruckmaschine', DIGITAL_ECHT_BREITE, (l, x, y, z, b) => zeichneDigital(l, x, y, z, b)),
+  ...maschinenBilder('sm52', 'SM 52', SM52_BREITE, (l, x, y, z, b) => zeichneSM52(l, x, y, z, b)),
+  ...maschinenBilder('ra76', 'RA 76', RA76_BREITE, (l, x, y, z, b) => zeichneRA76(l, x, y, z, b)),
   { name: 'lauftasche', breite: 76, hoehe: 48, beschrieb: 'Lauftasche', zeichne: (l) => zeichneLauftasche(l, STIL, 0, 0) },
   {
     name: 'lauftasche_gewaehlt',
@@ -135,4 +134,17 @@ export const BILDER: Bild[] = [
   { name: 'symbol_home_180', breite: 36, hoehe: 36, massstab: 5, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm am iPhone (Datei 180 x 180)', zeichne: (l) => zeichneSymbol(l, F, 36) },
   { name: 'symbol_home_192', breite: 32, hoehe: 32, massstab: 6, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm (Datei 192 x 192)', zeichne: (l) => zeichneSymbol(l, F, 32) },
   { name: 'symbol_home_512', breite: 32, hoehe: 32, massstab: 16, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm (Datei 512 x 512)', zeichne: (l) => zeichneSymbol(l, F, 32) },
+  ...(['hoch', 'runter'] as const).map((r): Bild => ({ name: `taste_farbe_${r}`, breite: 40, hoehe: 30, beschrieb: `Leitstand: Taste Farbe ${r === 'hoch' ? 'mehr' : 'weniger'}`, zeichne: (l) => zeichneTaste(l, F, 40, 30, r) })),
+  ...(['hoch', 'runter', 'links', 'rechts'] as const).map((r): Bild => ({ name: `taste_passer_${r}`, breite: 30, hoehe: 30, beschrieb: `Leitstand: Taste Passer nach ${r === 'hoch' ? 'oben' : r === 'runter' ? 'unten' : r}`, zeichne: (l) => zeichneTaste(l, F, 30, 30, r) })),
+  { name: 'schaltflaeche_bereich', breite: 118, hoehe: 32, beschrieb: 'Schaltfläche zur Wahl des Bereichs', zeichne: (l) => zeichneSchaltflaeche(l, STIL, 0, 0, 118, 32) },
+  {
+    name: 'schaltflaeche_nochmals_klein',
+    breite: 70,
+    hoehe: 30,
+    beschrieb: 'Schaltfläche «Nochmals», schmal (grün)',
+    zeichne: (l) => zeichneSchaltflaeche(l, { ...STIL, farben: { ...F, knopf: F.gut, knopfHell: '#8fd69b', knopfDunkel: '#2f8540' } }, 0, 0, 70, 30),
+  },
 ];
+
+/** Zusätzliche feste Farben der Maschinen, für die Palette in der Bilderliste. */
+export const MASCHINENFARBEN: string[] = Object.values(MF);

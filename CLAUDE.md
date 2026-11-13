@@ -10,7 +10,8 @@ Es spielen Alexander und später seine Lernenden (1. Lehrjahr, Medientechnologen
 
 ## Ziel
 Einfaches Pixelart-Spiel im Browser, am Mac und am iPhone, ohne Installation und ohne Anmeldung.
-Der Spieler ist Produktionsleiter einer fiktiven Bogenoffset-Druckerei, sieht Lauftaschen und verteilt die Aufträge auf drei Maschinen: RA 76, SM 52, Digitaldruck.
+Bereich Produktionsleiter: Der Spieler sieht Lauftaschen und verteilt die Aufträge auf drei Maschinen: RA 76, SM 52, Digitaldruck.
+Bereich Medientechnologe (seit 13.11.2026): Der Spieler überwacht am Leitstand Farbe und Passer im Fortdruck.
 
 ## Ablauf einer Runde
 1. Eine Schicht dauert 180 Sekunden. In dieser Zeit kommen Lauftaschen. Danach kommen keine neuen, die Maschinen arbeiten im Zeitraffer fertig, dann folgt die Auswertung.
@@ -79,6 +80,11 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 12.11.2026 | Alexander ordnet an: `public/schrift/pixelify-sans.woff2` löschen. Noch offen, weil die Mod «Arbeitsweise» das Löschen sperrt. |
 | 12.11.2026 | Alexander wünscht ein Männchen, das die Lauftasche abholt, zur Maschine trägt und danach die nächste wartende holt. Umgesetzt: Jede Maschine hat einen Drucker (Figur). Er holt die zugeteilte Lauftasche am unteren Rand des Drucksaals und, wenn der nächste Auftrag startet, aus der Reihe unter der Maschine. Reine Darstellung: Die Zeiten des Zahlenmodells laufen unabhängig davon. |
 | 12.11.2026 | M3: Bestleistung lokal mit Versionsnummer (`src/logik/bestleistung.ts`, Schlüssel `druckerei.bestleistung`). Töne selbst erzeugt, ohne Dateien (`src/spiel/ton.ts`), Schalter «Ton» auf dem Startbild. Home-Bildschirm über `public/manifest.webmanifest` und die Einträge in `index.html`. Kein Offline-Betrieb (nicht verlangt). |
+| 13.11.2026 | Alexander ändert den Rahmen: Das Spiel heisst «Druckerei Wallimann» (sein Betrieb). Man wählt einen Bereich: Produktionsleiter (das bisherige Spiel) oder Medientechnologe. Regel 9 (fiktive Druckerei) gilt damit für den Namen nicht mehr. Herstellerlogos bleiben weg. |
+| 13.11.2026 | Logo Wallimann als Pixelart: gewünscht, noch offen. Die Logodatei fehlt (wallimann.ch ist in der Arbeitsumgebung gesperrt). Alexander liefert die Datei und klärt, ob Name und Logo öffentlich im Netz verwendet werden dürfen. |
+| 13.11.2026 | Maschinen nach Alexanders Fotos neu gezeichnet: RA 76 anthrazit mit hohen weissen Rahmen und schwarzem Glas auf dunklem Podest, Leitstand mit grossem Bildschirm. SM 52 silbern mit dunklem Sockel. Digitaldruck weiss mit dunkler Front. Farben in `MF` (`src/grafik/zeichnen.ts`). |
+| 13.11.2026 | Neuer Bereich Medientechnologe (Leitstand im Fortdruck): Vier Farben (Cyan, Magenta, Yellow, Black) laufen vom Sollwert weg, Tasten für mehr und weniger Farbe. Passerkreuz Magenta unter dem Fadenzähler mit Steuerkreuz. Nur wenn alles in der Toleranz liegt, entstehen Gutbogen, sonst Makulatur. Logik in `src/logik/leitstand.ts`, Startwerte in `daten/leitstand.json` (Spielwerte, keine Fachwerte). Damit sind «Makulatur» und die Rolle am Leitstand aus der Liste «Später» vorgezogen. |
+| 13.11.2026 | Bestleistung je Bereich getrennt gespeichert. |
 | 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.

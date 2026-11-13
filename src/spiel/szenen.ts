@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
-import { EINSTELLUNGEN, ZAHLENMODELL } from '../logik/daten';
+import { EINSTELLUNGEN, LEITSTAND, ZAHLENMODELL } from '../logik/daten';
 import { maschinenName, werteAus, type Auswertung } from '../logik/auswertung';
 import { Schicht } from '../logik/schicht';
 import type { Auftrag, Farbigkeit } from '../logik/typen';
 import { BILDER, MASCHINE_H } from '../grafik/bilder.ts';
-import { ladeBestleistung, meldeErgebnis, setzeTon, tonAn } from './speicher';
+import { ladeBestleistung, meldeErgebnis, setzeTon, tonAn, type Bereich } from './speicher';
 import { spiele } from './ton';
 import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
 
@@ -41,11 +41,12 @@ export class LadeSzene extends Phaser.Scene {
   }
 }
 
-// ---------------------------------------------------------------- Startbild
+// ---------------------------------------------------------------- Auswahl des Bereichs
 
 export class StartSzene extends Phaser.Scene {
-  private knopf: Rechteck = { x: 100, y: 138, b: 120, h: 32 };
-  private kTon: Rechteck = { x: 244, y: 139, b: 70, h: 30 };
+  private kProduktion: Rechteck = { x: 3, y: 130, b: 118, h: 32 };
+  private kLeitstand: Rechteck = { x: 124, y: 130, b: 118, h: 32 };
+  private kTon: Rechteck = { x: 246, y: 131, b: 70, h: 30 };
 
   constructor() {
     super('Start');
@@ -56,39 +57,89 @@ export class StartSzene extends Phaser.Scene {
     m.r(0, 0, BREITE, HOEHE, FARBEN.leiste);
     bild(this, 0, 16, 'drucksaal');
     ZAHLENMODELL.maschinen.forEach((ma, i) => bild(this, 5 + i * 104, 74, `${ma.id}_steht_1`));
-    bild(this, this.knopf.x, this.knopf.y, 'schaltflaeche_start');
-    schrift(this, 160, 2, 'Druckerei', FARBEN.text, 'mitte', 10);
+    schrift(this, 160, 2, 'Druckerei Wallimann', FARBEN.text, 'mitte', 10);
     const hell = new Maler(this.add.graphics().setDepth(2));
-    hell.r(30, 20, 260, 48, FARBEN.papier, 0.92);
-    schrift(this, 160, 22, `Du bist Produktionsleiter. Verteile die Lauftaschen auf die ${ZAHLENMODELL.maschinen.length} Maschinen:`, FARBEN.textAufPapier, 'mitte');
-    schrift(this, 160, 33, 'Lauftasche antippen, dann Maschine antippen. Oder ziehen.', FARBEN.textAufPapier, 'mitte');
-    schrift(
-      this,
-      160,
-      44,
-      `Fertig bis zum Liefertermin: plus ${EINSTELLUNGEN.punktePuenktlich}. Zu spät: minus ${Math.abs(EINSTELLUNGEN.punkteVerspaetet)}.`,
-      FARBEN.textAufPapier,
-      'mitte',
-    );
-    schrift(this, 160, 55, `Eine Schicht dauert ${EINSTELLUNGEN.schichtDauer % 60 === 0 ? EINSTELLUNGEN.schichtDauer / 60 : minSek(EINSTELLUNGEN.schichtDauer)} Minuten.`, FARBEN.textAufPapier, 'mitte');
-    schrift(this, 160, 147, 'Schicht starten', FARBEN.knopfText, 'mitte', 10);
+    hell.r(90, 22, 140, 16, FARBEN.papier, 0.92);
+    schrift(this, 160, 24, 'Wähle deinen Bereich', FARBEN.textAufPapier, 'mitte', 10);
+
+    bild(this, this.kProduktion.x, this.kProduktion.y, 'schaltflaeche_bereich');
+    bild(this, this.kLeitstand.x, this.kLeitstand.y, 'schaltflaeche_bereich');
     bild(this, this.kTon.x, this.kTon.y, 'schaltflaeche_blaettern');
-    const tTon = schrift(this, this.kTon.x + 35, 148, tonAn() ? 'Ton: an' : 'Ton: aus', FARBEN.knopfText, 'mitte');
-    const best = ladeBestleistung();
-    if (best) {
-      schrift(this, 6, 142, 'Bestleistung', FARBEN.text);
-      schrift(this, 6, 153, `${tausender(best.punkte).replace('-', 'minus ')} Punkte`, FARBEN.text, 'links', 10);
-      if (best.datum) schrift(this, 6, 166, best.datum, FARBEN.text, 'links', 8);
-    }
+    schrift(this, this.kProduktion.x + 59, 139, 'Produktionsleiter', FARBEN.knopfText, 'mitte', 10);
+    schrift(this, this.kLeitstand.x + 59, 139, 'Medientechnologe', FARBEN.knopfText, 'mitte', 10);
+    const tTon = schrift(this, this.kTon.x + 35, 140, tonAn() ? 'Ton: an' : 'Ton: aus', FARBEN.knopfText, 'mitte');
+    const bestP = ladeBestleistung('produktion');
+    const bestL = ladeBestleistung('leitstand');
+    if (bestP) schrift(this, this.kProduktion.x + 59, 165, `Bestleistung: ${tausender(bestP.punkte).replace('-', 'minus ')} Punkte`, FARBEN.text, 'mitte', 8);
+    if (bestL) schrift(this, this.kLeitstand.x + 59, 165, `Bestleistung: ${tausender(bestL.punkte)} Gutbogen`, FARBEN.text, 'mitte', 8);
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      if (trifft(this.knopf, p.worldX, p.worldY)) {
-        spiele('start');
-        this.scene.start('Schicht');
+      if (trifft(this.kProduktion, p.worldX, p.worldY)) {
+        spiele('zuteilen');
+        this.scene.start('Einfuehrung', { bereich: 'produktion' });
+      } else if (trifft(this.kLeitstand, p.worldX, p.worldY)) {
+        spiele('zuteilen');
+        this.scene.start('Einfuehrung', { bereich: 'leitstand' });
       } else if (trifft(this.kTon, p.worldX, p.worldY)) {
         setzeTon(!tonAn());
         setze(tTon, tonAn() ? 'Ton: an' : 'Ton: aus');
         spiele('zuteilen');
+      }
+    });
+  }
+}
+
+// ---------------------------------------------------------------- Einführung in den Bereich
+
+export class EinfuehrungSzene extends Phaser.Scene {
+  private bereich: Bereich = 'produktion';
+  private kStart: Rechteck = { x: 100, y: 138, b: 120, h: 32 };
+  private kZurueck: Rechteck = { x: 6, y: 139, b: 70, h: 30 };
+
+  constructor() {
+    super('Einfuehrung');
+  }
+
+  init(daten: { bereich: Bereich }): void {
+    this.bereich = daten.bereich;
+  }
+
+  create(): void {
+    const produktion = this.bereich === 'produktion';
+    const m = new Maler(this.add.graphics());
+    m.r(0, 0, BREITE, HOEHE, FARBEN.leiste);
+    bild(this, 0, 16, 'drucksaal');
+    ZAHLENMODELL.maschinen.forEach((ma, i) => bild(this, 5 + i * 104, 74, `${ma.id}_steht_1`));
+    schrift(this, 160, 2, produktion ? 'Produktionsleiter' : 'Medientechnologe', FARBEN.text, 'mitte', 10);
+    const e = EINSTELLUNGEN;
+    const minuten = (sekunden: number): string => (sekunden % 60 === 0 ? String(sekunden / 60) : minSek(sekunden));
+    const zeilen = produktion
+      ? [
+          `Du verteilst die Lauftaschen auf die ${ZAHLENMODELL.maschinen.length} Maschinen:`,
+          'Lauftasche antippen, dann Maschine antippen. Oder ziehen.',
+          `Fertig bis zum Liefertermin: plus ${e.punktePuenktlich}. Zu spät: minus ${Math.abs(e.punkteVerspaetet)}.`,
+          `Eine Schicht dauert ${minuten(e.schichtDauer)} Minuten.`,
+        ]
+      : [
+          'Du überwachst den Fortdruck am Leitstand der RA 76.',
+          'Läuft eine Farbe weg: mit den Pfeilen mehr oder weniger Farbe geben.',
+          'Passt Magenta nicht: Passer mit dem Steuerkreuz zurückstellen.',
+          `Nur wenn alles stimmt, entstehen Gutbogen. Dauer: ${minuten(LEITSTAND.dauer)} Minuten.`,
+        ];
+    const hell = new Maler(this.add.graphics().setDepth(2));
+    hell.r(24, 20, 272, 48, FARBEN.papier, 0.92);
+    zeilen.forEach((z, i) => schrift(this, 160, 22 + i * 11, z, FARBEN.textAufPapier, 'mitte'));
+    bild(this, this.kStart.x, this.kStart.y, 'schaltflaeche_start');
+    bild(this, this.kZurueck.x, this.kZurueck.y, 'schaltflaeche_blaettern');
+    schrift(this, 160, 147, produktion ? 'Schicht starten' : 'Fortdruck starten', FARBEN.knopfText, 'mitte', 10);
+    schrift(this, this.kZurueck.x + 35, 148, 'Zurück', FARBEN.knopfText, 'mitte');
+    richteAus(this);
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (trifft(this.kStart, p.worldX, p.worldY)) {
+        spiele('start');
+        this.scene.start(produktion ? 'Schicht' : 'Leitstand');
+      } else if (trifft(this.kZurueck, p.worldX, p.worldY)) {
+        this.scene.start('Start');
       }
     });
   }
@@ -140,7 +191,7 @@ interface Figur {
 }
 
 /** Standplatz des Druckers je Maschine, gemessen ab dem linken Rand der Maschinenfläche. */
-const STANDPLATZ: Record<string, number> = { digital: 9, sm52: 15, ra76: 5 };
+const STANDPLATZ: Record<string, number> = { digital: 8, sm52: 18, ra76: 8 };
 const SCHRITT_TEMPO = 85;
 
 interface Meldung {
@@ -574,9 +625,10 @@ export class AuswertungSzene extends Phaser.Scene {
   private maler!: Maler;
   private bZurueck!: Bildobjekt;
   private bWeiter!: Bildobjekt;
-  private kZurueck: Rechteck = { x: 4, y: 146, b: 70, h: 30 };
-  private kWeiter: Rechteck = { x: 78, y: 146, b: 70, h: 30 };
-  private kNochmals: Rechteck = { x: 206, y: 146, b: 110, h: 30 };
+  private kZurueck: Rechteck = { x: 2, y: 146, b: 70, h: 30 };
+  private kWeiter: Rechteck = { x: 74, y: 146, b: 70, h: 30 };
+  private kAuswahl: Rechteck = { x: 176, y: 146, b: 70, h: 30 };
+  private kNochmals: Rechteck = { x: 248, y: 146, b: 70, h: 30 };
   private bestText = '';
 
   constructor() {
@@ -592,7 +644,7 @@ export class AuswertungSzene extends Phaser.Scene {
       this.bestText = 'Prüflauf: zählt nicht für die Bestleistung';
       return;
     }
-    const meldung = meldeErgebnis(w.punkte, w.puenktlich, w.verspaetet);
+    const meldung = meldeErgebnis('produktion', w.punkte, w.puenktlich, w.verspaetet);
     this.bestText = meldung.neu ? 'Neue Bestleistung!' : `Bestleistung: ${tausender(meldung.best.punkte).replace('-', 'minus ')} Punkte`;
     if (meldung.neu) spiele('bestleistung');
   }
@@ -616,15 +668,21 @@ export class AuswertungSzene extends Phaser.Scene {
     for (let i = 0; i < PRO_SEITE * 2; i++) this.zeilen.push(schrift(this, 8, 30 + Math.floor(i / 2) * 22 + (i % 2) * 9, '', FARBEN.textAufPapier));
     this.bZurueck = bild(this, this.kZurueck.x, this.kZurueck.y, 'schaltflaeche_blaettern_aus');
     this.bWeiter = bild(this, this.kWeiter.x, this.kWeiter.y, 'schaltflaeche_blaettern_aus');
-    bild(this, this.kNochmals.x, this.kNochmals.y, 'schaltflaeche_nochmals');
-    this.tSeite = schrift(this, 177, 155, '', FARBEN.text, 'mitte');
+    bild(this, this.kNochmals.x, this.kNochmals.y, 'schaltflaeche_nochmals_klein');
+    bild(this, this.kAuswahl.x, this.kAuswahl.y, 'schaltflaeche_blaettern');
+    schrift(this, this.kAuswahl.x + 35, 155, 'Auswahl', FARBEN.knopfText, 'mitte');
+    this.tSeite = schrift(this, 160, 155, '', FARBEN.text, 'mitte', 8);
     schrift(this, this.kZurueck.x + 35, 155, 'Zurück', FARBEN.knopfText, 'mitte');
     schrift(this, this.kWeiter.x + 35, 155, 'Weiter', FARBEN.knopfText, 'mitte');
-    schrift(this, this.kNochmals.x + 55, 154, 'Nochmals', FARBEN.knopfText, 'mitte', 10);
+    schrift(this, this.kNochmals.x + 35, 155, 'Nochmals', FARBEN.knopfText, 'mitte');
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (trifft(this.kNochmals, p.worldX, p.worldY)) {
         this.scene.start('Schicht');
+        return;
+      }
+      if (trifft(this.kAuswahl, p.worldX, p.worldY)) {
+        this.scene.start('Start');
         return;
       }
       if (trifft(this.kWeiter, p.worldX, p.worldY) && this.seite < this.seiten - 1) this.seite++;
@@ -669,6 +727,6 @@ export class AuswertungSzene extends Phaser.Scene {
     const mehrere = this.seiten > 1;
     setzeBild(this.bZurueck, mehrere && this.seite > 0 ? 'schaltflaeche_blaettern' : 'schaltflaeche_blaettern_aus');
     setzeBild(this.bWeiter, mehrere && this.seite < this.seiten - 1 ? 'schaltflaeche_blaettern' : 'schaltflaeche_blaettern_aus');
-    setze(this.tSeite, `Seite ${this.seite + 1}/${this.seiten}`);
+    setze(this.tSeite, `${this.seite + 1}/${this.seiten}`);
   }
 }

@@ -1,0 +1,14 @@
+{
+  "hinweis": "Startwerte für den Bereich Medientechnologe (Leitstand). Alle Werte sind Spielwerte zum Einstellen, keine Fachwerte. Farbwerte laufen von -1 (viel zu wenig Farbe) über 0 (Sollwert) bis +1 (viel zu viel).",
+  "dauer": 90,
+  "bogenProSekunde": 100,
+  "toleranz": 0.25,
+  "schrittFarbe": 0.12,
+  "driftAmAnfang": 0.025,
+  "driftAmEnde": 0.07,
+  "driftWechselVon": 3,
+  "driftWechselBis": 7,
+  "passerVon": 6,
+  "passerBis": 12,
+  "passerMax": 3
+}
