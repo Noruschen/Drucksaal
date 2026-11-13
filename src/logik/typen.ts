@@ -33,6 +33,8 @@ export interface Einstellungen {
   ersteLauftascheNach: number;
   /** So viele Lauftaschen liegen zum Schichtbeginn bereit: je eine aus den ersten Auflagenklassen */
   startLauftaschen?: number;
+  /** Anteil der Aufträge, bei denen der Drucker im Fortdruck um Hilfe ruft (0.2 = 20 Prozent) */
+  hilferufAnteil?: number;
   maxOffeneLauftaschen: number;
   maxWartendProMaschine: number;
   anteilVierVier: number;

@@ -17,6 +17,8 @@ type Bildobjekt = Phaser.GameObjects.Image;
 // Prüfhilfe: Mit ?tempo=10 in der Adresse läuft die Schicht zehnmal so schnell. Ohne Angabe gilt 1.
 const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get('tempo')) || 1);
 
+const IMMER_HILFE = new URLSearchParams(window.location.search).get('hilfe') === '1';
+
 function punkteText(punkte: number): string {
   return `Punkte ${tausender(punkte).replace('-', 'minus ')}`;
 }
@@ -220,6 +222,7 @@ export class EinfuehrungSzene extends Phaser.Scene {
           `Du verteilst die Lauftaschen auf die ${ZAHLENMODELL.maschinen.length} Maschinen:`,
           'Lauftasche antippen, dann Maschine antippen. Oder ziehen.',
           `Fertig bis zum Liefertermin: plus ${e.punktePuenktlich}. Zu spät: minus ${Math.abs(e.punkteVerspaetet)}.`,
+          'Ruft ein Drucker «Hilfe!», steht sein Fortdruck: Drucker antippen.',
           `Eine Schicht dauert ${minuten(e.schichtDauer)} Minuten.`,
         ],
         start: 'Schicht starten',
@@ -254,7 +257,7 @@ export class EinfuehrungSzene extends Phaser.Scene {
     // Das Textfeld richtet sich nach der breitesten Zeile, damit kein Text übersteht.
     const texte = seite.zeilen.map((z, i) => schrift(this, 160, 22 + i * 11, z, FARBEN.textAufPapier, 'mitte'));
     const feldBreite = Math.min(BREITE - 8, Math.ceil(Math.max(...texte.map((t) => t.width))) + 16);
-    hell.r(Math.round(160 - feldBreite / 2), 20, feldBreite, 48, FARBEN.papier, 0.92);
+    hell.r(Math.round(160 - feldBreite / 2), 20, feldBreite, 4 + seite.zeilen.length * 11, FARBEN.papier, 0.92);
     bild(this, this.kStart.x, this.kStart.y, 'schaltflaeche_start');
     bild(this, this.kZurueck.x, this.kZurueck.y, 'schaltflaeche_blaettern');
     schrift(this, 160, 147, seite.start, FARBEN.knopfText, 'mitte', 10);
@@ -300,6 +303,8 @@ interface MaschinenTeile {
   besetzt: Text;
   zustand: Text;
   plaettchen: Text[];
+  /** Text in der Sprechblase des Druckers */
+  hilfe: Text;
 }
 
 /** Drucker an der Maschine: holt die Lauftasche und trägt sie zur Maschine. Reine Darstellung, ohne Einfluss auf die Zeiten. */
@@ -355,6 +360,8 @@ export class SchichtSzene extends Phaser.Scene {
   private blinken: number[] = [];
   private endePause = 0;
   private uhrzeit = 0;
+  private blasenMaler!: Maler;
+  private warGestoert: boolean[] = [];
   private figuren: Figur[] = [];
   private meldungen: Meldung[] = [];
   /** Nummer des laufenden Auftrags je Maschine, um den Wechsel zum nächsten zu erkennen */
@@ -367,7 +374,8 @@ export class SchichtSzene extends Phaser.Scene {
   }
 
   create(): void {
-    this.schicht = new Schicht(ZAHLENMODELL, EINSTELLUNGEN, Math.random);
+    // Prüfhilfe: Mit ?hilfe=1 in der Adresse ruft der Drucker bei jedem Auftrag um Hilfe. Zählt nicht für die Bestleistung.
+    this.schicht = new Schicht(ZAHLENMODELL, IMMER_HILFE ? { ...EINSTELLUNGEN, hilferufAnteil: 1 } : EINSTELLUNGEN, Math.random);
     this.plaetze = Array.from({ length: EINSTELLUNGEN.maxOffeneLauftaschen }, () => null);
     this.auswahl = null;
     this.ziehen = null;
@@ -389,6 +397,8 @@ export class SchichtSzene extends Phaser.Scene {
     bild(this, 4, 3, 'uhr_hell');
     this.maler = new Maler(this.add.graphics().setDepth(2));
     this.geistMaler = new Maler(this.add.graphics().setDepth(8));
+    this.blasenMaler = new Maler(this.add.graphics().setDepth(6));
+    this.warGestoert = this.schicht.maschinen.map(() => false);
 
     this.tUhr = schrift(this, 16, 2, '', FARBEN.text);
     this.tMitte = schrift(this, 192, 2, '', FARBEN.text, 'mitte');
@@ -404,6 +414,7 @@ export class SchichtSzene extends Phaser.Scene {
         bild: bild(this, f.x, BODEN_Y + 2 - MASCHINE_H, `${ma.daten.id}_steht_1`),
         besetzt: schrift(this, mitte, 32, '', FARBEN.textAufBoden, 'mitte'),
         zustand: schrift(this, mitte, 92, '', FARBEN.textAufBoden, 'mitte'),
+        hilfe: schrift(this, 0, 0, 'Hilfe!', FARBEN.schlecht, 'mitte', 10).setDepth(7).setVisible(false),
         plaettchen: Array.from({ length: anzahl }, (_, k) => {
           const p = plaettchen(f, k);
           return schrift(this, p.x + Math.floor(p.b / 2), p.y, '', FARBEN.textAufPapier, 'mitte', 8);
@@ -536,8 +547,29 @@ export class SchichtSzene extends Phaser.Scene {
     this.meldungen = this.meldungen.filter((x) => x.alter <= 1.5);
   }
 
+  /** Fläche um den Drucker einer Maschine: antippen hilft ihm weiter. */
+  private helferFeld(i: number): Rechteck {
+    const fig = this.figuren[i];
+    return { x: fig.heimX - 18, y: fig.heimY - 48, b: 40, h: 52 };
+  }
+
+  /** Ruft an dieser Stelle ein Drucker um Hilfe? Ohne gewählte Lauftasche zählt die ganze Maschine. */
+  private hilferufBei(x: number, y: number): number {
+    for (let i = 0; i < this.schicht.maschinen.length; i++) {
+      if (!this.schicht.maschinen[i].gestoert) continue;
+      if (trifft(this.helferFeld(i), x, y) || (this.auswahl === null && trifft(maschinenFeld(i), x, y))) return i;
+    }
+    return -1;
+  }
+
   private runter(x: number, y: number): void {
     this.ziehen = null;
+    const ruf = this.hilferufBei(x, y);
+    if (ruf >= 0) {
+      this.schicht.hilf(this.schicht.maschinen[ruf].daten.id);
+      spiele('puenktlich');
+      return;
+    }
     const j = this.platzBei(x, y);
     if (j >= 0) {
       this.auswahl = this.plaetze[j];
@@ -604,6 +636,18 @@ export class SchichtSzene extends Phaser.Scene {
       }
     });
     const echt = delta / 1000;
+    // Neuer Hilferuf: Der Drucker bleibt an seinem Platz stehen und ruft.
+    s.maschinen.forEach((ma, i) => {
+      if (ma.gestoert && !this.warGestoert[i]) {
+        spiele('abgelehnt');
+        const fig = this.figuren[i];
+        fig.wege.length = 0;
+        fig.x = fig.heimX;
+        fig.y = fig.heimY;
+        fig.traegt = false;
+      }
+      this.warGestoert[i] = ma.gestoert;
+    });
     this.bewegeFiguren(echt * (s.abschnitt === 'zeitraffer' ? 3 : 1));
     this.pflegeMeldungen(echt);
 
@@ -629,6 +673,7 @@ export class SchichtSzene extends Phaser.Scene {
     const s = this.schicht;
     const m = this.maler;
     m.leeren();
+    this.blasenMaler.leeren();
     // Die Maschinen bewegen sich: zwei Bilder im Wechsel.
     const bewegung = 1 + (Math.floor(this.uhrzeit / 0.35) % 2);
 
@@ -653,7 +698,7 @@ export class SchichtSzene extends Phaser.Scene {
       const blinkt = this.blinken[i] > 0 && Math.floor(this.blinken[i] * 10) % 2 === 0;
       const mitte = f.x + f.b / 2;
 
-      const zustand = !phase ? 'steht' : phase.art === 'ruesten' ? 'ruestet' : 'druckt';
+      const zustand = !phase || ma.gestoert ? 'steht' : phase.art === 'ruesten' ? 'ruestet' : 'druckt';
       setzeBild(t.bild, `${ma.daten.id}_${zustand}_${zustand === 'steht' ? 1 : bewegung}`);
 
       // Schild mit dem Namen an der Wand
@@ -665,10 +710,15 @@ export class SchichtSzene extends Phaser.Scene {
       // Zustand und Fortschritt am Boden
       const zustandsfarbe = !phase ? FARBEN.maschine : phase.art === 'ruesten' ? FARBEN.warnung : FARBEN.gut;
       if (laufend && phase) {
-        setze(t.zustand, `${phase.bezeichnung} ${anzeigeSekunden(phase.dauer - laufend.phasenZeit)} s`);
-        m.balken(mitte - 35, 103, 70, 5, laufend.phasenZeit / phase.dauer, zustandsfarbe);
+        if (ma.gestoert) {
+          setze(t.zustand, 'Drucker antippen!', FARBEN.schlecht);
+          m.balken(mitte - 35, 103, 70, 5, laufend.phasenZeit / phase.dauer, FARBEN.schlecht);
+        } else {
+          setze(t.zustand, `${phase.bezeichnung} ${anzeigeSekunden(phase.dauer - laufend.phasenZeit)} s`, FARBEN.textAufBoden);
+          m.balken(mitte - 35, 103, 70, 5, laufend.phasenZeit / phase.dauer, zustandsfarbe);
+        }
       } else {
-        setze(t.zustand, 'steht');
+        setze(t.zustand, 'steht', FARBEN.textAufBoden);
         m.balken(mitte - 35, 103, 70, 5, 0, zustandsfarbe);
       }
 
@@ -691,6 +741,22 @@ export class SchichtSzene extends Phaser.Scene {
       }
 
       if (ziel) m.rahmen(f.x, f.y, f.b, f.h, FARBEN.akzent, 2);
+      // Sprechblase über dem Drucker
+      t.hilfe.setVisible(ma.gestoert);
+      if (ma.gestoert) {
+        const fig = this.figuren[i];
+        const hell = Math.floor(this.uhrzeit / 0.3) % 2 === 0;
+        const bx = Math.max(f.x + 1, Math.min(f.x + f.b - 39, Math.round(fig.heimX) - 6));
+        const by = Math.round(fig.heimY) - 36;
+        const b = this.blasenMaler;
+        b.r(bx + 1, by, 36, 16, FARBEN.schlecht);
+        b.r(bx, by + 1, 38, 14, FARBEN.schlecht);
+        b.r(bx + 1, by + 1, 36, 14, hell ? FARBEN.papier : '#ffe3de');
+        b.r(Math.round(fig.heimX) - 1, by + 16, 3, 2, FARBEN.schlecht);
+        b.r(Math.round(fig.heimX), by + 18, 1, 1, FARBEN.schlecht);
+        t.hilfe.setPosition(bx + 19, by + 1);
+        m.rahmen(f.x, f.y, f.b, f.h, FARBEN.schlecht, hell ? 2 : 1);
+      }
       if (blinkt) m.r(f.x, f.y, f.b, f.h, FARBEN.schlecht, 0.45);
     });
 
@@ -765,8 +831,8 @@ export class AuswertungSzene extends Phaser.Scene {
     this.auswertung = daten.auswertung;
     this.seite = 0;
     const w = daten.auswertung;
-    if (TEMPO > 1) {
-      // Mit der Prüfhilfe ?tempo= zählt die Schicht nicht für die Bestleistung.
+    if (TEMPO > 1 || IMMER_HILFE) {
+      // Mit den Prüfhilfen ?tempo= und ?hilfe= zählt die Schicht nicht für die Bestleistung.
       this.bestText = 'Prüflauf: zählt nicht für die Bestleistung';
       return;
     }
@@ -789,7 +855,7 @@ export class AuswertungSzene extends Phaser.Scene {
     this.zeilen = [];
     schrift(this, 4, 2, 'Auswertung der Schicht', FARBEN.text);
     schrift(this, BREITE - 4, 2, punkteText(w.punkte), FARBEN.text, 'rechts');
-    schrift(this, 4, 18, `pünktlich: ${w.puenktlich}      verspätet: ${w.verspaetet}`, FARBEN.textAufBoden);
+    schrift(this, 4, 18, `pünktlich: ${w.puenktlich}    verspätet: ${w.verspaetet}    Hilferufe: ${w.hilferufe} (${anzeigeSekunden(w.stillstand)} s Stillstand)`, FARBEN.textAufBoden);
     schrift(this, BREITE - 4, 18, this.bestText, FARBEN.textAufBoden, 'rechts');
     for (let i = 0; i < PRO_SEITE * 2; i++) this.zeilen.push(schrift(this, 8, 30 + Math.floor(i / 2) * 22 + (i % 2) * 9, '', FARBEN.textAufPapier));
     this.bZurueck = bild(this, this.kZurueck.x, this.kZurueck.y, 'schaltflaeche_blaettern_aus');

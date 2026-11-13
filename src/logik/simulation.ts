@@ -27,6 +27,8 @@ export function simuliere(modell: Zahlenmodell, einstellungen: Einstellungen, sc
     let sicherung = 0;
     while (schicht.abschnitt !== 'fertig' && sicherung++ < 100000) {
       schicht.schritt(dt);
+      // Die automatische Spielweise hilft dem Drucker sofort.
+      for (const m of schicht.maschinen) if (m.gestoert) schicht.hilf(m.daten.id);
       for (const a of [...schicht.offen]) {
         const prognose = schicht.prognose(a);
         const frei = Object.entries(prognose).filter((p): p is [string, number] => p[1] !== null);

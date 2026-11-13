@@ -10,12 +10,18 @@ export interface LaufenderAuftrag {
   phasenIndex: number;
   /** Bereits abgelaufene Zeit in der aktuellen Phase */
   phasenZeit: number;
+  /** Hilferuf des Druckers: in welcher Phase und nach wie vielen Sekunden dieser Phase. null = kein Hilferuf */
+  hilferuf: { phase: number; nach: number } | null;
 }
 
 export interface Maschinenzustand {
   daten: Maschinendaten;
   laufend: LaufenderAuftrag | null;
   wartend: Zuteilung[];
+  /** true = der Drucker ruft um Hilfe, der Fortdruck steht, bis der Produktionsleiter hilft */
+  gestoert: boolean;
+  /** Sekunden, die diese Maschine wegen Hilferufen gestanden ist */
+  stillstand: number;
 }
 
 export type Abschnitt = 'schicht' | 'zeitraffer' | 'fertig';
@@ -38,7 +44,7 @@ export class Schicht {
     readonly einstellungen: Einstellungen,
     private readonly zufall: Zufall,
   ) {
-    this.maschinen = modell.maschinen.map((daten) => ({ daten, laufend: null, wartend: [] }));
+    this.maschinen = modell.maschinen.map((daten) => ({ daten, laufend: null, wartend: [], gestoert: false, stillstand: 0 }));
     this.naechsterTakt = einstellungen.ersteLauftascheNach;
     // Zum Schichtbeginn liegen schon Lauftaschen bereit: je eine aus den ersten Auflagenklassen (klein, mittel, gross).
     const anzahl = Math.min(einstellungen.startLauftaschen ?? 0, einstellungen.auflagenKlassen.length, einstellungen.maxOffeneLauftaschen);
@@ -149,7 +155,26 @@ export class Schicht {
   }
 
   private starte(m: Maschinenzustand, z: Zuteilung): void {
-    m.laufend = { zuteilung: z, phasen: phasen(m.daten, z.auftrag.auflage, z.auftrag.farbigkeit), phasenIndex: 0, phasenZeit: 0 };
+    const liste = phasen(m.daten, z.auftrag.auflage, z.auftrag.farbigkeit);
+    // Bei einem Teil der Aufträge ruft der Drucker mitten im Fortdruck um Hilfe.
+    let hilferuf: LaufenderAuftrag['hilferuf'] = null;
+    const anteil = this.einstellungen.hilferufAnteil ?? 0;
+    if (anteil > 0 && this.zufall() < anteil) {
+      const druck = liste.findIndex((p) => p.art === 'drucken');
+      if (druck >= 0) hilferuf = { phase: druck, nach: liste[druck].dauer * (0.2 + 0.6 * this.zufall()) };
+    }
+    m.laufend = { zuteilung: z, phasen: liste, phasenIndex: 0, phasenZeit: 0, hilferuf };
+  }
+
+  /** Anzahl Hilferufe in dieser Schicht */
+  hilferufe = 0;
+
+  /** Der Produktionsleiter hilft dem Drucker: Der Fortdruck läuft weiter. */
+  hilf(maschinenId: string): boolean {
+    const m = this.maschinen.find((x) => x.daten.id === maschinenId);
+    if (!m || !m.gestoert) return false;
+    m.gestoert = false;
+    return true;
   }
 
   private werte(e: Ergebnis): void {
@@ -161,10 +186,26 @@ export class Schicht {
   private arbeite(m: Maschinenzustand, bis: number): void {
     let jetzt = this.zeit;
     while (m.laufend && jetzt < bis - EPS) {
+      if (m.gestoert) {
+        // Der Fortdruck steht, bis geholfen wird.
+        m.stillstand += bis - jetzt;
+        return;
+      }
       const l = m.laufend;
       const phase = l.phasen[l.phasenIndex];
       const rest = phase.dauer - l.phasenZeit;
-      const schritt = Math.min(rest, bis - jetzt);
+      let schritt = Math.min(rest, bis - jetzt);
+      // Kommt in diesem Schritt der Hilferuf, läuft die Maschine nur bis dorthin.
+      const ruf = l.hilferuf && l.hilferuf.phase === l.phasenIndex ? l.hilferuf.nach - l.phasenZeit : null;
+      if (ruf !== null && ruf <= schritt + EPS) {
+        schritt = Math.max(0, ruf);
+        l.phasenZeit += schritt;
+        jetzt += schritt;
+        l.hilferuf = null;
+        m.gestoert = true;
+        this.hilferufe++;
+        continue;
+      }
       l.phasenZeit += schritt;
       jetzt += schritt;
       if (l.phasenZeit >= phase.dauer - EPS) {

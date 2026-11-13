@@ -20,6 +20,7 @@ const ohneTakt: Einstellungen = {
   ...EINSTELLUNGEN,
   ersteLauftascheNach: 9999,
   startLauftaschen: 0,
+  hilferufAnteil: 0,
   schichtDauer: 180,
   terminFaktor: 2,
   terminZuschlag: 15,
@@ -179,6 +180,43 @@ describe('Auswertung', () => {
       prognose: { digital: null, sm52: 30, ra76: 40 },
     });
     expect(v).toEqual({ besteMaschine: 'sm52', warBesteWahl: true, frueherUm: 0 });
+  });
+});
+
+describe('Hilferuf des Druckers', () => {
+  it('der Fortdruck steht, bis der Produktionsleiter hilft, die Rüstzeit läuft normal', () => {
+    const s = neueSchicht({ ...ohneTakt, hilferufAnteil: 1 });
+    const a = s.auftragMit(3000, '4/0');
+    s.lauftascheAuflegen(a);
+    s.zuteilen(a.nummer, 'sm52');
+    const m = s.maschine('sm52');
+    // Rüsten 15 s ohne Störung
+    s.schritt(15);
+    expect(m.gestoert).toBe(false);
+    // Der Hilferuf kommt im Fortdruck (20 s lang), spätestens nach 80 Prozent
+    s.schritt(17);
+    expect(m.gestoert).toBe(true);
+    expect(s.hilferufe).toBe(1);
+    const stand = m.laufend!.phasenZeit;
+    s.schritt(30);
+    expect(m.laufend!.phasenZeit).toBeCloseTo(stand, 5);
+    expect(s.ergebnisse.length).toBe(0);
+    expect(m.stillstand).toBeGreaterThan(29);
+    expect(s.hilf('sm52')).toBe(true);
+    expect(s.hilf('sm52')).toBe(false);
+    s.schritt(20);
+    expect(s.ergebnisse.length).toBe(1);
+    // Fertig = 35 s Arbeit plus der Stillstand
+    nah(s.ergebnisse[0].fertigUm!, 35 + m.stillstand);
+  });
+  it('ohne Hilferuf (Anteil 0) ändert sich nichts', () => {
+    const s = neueSchicht();
+    const a = s.auftragMit(3000, '4/0');
+    s.lauftascheAuflegen(a);
+    s.zuteilen(a.nummer, 'sm52');
+    s.schritt(40);
+    expect(s.hilferufe).toBe(0);
+    nah(s.ergebnisse[0].fertigUm!, 35);
   });
 });
 

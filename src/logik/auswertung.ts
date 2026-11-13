@@ -20,6 +20,9 @@ export interface Auswertung {
   punkte: number;
   puenktlich: number;
   verspaetet: number;
+  /** Wie oft ein Drucker um Hilfe gerufen hat und wie lange die Maschinen deswegen standen */
+  hilferufe: number;
+  stillstand: number;
   verspaeteteAuftraege: VerspaeteterAuftrag[];
 }
 
@@ -52,6 +55,8 @@ export function werteAus(schicht: Schicht): Auswertung {
     punkte: schicht.punkte,
     puenktlich: schicht.puenktlich,
     verspaetet: schicht.verspaetet,
+    hilferufe: schicht.hilferufe,
+    stillstand: schicht.maschinen.reduce((summe, m) => summe + m.stillstand, 0),
     verspaeteteAuftraege: verspaetete,
   };
 }

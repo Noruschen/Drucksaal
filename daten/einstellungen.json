@@ -4,6 +4,7 @@
   "takt": 11,
   "ersteLauftascheNach": 11,
   "startLauftaschen": 3,
+  "hilferufAnteil": 0.2,
   "maxOffeneLauftaschen": 4,
   "maxWartendProMaschine": 3,
   "anteilVierVier": 0.3333,
