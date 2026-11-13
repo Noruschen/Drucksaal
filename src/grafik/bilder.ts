@@ -10,6 +10,8 @@ import {
   RA76_BREITE,
   SM52_BREITE,
   zeichneDigital,
+  zeichnePortraitMedientechnologe,
+  zeichnePortraitProduktionsleiter,
   zeichneRA76,
   zeichneSM52,
   zeichneTaste,
@@ -144,6 +146,8 @@ export const BILDER: Bild[] = [
     beschrieb: 'Schaltfläche «Nochmals», schmal (grün)',
     zeichne: (l) => zeichneSchaltflaeche(l, { ...STIL, farben: { ...F, knopf: F.gut, knopfHell: '#8fd69b', knopfDunkel: '#2f8540' } }, 0, 0, 70, 30),
   },
+  { name: 'portrait_medientechnologe', breite: 40, hoehe: 46, beschrieb: 'Porträt Medientechnologe für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitMedientechnologe(l) },
+  { name: 'portrait_produktionsleiter', breite: 40, hoehe: 46, beschrieb: 'Porträt Produktionsleiter für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitProduktionsleiter(l) },
   {
     name: 'logo_wallimann',
     breite: 104,

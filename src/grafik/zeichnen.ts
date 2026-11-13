@@ -639,3 +639,128 @@ export function zeichneTaste(l: Leinwand, f: Farben, b: number, h: number, richt
     else l.rechteck(mx + 3 - i, my - i, 1, i * 2, MF.weiss);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Porträts für die Wahl des Bereichs, nach Alexanders Fotos (13.11.2026). Je 40 x 46.
+// ---------------------------------------------------------------------------
+
+const PF = {
+  grund: '#dfe1e3',
+  haut: '#e8b98f',
+  hautSchatten: '#cf9a72',
+  polo: '#1d1f24',
+  kragen: '#33373f',
+  weiss: '#f4f5f6',
+  brille: '#20242e',
+  lippe: '#a85a52',
+  // Medientechnologe: braune Locken, Schnauz
+  locken: '#5a3a22',
+  lockenDunkel: '#3f2817',
+  lockenHell: '#7d5433',
+  schnauz: '#9a6236',
+  auge: '#6f8f8a',
+  // Produktionsleiter: dunkles, leicht graues Haar, Vollbart
+  haar: '#3a3532',
+  haarHell: '#5c5753',
+  grau: '#8a8784',
+} as const;
+
+function poloUndHals(l: Leinwand): void {
+  l.rechteck(0, 0, 40, 46, PF.grund);
+  l.rechteck(17, 28, 6, 7, PF.hautSchatten);
+  l.rechteck(5, 35, 30, 2, PF.polo);
+  l.rechteck(2, 37, 36, 9, PF.polo);
+  l.rechteck(0, 40, 40, 6, PF.polo);
+  l.rechteck(18, 34, 4, 4, PF.haut);
+  l.rechteck(12, 33, 6, 4, PF.kragen);
+  l.rechteck(22, 33, 6, 4, PF.kragen);
+  l.rechteck(19, 38, 2, 8, PF.kragen);
+  // Gesticktes Logo auf der Brust
+  l.rechteck(28, 41, 6, 1, PF.weiss);
+  l.rechteck(27, 43, 7, 1, PF.weiss);
+}
+
+/** Porträt Medientechnologe: braune Locken, runde Brille, Schnauz, schwarzes Polo. */
+export function zeichnePortraitMedientechnologe(l: Leinwand): void {
+  poloUndHals(l);
+  // Kopf
+  l.rechteck(12, 10, 16, 19, PF.haut);
+  l.rechteck(14, 29, 12, 2, PF.haut);
+  l.rechteck(10, 17, 2, 5, PF.haut);
+  l.rechteck(28, 17, 2, 5, PF.haut);
+  // Locken
+  l.rechteck(11, 4, 18, 8, PF.locken);
+  l.rechteck(9, 6, 2, 6, PF.locken);
+  l.rechteck(29, 6, 2, 6, PF.locken);
+  l.rechteck(13, 2, 5, 2, PF.locken);
+  l.rechteck(20, 1, 6, 3, PF.locken);
+  l.rechteck(17, 3, 3, 1, PF.locken);
+  l.rechteck(12, 12, 5, 1, PF.locken);
+  l.rechteck(23, 12, 4, 1, PF.locken);
+  l.rechteck(11, 12, 1, 5, PF.lockenDunkel);
+  l.rechteck(28, 12, 1, 5, PF.lockenDunkel);
+  for (const [x, y] of [[13, 5], [18, 4], [23, 6], [26, 4], [15, 8], [21, 9], [10, 8], [28, 9], [22, 2], [14, 3]]) l.rechteck(x, y, 1, 1, PF.lockenHell);
+  for (const [x, y] of [[16, 6], [20, 7], [25, 8], [12, 9], [24, 3], [18, 10]]) l.rechteck(x, y, 1, 1, PF.lockenDunkel);
+  // Augenbrauen und Augen
+  l.rechteck(14, 15, 4, 1, PF.lockenDunkel);
+  l.rechteck(22, 15, 4, 1, PF.lockenDunkel);
+  l.rechteck(15, 18, 2, 2, PF.auge);
+  l.rechteck(23, 18, 2, 2, PF.auge);
+  // Runde Brille
+  for (const bx of [13, 21]) {
+    l.rechteck(bx + 1, 16, 4, 1, PF.brille);
+    l.rechteck(bx + 1, 21, 4, 1, PF.brille);
+    l.rechteck(bx, 17, 1, 4, PF.brille);
+    l.rechteck(bx + 5, 17, 1, 4, PF.brille);
+  }
+  l.rechteck(19, 18, 2, 1, PF.brille);
+  l.rechteck(11, 18, 2, 1, PF.brille);
+  l.rechteck(27, 18, 2, 1, PF.brille);
+  // Nase, Schnauz, Mund
+  l.rechteck(19, 21, 2, 3, PF.hautSchatten);
+  l.rechteck(15, 25, 10, 2, PF.schnauz);
+  l.rechteck(14, 26, 1, 1, PF.schnauz);
+  l.rechteck(25, 26, 1, 1, PF.schnauz);
+  l.rechteck(17, 27, 6, 1, PF.lippe);
+}
+
+/** Porträt Produktionsleiter: dunkles, leicht graues Haar, Vollbart, breites Lachen, schwarzes Polo. */
+export function zeichnePortraitProduktionsleiter(l: Leinwand): void {
+  poloUndHals(l);
+  // Kopf
+  l.rechteck(11, 10, 18, 19, PF.haut);
+  l.rechteck(9, 17, 2, 5, PF.haut);
+  l.rechteck(29, 17, 2, 5, PF.haut);
+  // Haar, oben zerzaust, an den Seiten grau
+  l.rechteck(11, 5, 18, 7, PF.haar);
+  l.rechteck(13, 3, 3, 2, PF.haar);
+  l.rechteck(18, 2, 4, 3, PF.haar);
+  l.rechteck(24, 3, 3, 2, PF.haar);
+  l.rechteck(27, 4, 2, 2, PF.haar);
+  l.rechteck(10, 7, 1, 4, PF.haar);
+  l.rechteck(29, 7, 1, 4, PF.haar);
+  l.rechteck(10, 11, 2, 5, PF.grau);
+  l.rechteck(28, 11, 2, 5, PF.grau);
+  l.rechteck(12, 12, 3, 1, PF.haar);
+  l.rechteck(25, 12, 3, 1, PF.haar);
+  for (const [x, y] of [[14, 6], [19, 4], [23, 7], [26, 6], [16, 9], [21, 8], [12, 8]]) l.rechteck(x, y, 1, 1, PF.haarHell);
+  // Augenbrauen und lachende Augen
+  l.rechteck(13, 15, 5, 1, PF.haar);
+  l.rechteck(22, 15, 5, 1, PF.haar);
+  l.rechteck(14, 18, 3, 1, PF.brille);
+  l.rechteck(23, 18, 3, 1, PF.brille);
+  // Nase
+  l.rechteck(19, 19, 2, 4, PF.hautSchatten);
+  // Vollbart
+  l.rechteck(11, 21, 2, 8, PF.haar);
+  l.rechteck(27, 21, 2, 8, PF.haar);
+  l.rechteck(12, 24, 16, 7, PF.haar);
+  l.rechteck(14, 31, 12, 1, PF.haar);
+  l.rechteck(15, 23, 10, 1, PF.haar);
+  l.rechteck(12, 28, 2, 2, PF.grau);
+  l.rechteck(26, 28, 2, 2, PF.grau);
+  l.rechteck(18, 30, 4, 1, PF.grau);
+  // Lachen
+  l.rechteck(16, 25, 8, 2, PF.weiss);
+  l.rechteck(16, 27, 8, 1, PF.lippe);
+}

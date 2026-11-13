@@ -44,9 +44,10 @@ export class LadeSzene extends Phaser.Scene {
 // ---------------------------------------------------------------- Auswahl des Bereichs
 
 export class StartSzene extends Phaser.Scene {
-  private kProduktion: Rechteck = { x: 3, y: 130, b: 118, h: 32 };
-  private kLeitstand: Rechteck = { x: 124, y: 130, b: 118, h: 32 };
-  private kTon: Rechteck = { x: 246, y: 131, b: 70, h: 30 };
+  // Karten mit den Porträts: antippen führt in den Bereich.
+  private kLeitstand: Rechteck = { x: 3, y: 128, b: 118, h: 50 };
+  private kProduktion: Rechteck = { x: 124, y: 128, b: 118, h: 50 };
+  private kTon: Rechteck = { x: 246, y: 138, b: 70, h: 30 };
 
   constructor() {
     super('Start');
@@ -64,16 +65,21 @@ export class StartSzene extends Phaser.Scene {
     schild.r(102, 21, 116, 27, FARBEN.papier);
     bild(this, 108, 26, 'logo_wallimann', 3);
 
-    bild(this, this.kProduktion.x, this.kProduktion.y, 'schaltflaeche_bereich');
-    bild(this, this.kLeitstand.x, this.kLeitstand.y, 'schaltflaeche_bereich');
-    bild(this, this.kTon.x, this.kTon.y, 'schaltflaeche_blaettern');
-    schrift(this, this.kProduktion.x + 59, 139, 'Produktionsleiter', FARBEN.knopfText, 'mitte', 10);
-    schrift(this, this.kLeitstand.x + 59, 139, 'Medientechnologe', FARBEN.knopfText, 'mitte', 10);
-    const tTon = schrift(this, this.kTon.x + 35, 140, tonAn() ? 'Ton: an' : 'Ton: aus', FARBEN.knopfText, 'mitte');
     const bestP = ladeBestleistung('produktion');
     const bestL = ladeBestleistung('leitstand');
-    if (bestP) schrift(this, this.kProduktion.x + 59, 165, `Bestleistung: ${tausender(bestP.punkte).replace('-', 'minus ')} Punkte`, FARBEN.text, 'mitte', 8);
-    if (bestL) schrift(this, this.kLeitstand.x + 59, 165, `Bestleistung: ${tausender(bestL.punkte)} Gutbogen`, FARBEN.text, 'mitte', 8);
+    const karte = (k: Rechteck, portrait: string, titel: string, zeile: string, best: string): void => {
+      schild.r(k.x, k.y, k.b, k.h, FARBEN.umriss);
+      schild.r(k.x + 1, k.y + 1, k.b - 2, k.h - 2, FARBEN.akzent);
+      schild.r(k.x + 1, k.y + k.h - 4, k.b - 2, 3, FARBEN.knopfDunkel);
+      bild(this, k.x + 3, k.y + 2, portrait, 3);
+      schrift(this, k.x + 46, k.y + 3, titel, FARBEN.knopfText, 'links', 10);
+      schrift(this, k.x + 46, k.y + 17, zeile, FARBEN.knopfText, 'links', 8);
+      if (best) schrift(this, k.x + 46, k.y + 30, best, FARBEN.knopfText, 'links', 8);
+    };
+    karte(this.kLeitstand, 'portrait_medientechnologe', 'Medientechnologe', 'Farbe und Passer', bestL ? `Beste: ${tausender(bestL.punkte)} Gutbogen` : '');
+    karte(this.kProduktion, 'portrait_produktionsleiter', 'Produktionsleiter', 'Lauftaschen verteilen', bestP ? `Beste: ${tausender(bestP.punkte).replace('-', 'minus ')} Punkte` : '');
+    bild(this, this.kTon.x, this.kTon.y, 'schaltflaeche_blaettern');
+    const tTon = schrift(this, this.kTon.x + 35, this.kTon.y + 9, tonAn() ? 'Ton: an' : 'Ton: aus', FARBEN.knopfText, 'mitte');
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (trifft(this.kProduktion, p.worldX, p.worldY)) {
