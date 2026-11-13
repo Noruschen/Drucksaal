@@ -54,6 +54,14 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | schaltflaeche_bereich.png | 118 x 32 | Schaltfläche zur Wahl des Bereichs | Skript |
 | schaltflaeche_nochmals_klein.png | 70 x 30 | Schaltfläche «Nochmals», schmal (grün) | Skript |
 | arbeitsplatz.png | 34 x 30 | Computer-Arbeitsplatz des Produktionsleiters (Tisch, Bildschirm mit Planung, Stuhl) | Skript |
+| portrait_polygraf.png | 40 x 46 | Porträt Polygraf für die Wahl des Berufs (nach Foto) | Skript |
+| vorstufenplatz.png | 34 x 30 | Arbeitsplatz der Medienvorstufe (Tisch, Bildschirm mit Seitenlayout, Stuhl) | Skript |
+| seite_titel.png | 36 x 30 | Bereich Polygraf: Seitenelement Titel | Skript |
+| seite_text.png | 36 x 30 | Bereich Polygraf: Seitenelement Text | Skript |
+| seite_foto.png | 36 x 30 | Bereich Polygraf: Seitenelement Foto | Skript |
+| seite_grafik.png | 36 x 30 | Bereich Polygraf: Seitenelement Grafik | Skript |
+| taste_blaettern_links.png | 30 x 40 | Wahl des Berufs: nach links blättern | Skript |
+| taste_blaettern_rechts.png | 30 x 40 | Wahl des Berufs: nach rechts blättern | Skript |
 | portrait_medientechnologe.png | 40 x 46 | Porträt Medientechnologe für die Wahl des Bereichs (nach Foto) | Skript |
 | portrait_produktionsleiter.png | 40 x 46 | Porträt Produktionsleiter für die Wahl des Bereichs (nach Foto) | Skript |
 | logo_wallimann.png | 104 x 17 | Logo Wallimann als Pixelart (roter Schriftzug). Umgerechnet aus dem Logo von wallimann.ch, nicht vom Skript gezeichnet | von Hand gezeichnet |
@@ -62,4 +70,4 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 
 `#14181d` `#1aa7e0` `#20242e` `#262a30` `#2678a3` `#2b3445` `#3b4148` `#3d4855` `#3fa7d6` `#434a54` `#49b35a` `#525a63` `#56657a` `#5b6470` `#7b8695` `#8d98a6` `#8f979f` `#8fd3f0` `#9eadbd` `#c9ced3` `#c9d3dd` `#cfd3d0` `#d93a8a` `#d94a3d` `#e6e9ec` `#e6ebf0` `#e8b98f` `#eaf4fb` `#f1f0ea` `#f2a530` `#f2c230` `#f4d51e` `#f4f5f6` `#fbfbf6` `#ffffff`
 
-Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#1d1f24` `#2f8540` `#33373f` `#3a3532` `#3d4a5e` `#3f2817` `#5a3a22` `#5c5753` `#6f8f8a` `#7c8aa0` `#7d5433` `#8a8784` `#8fd69b` `#9a6236` `#a85a52` `#cf9a72` `#dfe1e3` `#f6c9c2`
+Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#1d1f24` `#2f8540` `#33373f` `#3a281e` `#3a3532` `#3b3431` `#3d4a5e` `#3f2817` `#4a3426` `#57392a` `#5a3a22` `#5c5753` `#6f8f8a` `#7c8aa0` `#7d5433` `#8a8784` `#8fd69b` `#9a6236` `#a85a52` `#bd8f6d` `#cf9a72` `#dfe1e3` `#f6c9c2`

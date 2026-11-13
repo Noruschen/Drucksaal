@@ -14,6 +14,7 @@ Stand: 13.11.2026
 | M3 | Bestleistung speichern, Home-Bildschirm, Ton, Feinschliff (Drucker-Figur, Punktemeldung) | erledigt, läuft am iPhone (Rückmeldung 13.11.2026) |
 | M4 | Rahmen «Druckerei Wallimann» mit Wahl des Bereichs, Maschinen nach Alexanders Fotos | erledigt, Logo als Firmenschild im Startbild |
 | M5 | Bereich Medientechnologe: Leitstand mit Farbe und Passer | erste Fassung gebaut und getestet, **wartet auf Alexanders Urteil** |
+| M6 | Berufswahl zum Blättern, Bereich Polygraf (Seite nach Lauftasche nachbauen, Zeitlimit) | erste Fassung gebaut und getestet, **wartet auf Alexanders Urteil** |
 
 ## Offen bei Alexander
 1. Im Betrieb klären, ob Name und Logo Wallimann im öffentlichen Spiel bleiben dürfen.

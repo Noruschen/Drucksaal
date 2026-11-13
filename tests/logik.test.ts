@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { anzeigeSekunden, dauer, phasen, schnellsteDauer, tausender } from '../src/logik/dauer';
-import { EINSTELLUNGEN, LEITSTAND, ZAHLENMODELL } from '../src/logik/daten';
+import { EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL } from '../src/logik/daten';
+import { Vorstufe } from '../src/logik/vorstufe';
 import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
@@ -277,5 +278,82 @@ describe('Leitstand (Bereich Medientechnologe)', () => {
     expect(l.fertig).toBe(true);
     expect(w.gutbogen + w.makulatur).toBe(LEITSTAND.dauer * LEITSTAND.bogenProSekunde);
     expect(w.makulatur).toBeGreaterThan(0);
+  });
+});
+
+describe('Vorstufe (Bereich Polygraf)', () => {
+  const neu = () => new Vorstufe({ ...VORSTUFE, dauer: 180, zeitlimit: 20, punktePuenktlich: 100, punkteVerspaetet: -50 }, zufallMitStartwert(4));
+  /** Baut die Vorlage richtig nach. */
+  const baueNach = (v: Vorstufe) => {
+    const ziel = [...v.vorlage.seite];
+    let letzte = v.setze('', -1);
+    ziel.forEach((element, feld) => {
+      if (element) letzte = v.setze(element, feld);
+    });
+    return letzte;
+  };
+  it('die Vorlage hat vier Elemente auf sechs Feldern', () => {
+    const v = neu();
+    expect(v.vorlage.seite.length).toBe(6);
+    expect(v.vorlage.seite.filter((x) => x !== null).sort()).toEqual([...VORSTUFE.elemente].sort());
+  });
+  it('richtig nachgebaut innerhalb des Zeitlimits: plus 100 und nächste Lauftasche', () => {
+    const v = neu();
+    v.schritt(12);
+    expect(baueNach(v)).toEqual({ art: 'fertig', puenktlich: true });
+    expect(v.punkte).toBe(100);
+    expect(v.vorlage.nummer).toBe(2);
+    expect(v.arbeit.every((x) => x === null)).toBe(true);
+    expect(v.vorlage.limit).toBeCloseTo(32, 5);
+  });
+  it('nach dem Zeitlimit fertig: Punktabzug', () => {
+    const v = neu();
+    v.schritt(25);
+    expect(baueNach(v)).toEqual({ art: 'fertig', puenktlich: false });
+    expect(v.punkte).toBe(-50);
+    expect(v.verspaetet).toBe(1);
+  });
+  it('falsch gesetzte Elemente werden wieder entfernt, die richtigen bleiben', () => {
+    const v = neu();
+    const ziel = [...v.vorlage.seite];
+    const belegt = ziel.map((e, i) => (e ? i : -1)).filter((i) => i >= 0);
+    // Zwei Elemente vertauschen, die anderen richtig setzen.
+    v.setze(ziel[belegt[0]]!, belegt[1]);
+    v.setze(ziel[belegt[1]]!, belegt[0]);
+    v.setze(ziel[belegt[2]]!, belegt[2]);
+    const antwort = v.setze(ziel[belegt[3]]!, belegt[3]);
+    expect(antwort.art).toBe('falsch');
+    expect(v.fehlversuche).toBe(1);
+    expect(v.arbeit[belegt[0]]).toBeNull();
+    expect(v.arbeit[belegt[2]]).toBe(ziel[belegt[2]]);
+    expect(v.vorlage.nummer).toBe(1);
+  });
+  it('ein Element lässt sich verschieben und wegnehmen', () => {
+    const v = neu();
+    v.setze('titel', 0);
+    v.setze('titel', 3);
+    expect(v.arbeit[0]).toBeNull();
+    expect(v.platzVon('titel')).toBe(3);
+    v.entferne(3);
+    expect(v.platzVon('titel')).toBe(-1);
+  });
+  it('nach drei Minuten ist Schluss, eine abgelaufene offene Lauftasche zählt als verspätet', () => {
+    const v = neu();
+    v.schritt(170);
+    baueNach(v);
+    const punkte = v.punkte;
+    v.schritt(5);
+    v.schritt(100);
+    expect(v.fertig).toBe(true);
+    expect(v.zeit).toBe(180);
+    // Die zweite Lauftasche erschien bei 170 s, ihr Limit (190 s) ist bei Schichtende noch nicht abgelaufen.
+    expect(v.punkte).toBe(punkte);
+    expect(v.setze('titel', 0)).toEqual({ art: 'nichts' });
+    expect(v.auswertung().fertigeSeiten).toBe(1);
+    expect(v.auswertung().offenVerspaetet).toBe(false);
+    // Ohne jede Eingabe: Die erste Lauftasche läuft ab und zählt am Schluss als verspätet, fertig ist keine Seite.
+    const leer = neu();
+    leer.schritt(200);
+    expect(leer.auswertung()).toMatchObject({ fertigeSeiten: 0, verspaetet: 1, punkte: -50, offenVerspaetet: true });
   });
 });

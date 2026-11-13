@@ -12,6 +12,7 @@ Es spielen Alexander und später seine Lernenden (1. Lehrjahr, Medientechnologen
 Einfaches Pixelart-Spiel im Browser, am Mac und am iPhone, ohne Installation und ohne Anmeldung.
 Bereich Produktionsleiter: Der Spieler sieht Lauftaschen und verteilt die Aufträge auf drei Maschinen: RA 76, SM 52, Digitaldruck.
 Bereich Medientechnologe (seit 13.11.2026): Der Spieler überwacht am Leitstand Farbe und Passer im Fortdruck.
+Bereich Polygraf (seit 13.11.2026): Der Spieler baut in der Medienvorstufe Seiten nach der Lauftasche nach.
 
 ## Ablauf einer Runde
 1. Eine Schicht dauert 180 Sekunden. In dieser Zeit kommen Lauftaschen. Danach kommen keine neuen, die Maschinen arbeiten im Zeitraffer fertig, dann folgt die Auswertung.
@@ -90,6 +91,9 @@ Teil von M1: Ein automatischer Test spielt viele Schichten durch und teilt jede 
 | 13.11.2026 | Wahl des Bereichs über zwei Porträtkarten statt Schaltflächen: Alexander hat zwei Fotos geliefert, die Porträts sind danach als Pixelart gezeichnet (40 x 46, `zeichnePortrait...` in `src/grafik/zeichnen.ts`). Porträt 1 ist der Medientechnologe, Porträt 2 der Produktionsleiter. Die Fotos liegen nicht im Projekt. |
 | 13.11.2026 | Startbild auf Alexanders Wunsch: Drucksaal mit Logo und den drei Maschinen bleibt. Die Personen stehen im Drucksaal statt auf Karten: links der Produktionsleiter über einem Computer-Arbeitsplatz neben dem Digitaldruck, rechts der Medientechnologe über der RA 76. Antippbar ist jeweils die ganze linke und rechte Spalte. Der Ton-Schalter liegt unten in der Mitte. |
 | 13.11.2026 | Alexander wünscht: Der Bereich Produktionsleiter startet gleich mit 3 Lauftaschen (klein, mittel, gross), damit alle drei Maschinen sofort besetzt werden können. Umgesetzt über `startLauftaschen` in `daten/einstellungen.json`. Der Test fiel damit auf 68 Prozent pünktlich, darum Takt von 10 auf 11 Sekunden (75 Prozent). Die nächste Lauftasche kommt nach 11 Sekunden. |
+| 13.11.2026 | Startbild: bleibt mit Arbeitsplätzen und Logo. Unten steht «Beruf auswählen» statt des Ton-Schalters. Danach folgt die Berufswahl zum Blättern (Pfeile oder Wischen): Polygraf, Produktionsleiter, Medientechnologe. Der Ton-Schalter liegt jetzt dort. Die Personen im Startbild führen direkt zu ihrem Beruf in der Berufswahl. |
+| 13.11.2026 | Neuer Bereich Polygraf (Medienvorstufe), nach Alexanders Vorgabe: Links zeigt die Lauftasche eine Seite mit vier Elementen (Titel, Text, Foto, Grafik) auf sechs Feldern. Rechts am Rechner wird sie nachgebaut: Element antippen, dann das Feld antippen. Stimmt die Seite, kommt die nächste Lauftasche, bis 3 Minuten um sind. Zeitlimit pro Lauftasche 20 Sekunden (von Claude festgelegt): rechtzeitig plus 100, später minus 50. Logik in `src/logik/vorstufe.ts`, Startwerte in `daten/vorstufe.json` (Spielwerte). Porträt des Polygrafen nach Alexanders Foto. |
+| 13.11.2026 | Annahmen zum Polygrafen (nicht einzeln bestätigt): Sind alle vier Elemente gesetzt und die Seite stimmt nicht, werden nur die falschen wieder entfernt (zählt als Fehlversuch, ohne Punktabzug). Eine am Schichtende offene Lauftasche zählt nur als verspätet, wenn ihr Zeitlimit schon abgelaufen ist. |
 | 12.11.2026 | Prüfhilfe: `?tempo=10` an der Adresse lässt die Schicht zehnmal so schnell laufen. |
 
 Die Annahmen A bis G hat Alexander nicht einzeln bestätigt. Sie gelten über «empfohlen» und lassen sich ändern.

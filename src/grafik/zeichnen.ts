@@ -792,3 +792,104 @@ export function zeichneArbeitsplatz(l: Leinwand): void {
   // Tastatur
   l.rechteck(13, 14, 9, 1, MF.anthrazit);
 }
+
+/** Porträt Polygraf: dunkles Haar, dunkle runde Brille, Dreitagebart, Lachen, schwarzes Polo. Nach Alexanders Foto (13.11.2026). */
+export function zeichnePortraitPolygraf(l: Leinwand): void {
+  const haar = '#3a281e';
+  const haarHell = '#57392a';
+  const brille = '#3b3431';
+  const bart = '#bd8f6d';
+  poloUndHals(l);
+  l.rechteck(12, 10, 16, 19, PF.haut);
+  l.rechteck(14, 29, 12, 2, PF.haut);
+  l.rechteck(10, 17, 2, 5, PF.haut);
+  l.rechteck(28, 17, 2, 5, PF.haut);
+  // Haar, zur Seite gekämmt
+  l.rechteck(11, 5, 18, 6, haar);
+  l.rechteck(13, 3, 14, 2, haar);
+  l.rechteck(12, 11, 11, 1, haar);
+  l.rechteck(12, 12, 6, 1, haar);
+  l.rechteck(11, 11, 1, 5, haar);
+  l.rechteck(28, 11, 1, 4, haar);
+  for (const [x, y] of [[15, 5], [20, 4], [24, 6], [18, 8], [22, 9], [14, 7]]) l.rechteck(x, y, 1, 1, haarHell);
+  // Augenbrauen, Augen, Brille
+  l.rechteck(14, 15, 4, 1, haar);
+  l.rechteck(22, 15, 4, 1, haar);
+  l.rechteck(15, 19, 2, 1, '#4a3426');
+  l.rechteck(23, 19, 2, 1, '#4a3426');
+  for (const bx of [13, 21]) {
+    l.rechteck(bx + 1, 16, 4, 1, brille);
+    l.rechteck(bx + 1, 21, 4, 1, brille);
+    l.rechteck(bx, 17, 1, 4, brille);
+    l.rechteck(bx + 5, 17, 1, 4, brille);
+  }
+  l.rechteck(19, 18, 2, 1, brille);
+  l.rechteck(11, 18, 2, 1, brille);
+  l.rechteck(27, 18, 2, 1, brille);
+  l.rechteck(19, 21, 2, 3, PF.hautSchatten);
+  // Dreitagebart und Lachen
+  l.rechteck(12, 23, 2, 6, bart);
+  l.rechteck(26, 23, 2, 6, bart);
+  l.rechteck(13, 27, 14, 3, bart);
+  l.rechteck(14, 30, 12, 1, bart);
+  l.rechteck(15, 24, 10, 1, bart);
+  l.rechteck(16, 25, 8, 2, PF.weiss);
+  l.rechteck(16, 27, 8, 1, PF.lippe);
+}
+
+/** Arbeitsplatz der Medienvorstufe: Tisch, grosser Bildschirm mit Seitenlayout, Stuhl. 34 x 30. */
+export function zeichneVorstufenplatz(l: Leinwand): void {
+  l.rechteck(0, 28, 34, 2, MF.schatten);
+  l.rechteck(1, 12, 2, 12, MF.anthrazit);
+  l.rechteck(1, 20, 9, 2, MF.anthrazit);
+  l.rechteck(5, 22, 1, 5, MF.anthrazitDunkel);
+  l.rechteck(2, 27, 7, 1, MF.anthrazitDunkel);
+  l.rechteck(9, 15, 25, 2, MF.silberHell);
+  l.rechteck(9, 17, 25, 1, MF.silberDunkel);
+  l.rechteck(11, 18, 2, 10, MF.silberDunkel);
+  l.rechteck(30, 18, 2, 10, MF.silberDunkel);
+  l.rechteck(11, 0, 21, 13, MF.anthrazitDunkel);
+  l.rechteck(12, 1, 19, 11, MF.weiss);
+  l.rechteck(14, 2, 7, 9, MF.papier);
+  l.rechteck(15, 3, 5, 3, MF.c);
+  l.rechteck(15, 7, 5, 1, MF.silberDunkel);
+  l.rechteck(15, 9, 3, 1, MF.silberDunkel);
+  l.rechteck(23, 2, 7, 4, MF.m);
+  l.rechteck(23, 7, 7, 1, MF.silberDunkel);
+  l.rechteck(23, 9, 5, 1, MF.y);
+  l.rechteck(20, 13, 3, 2, MF.anthrazitDunkel);
+  l.rechteck(13, 14, 9, 1, MF.anthrazit);
+  l.rechteck(25, 14, 3, 1, MF.silberDunkel);
+}
+
+export type Seitenelement = 'titel' | 'text' | 'foto' | 'grafik';
+
+/** Element einer Seite für den Bereich Polygraf, 36 x 30: Titel, Text, Foto oder Grafik. */
+export function zeichneSeitenelement(l: Leinwand, art: Seitenelement): void {
+  const b = 36;
+  const h = 30;
+  l.rechteck(0, 0, b, h, MF.silberDunkel);
+  l.rechteck(1, 1, b - 2, h - 2, MF.weiss);
+  if (art === 'titel') {
+    // Grosse, fette Zeilen
+    l.rechteck(4, 6, 28, 6, MF.k);
+    l.rechteck(4, 16, 19, 6, MF.k);
+  } else if (art === 'text') {
+    // Viele dünne Zeilen (Lauftext)
+    for (let i = 0; i < 6; i++) l.rechteck(4, 4 + i * 4, i === 5 ? 16 : 28, 2, MF.silberDunkel);
+  } else if (art === 'foto') {
+    // Landschaft: Himmel, Sonne, Berge
+    l.rechteck(3, 3, 30, 24, MF.c);
+    l.rechteck(24, 6, 5, 5, MF.y);
+    l.rechteck(3, 21, 30, 6, MF.gut);
+    for (let i = 0; i < 8; i++) l.rechteck(8 - i + 3, 13 + i, 2 + i * 2, 1, '#2f8540');
+    for (let i = 0; i < 6; i++) l.rechteck(22 - i, 15 + i, 2 + i * 2, 1, '#2f8540');
+  } else {
+    // Grafik: Balkendiagramm in den Druckfarben
+    l.rechteck(4, 25, 28, 1, MF.k);
+    l.rechteck(6, 16, 5, 9, MF.c);
+    l.rechteck(13, 9, 5, 16, MF.m);
+    l.rechteck(20, 13, 5, 12, MF.y);
+    l.rechteck(27, 5, 4, 20, MF.k);
+  }
+}

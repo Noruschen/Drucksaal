@@ -3,8 +3,8 @@ import { istNeueBestleistung, leseBestleistung, neueBestleistung, type Bestleist
 // Lokaler Speicher des Browsers. Kein Abgleich zwischen Geräten.
 // Am iPhone haben Safari-Tab und Home-Bildschirm getrennte Speicher.
 /** Jeder Bereich hat seine eigene Bestleistung. */
-export type Bereich = 'produktion' | 'leitstand';
-const SCHLUESSEL_BEST: Record<Bereich, string> = { produktion: 'druckerei.bestleistung', leitstand: 'druckerei.bestleistung.leitstand' };
+export type Bereich = 'produktion' | 'leitstand' | 'vorstufe';
+const SCHLUESSEL_BEST: Record<Bereich, string> = { produktion: 'druckerei.bestleistung', leitstand: 'druckerei.bestleistung.leitstand', vorstufe: 'druckerei.bestleistung.vorstufe' };
 const SCHLUESSEL_TON = 'druckerei.ton';
 
 function lies(schluessel: string): string | null {
@@ -24,7 +24,7 @@ function schreibe(schluessel: string, wert: string): void {
 }
 
 /** Ersatz, falls der Browser das Speichern sperrt: Die Bestleistung gilt dann bis zum Schliessen der Seite. */
-const merker: Record<Bereich, Bestleistung | null> = { produktion: null, leitstand: null };
+const merker: Record<Bereich, Bestleistung | null> = { produktion: null, leitstand: null, vorstufe: null };
 
 export function ladeBestleistung(bereich: Bereich): Bestleistung | null {
   return leseBestleistung(lies(SCHLUESSEL_BEST[bereich])) ?? merker[bereich];

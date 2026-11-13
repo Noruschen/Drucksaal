@@ -1,0 +1,10 @@
+{
+  "hinweis": "Startwerte für den Bereich Polygraf (Medienvorstufe). Spielwerte zum Einstellen, keine Fachwerte. Zeiten in Sekunden.",
+  "dauer": 180,
+  "zeitlimit": 20,
+  "punktePuenktlich": 100,
+  "punkteVerspaetet": -50,
+  "spalten": 2,
+  "zeilen": 3,
+  "elemente": ["titel", "text", "foto", "grafik"]
+}

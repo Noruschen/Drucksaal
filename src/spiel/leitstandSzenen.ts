@@ -285,7 +285,7 @@ export class LeitstandAuswertungSzene extends Phaser.Scene {
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (trifft(this.kNochmals, p.worldX, p.worldY)) this.scene.start('Leitstand');
-      else if (trifft(this.kAuswahl, p.worldX, p.worldY)) this.scene.start('Start');
+      else if (trifft(this.kAuswahl, p.worldX, p.worldY)) this.scene.start('Berufswahl', { bereich: 'leitstand' });
     });
   }
 }
