@@ -4,6 +4,7 @@ import { EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL as ECHTES_MODELL } fro
 import { Vorstufe } from '../src/logik/vorstufe';
 import { AUSRUESTUNG } from '../src/logik/daten';
 import { Ausruestung, simuliereAusruestung, type AusruestungEinstellungen } from '../src/logik/ausruestung';
+import { Schneiden, type SchneidenEinstellungen } from '../src/logik/schneiden';
 import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
@@ -595,5 +596,73 @@ describe('Ausrüstung (Bereich Ausrüster)', () => {
     const r = simuliereAusruestung(AUSRUESTUNG, 200, (s) => zufallMitStartwert(100 + s));
     console.log(`Ausrüster: ${r.quote.toFixed(1)} Prozent pünktlich, ${r.paletten.toFixed(1)} Paletten, ${r.fahrten.toFixed(1)} Fahrten pro Schicht`);
     expect(r.paletten).toBeGreaterThan(5);
+  });
+});
+
+describe('Schneiden (Bereich Schneiden)', () => {
+  const E: SchneidenEinstellungen = {
+    dauer: 60,
+    ruettelZeit: 3,
+    schnittZeit: 0.5,
+    rand: 0.1,
+    falscheLinienMin: 2,
+    falscheLinienMax: 2,
+    wartend: 3,
+    punkteRichtig: 100,
+    punkteFehlschnitt: -50,
+    auftraege: [{ name: 'Visitenkarten', spalten: 4, zeilen: 2 }],
+  };
+  const neu = (e: SchneidenEinstellungen = E) => new Schneiden(e, zufallMitStartwert(7));
+  const waehleRichtige = (s: Schneiden) => s.aktiv!.linien.forEach((l, i) => l.richtig && s.waehle(i));
+
+  it('Visitenkarten mit 8 Nutzen brauchen 8 Schnitte, ein Bogen mit 1 Nutzen 4 Schnitte', () => {
+    const s = neu();
+    expect(s.eingang[0].linien.filter((l) => l.richtig).length).toBe(8);
+    expect(s.eingang[0].linien.filter((l) => !l.richtig).length).toBe(2);
+    const p = neu({ ...E, auftraege: [{ name: 'Plakat', spalten: 1, zeilen: 1 }] });
+    expect(p.eingang[0].linien.filter((l) => l.richtig).length).toBe(4);
+  });
+
+  it('Geschnitten wird erst nach dem Rütteln', () => {
+    const s = neu();
+    expect(s.nimm(s.eingang[0].nummer)).toBe(true);
+    expect(s.eingang.length).toBe(3);
+    waehleRichtige(s);
+    expect(s.schneide()).toBe('nichts');
+    s.schritt(3);
+    expect(s.phase).toBe('bereit');
+    expect(s.schneide()).toBe('richtig');
+    expect(s.punkte).toBe(100);
+    // Während des Schneidens ist die Maschine besetzt
+    expect(s.nimm(s.eingang[0].nummer)).toBe(false);
+    s.schritt(4);
+    expect(s.phase).toBe('leer');
+    expect(s.nimm(s.eingang[0].nummer)).toBe(true);
+  });
+
+  it('Eine falsche oder fehlende Linie ist ein Fehlschnitt: Abzug, der Stapel ist weg', () => {
+    const s = neu();
+    s.nimm(s.eingang[0].nummer);
+    s.schritt(3);
+    waehleRichtige(s);
+    s.waehle(s.aktiv!.linien.findIndex((l) => !l.richtig));
+    expect(s.schneide()).toBe('fehlschnitt');
+    expect(s.punkte).toBe(-50);
+    expect(s.aktiv).toBeNull();
+    s.nimm(s.eingang[0].nummer);
+    s.schritt(3);
+    s.waehle(0);
+    expect(s.schneide()).toBe('fehlschnitt');
+    expect(s.auswertung()).toEqual({ punkte: -100, richtig: 0, fehlschnitte: 2, schnitte: 0 });
+  });
+
+  it('Ohne gewählte Linie passiert nichts, die Schicht endet nach der Dauer', () => {
+    const s = neu();
+    s.nimm(s.eingang[0].nummer);
+    s.schritt(3);
+    expect(s.schneide()).toBe('nichts');
+    s.schritt(100);
+    expect(s.fertig).toBe(true);
+    expect(s.zeit).toBe(60);
   });
 });

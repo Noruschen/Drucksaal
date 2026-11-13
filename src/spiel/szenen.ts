@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
-import { AUSRUESTUNG, EINSTELLUNGEN, LEITSTAND, VORSTUFE, ZAHLENMODELL } from '../logik/daten';
+import { AUSRUESTUNG, EINSTELLUNGEN, LEITSTAND, SCHNEIDEN, VORSTUFE, ZAHLENMODELL } from '../logik/daten';
 import { maschinenName, werteAus, type Auswertung } from '../logik/auswertung';
 import { Schicht } from '../logik/schicht';
 import type { Auftrag, Farbigkeit } from '../logik/typen';
@@ -102,6 +102,7 @@ const BERUFE: Beruf[] = [
   { bereich: 'produktion', name: 'Produktionsleiter', portrait: 'portrait_produktionsleiter', zeilen: ['Planung:', 'Lauftaschen verteilen'], platz: 'arbeitsplatz', raum: 'buero', einheit: 'Punkte' },
   { bereich: 'leitstand', name: 'Medientechnologe', portrait: 'portrait_medientechnologe', zeilen: ['Leitstand der RA 76:', 'Farbe und Passer'], platz: 'ra76_steht_1', raum: 'saal', einheit: 'Gutbogen' },
   { bereich: 'ausruestung', name: 'Ausrüster', portrait: 'portrait_ausruester', zeilen: ['Weiterverarbeitung:', 'falzen, heften, liefern'], platz: 'mbo_steht_1', raum: 'saal', einheit: 'Punkte' },
+  { bereich: 'schneiden', name: 'Schneiden', portrait: 'portrait_schneiden', zeilen: ['Weiterverarbeitung:', 'rütteln und schneiden'], platz: 'schneidemaschine_steht', raum: 'saal', einheit: 'Punkte' },
 ];
 
 export class BerufswahlSzene extends Phaser.Scene {
@@ -253,6 +254,18 @@ export class EinfuehrungSzene extends Phaser.Scene {
         ],
         start: 'Schicht starten',
         szene: 'Ausruestung',
+      },
+      schneiden: {
+        titel: 'Schneiden',
+        zeilen: [
+          'Palette antippen: Der Stapel kommt auf den Rüttler.',
+          'Der Monitor zeigt den Druckbogen mit den Nutzen und roten Linien.',
+          'Tippe die richtigen Linien an (sie werden grün), dann «Schneiden».',
+          'Richtig ist jede Linie am Rand eines Nutzens, falsch jede mitten durch einen Nutzen.',
+          `Richtig: plus ${SCHNEIDEN.punkteRichtig}. Fehlschnitt: minus ${Math.abs(SCHNEIDEN.punkteFehlschnitt)}. Schicht: ${minuten(SCHNEIDEN.dauer)} Minuten.`,
+        ],
+        start: 'Schicht starten',
+        szene: 'Schneiden',
       },
       vorstufe: {
         titel: 'Polygraf',

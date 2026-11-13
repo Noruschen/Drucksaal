@@ -1,0 +1,18 @@
+{
+  "hinweis": "Startwerte für den Bereich Schneiden. Spielwerte zum Einstellen, keine Fachwerte. Zeiten in Sekunden. Nutzen pro Bogen = spalten mal zeilen.",
+  "dauer": 90,
+  "ruettelZeit": 3,
+  "schnittZeit": 0.4,
+  "rand": 0.08,
+  "falscheLinienMin": 2,
+  "falscheLinienMax": 3,
+  "wartend": 3,
+  "punkteRichtig": 100,
+  "punkteFehlschnitt": -50,
+  "auftraege": [
+    { "name": "Plakat", "spalten": 1, "zeilen": 1 },
+    { "name": "Flyer", "spalten": 2, "zeilen": 1 },
+    { "name": "Postkarten", "spalten": 2, "zeilen": 2 },
+    { "name": "Visitenkarten", "spalten": 4, "zeilen": 2 }
+  ]
+}

@@ -77,6 +77,13 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | palette_2.png | 26 x 20 | Palette mit Bogenstapel, Grösse 2 (2 Plätze) | Skript |
 | palette_3.png | 26 x 20 | Palette mit Bogenstapel, Grösse 3 (3 Plätze) | Skript |
 | lastwagen_heck.png | 46 x 44 | Heck des roten Lastwagens an der Rampe, mit dem «a» aus dem Schriftzug | Skript |
+| portrait_schneiden.png | 40 x 46 | Porträt für den Bereich Schneiden, für die Wahl des Berufs (nach Foto) | Skript |
+| ruettler_leer.png | 40 x 40 | Rüttler ohne Stapel | Skript |
+| ruettler_1.png | 40 x 40 | Rüttler mit Bogenstapel, Bewegungsbild 1 von 2 | Skript |
+| ruettler_2.png | 40 x 40 | Rüttler mit Bogenstapel, Bewegungsbild 2 von 2 | Skript |
+| schneidemaschine_steht.png | 56 x 46 | Schneidemaschine ohne Stapel, Messer oben | Skript |
+| schneidemaschine_bereit.png | 56 x 46 | Schneidemaschine mit Bogenstapel, Messer oben | Skript |
+| schneidemaschine_schneidet.png | 56 x 46 | Schneidemaschine mit Bogenstapel, Messer unten | Skript |
 | portrait_medientechnologe.png | 40 x 46 | Porträt Medientechnologe für die Wahl des Bereichs (nach Foto) | Skript |
 | portrait_produktionsleiter.png | 40 x 46 | Porträt Produktionsleiter für die Wahl des Bereichs (nach Foto) | Skript |
 | logo_wallimann.png | 104 x 17 | Logo Wallimann als Pixelart (roter Schriftzug). Umgerechnet aus dem Logo von wallimann.ch, nicht vom Skript gezeichnet | von Hand gezeichnet |
@@ -85,4 +92,4 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 
 `#14181d` `#1aa7e0` `#20242e` `#262a30` `#2678a3` `#2b3445` `#3b4148` `#3d4855` `#3f7fbd` `#3fa7d6` `#434a54` `#49b35a` `#525a63` `#56657a` `#5b6470` `#5b9bd5` `#7b8695` `#8a6239` `#8cbce6` `#8d98a6` `#8f979f` `#8fd3f0` `#9c070c` `#9eadbd` `#b98a56` `#c9ced3` `#c9d3dd` `#cfd3d0` `#d20a11` `#d93a8a` `#d94a3d` `#e6e9ec` `#e6ebf0` `#e8474d` `#e8b98f` `#eaf4fb` `#f1f0ea` `#f2a530` `#f2c230` `#f4d51e` `#f4f5f6` `#fbfbf6` `#ffffff`
 
-Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#1d1f24` `#1f1c1b` `#2a2827` `#2f8540` `#33373f` `#3a281e` `#3a3532` `#3b2416` `#3b3431` `#3d4a5e` `#3f2817` `#4a3426` `#4a4745` `#57392a` `#5a3a22` `#5c5753` `#6e6b68` `#6f8f8a` `#7c8aa0` `#7d0509` `#7d5433` `#8a8784` `#8fd69b` `#9a6236` `#a85a52` `#bd8f6d` `#cf9a72` `#dfe1e3` `#f6c9c2`
+Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#1d1f24` `#1f1c1b` `#2a2827` `#2f8540` `#33373f` `#3a281e` `#3a3532` `#3b2416` `#3b3431` `#3d4a5e` `#3e2617` `#3f2817` `#4a3220` `#4a3426` `#4a4745` `#57392a` `#5a3a22` `#5b3a26` `#5c5753` `#6e6b68` `#6f8f8a` `#7c8aa0` `#7d0509` `#7d5433` `#7d5638` `#8a4b2a` `#8a8784` `#8fd69b` `#9a6236` `#a85a52` `#bd8f6d` `#cf9a72` `#d8b25a` `#dfe1e3` `#f6c9c2`

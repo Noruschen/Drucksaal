@@ -16,6 +16,7 @@ Stand: 13.11.2026
 | M5 | Bereich Medientechnologe: Leitstand mit Farbe und Passer | erste Fassung gebaut und getestet, **wartet auf Alexanders Urteil** |
 | M6 | Berufswahl zum Blättern, Bereich Polygraf (Seite nach Lauftasche nachbauen, Zeitlimit) | erste Fassung gebaut und getestet, **wartet auf Alexanders Urteil** |
 | M7 | Bereich Ausrüster: MBO, Martini Hefter, Lager, Lastwagen, Eilauftrag | erste Fassung gebaut und getestet, **wartet auf Alexanders Urteil** |
+| M8 | Bereich Schneiden: Rüttler, Monitor mit Schnitten auf dem Druckbogen, Schneidemaschine | erste Fassung gebaut und getestet, **wartet auf Alexanders Urteil** |
 
 ## Offen bei Alexander
 1. Im Betrieb klären, ob Name und Logo Wallimann im öffentlichen Spiel bleiben dürfen.

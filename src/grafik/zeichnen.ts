@@ -1096,3 +1096,130 @@ export function zeichnePortraitAusruester(l: Leinwand): void {
   l.rechteck(17, 25, 6, 1, PF.lippe);
   for (const [x, y] of [[13, 30], [26, 31], [15, 34], [23, 35], [19, 37]]) l.rechteck(x, y, 1, 1, grau);
 }
+
+// ---------------------------------------------------------------- Bereich Schneiden
+
+/** Porträt für den Bereich Schneiden: langes braunes Haar mit Mittelscheitel, Lächeln, schwarzes Polo. */
+export function zeichnePortraitSchneiden(l: Leinwand): void {
+  const haar = '#5b3a26';
+  const haarDunkel = '#3e2617';
+  const haarHell = '#7d5638';
+  poloUndHals(l);
+  // Langes Haar hinter dem Kopf, fällt über die Schultern
+  l.rechteck(8, 6, 24, 30, haarDunkel);
+  l.rechteck(6, 14, 4, 26, haar);
+  l.rechteck(30, 14, 4, 26, haar);
+  l.rechteck(5, 26, 3, 16, haar);
+  l.rechteck(32, 26, 3, 16, haar);
+  // Hals und Kragen wieder nach vorn holen
+  l.rechteck(17, 28, 6, 7, PF.hautSchatten);
+  l.rechteck(18, 34, 4, 4, PF.haut);
+  // Gesicht
+  l.rechteck(12, 10, 16, 18, PF.haut);
+  l.rechteck(13, 28, 14, 2, PF.haut);
+  l.rechteck(15, 30, 10, 1, PF.haut);
+  // Haar oben mit Mittelscheitel, Strähnen an den Seiten
+  l.rechteck(11, 4, 18, 5, haar);
+  l.rechteck(13, 3, 14, 1, haar);
+  l.rechteck(9, 6, 4, 10, haar);
+  l.rechteck(27, 6, 4, 10, haar);
+  l.rechteck(11, 9, 4, 3, haar);
+  l.rechteck(25, 9, 4, 3, haar);
+  l.rechteck(10, 16, 2, 20, haar);
+  l.rechteck(28, 16, 2, 20, haar);
+  l.rechteck(20, 3, 1, 6, haarDunkel);
+  for (const [x, y] of [[14, 5], [24, 5], [8, 18], [31, 20], [7, 30], [32, 32], [10, 26], [29, 28]]) l.rechteck(x, y, 1, 4, haarHell);
+  // Haarklammern
+  l.rechteck(12, 5, 2, 1, '#8a4b2a');
+  l.rechteck(26, 5, 2, 1, '#8a4b2a');
+  // Augenbrauen, Augen, Nase
+  l.rechteck(14, 15, 4, 1, haarDunkel);
+  l.rechteck(22, 15, 4, 1, haarDunkel);
+  l.rechteck(14, 17, 4, 2, PF.weiss);
+  l.rechteck(22, 17, 4, 2, PF.weiss);
+  l.rechteck(15, 17, 2, 2, '#4a3220');
+  l.rechteck(23, 17, 2, 2, '#4a3220');
+  l.rechteck(14, 16, 4, 1, '#20242e');
+  l.rechteck(22, 16, 4, 1, '#20242e');
+  l.rechteck(19, 19, 2, 3, PF.hautSchatten);
+  // Lächeln mit Zähnen
+  l.rechteck(16, 24, 8, 1, PF.lippe);
+  l.rechteck(17, 25, 6, 1, PF.weiss);
+  l.rechteck(17, 26, 6, 1, PF.lippe);
+  l.rechteck(15, 23, 1, 1, PF.hautSchatten);
+  l.rechteck(24, 23, 1, 1, PF.hautSchatten);
+  // Feine Halskette
+  l.rechteck(17, 36, 1, 1, '#d8b25a');
+  l.rechteck(22, 36, 1, 1, '#d8b25a');
+  l.rechteck(19, 37, 2, 1, '#d8b25a');
+}
+
+export const RUETTLER_BREITE = 40;
+export const RUETTLER_HOEHE = 40;
+
+/** Rüttler: schräger Tisch mit Anschlag auf einem Gestell. bild 0 oder 1 (rüttelt), mitStapel zeigt den Bogenstapel. */
+export function zeichneRuettler(l: Leinwand, bild: number, mitStapel: boolean): void {
+  const v = bild; // Versatz beim Rütteln
+  // Gestell
+  l.rechteck(4, 36, 32, 3, MF.anthrazitDunkel);
+  l.rechteck(7, 22, 3, 14, MF.anthrazit);
+  l.rechteck(30, 26, 3, 10, MF.anthrazit);
+  l.rechteck(10, 30, 20, 2, MF.anthrazitHell);
+  l.rechteck(16, 32, 8, 4, MF.anthrazit);
+  l.rechteck(18, 33, 2, 1, bild === 0 ? MF.gut : MF.warnung);
+  // Schräger Tisch: links hoch, rechts tief, als Treppe
+  for (let i = 0; i < 8; i++) {
+    l.rechteck(4 + i * 4, 17 + i + v, 4, 3, WF.blauDunkel);
+    l.rechteck(4 + i * 4, 17 + i + v, 4, 1, WF.blauHell);
+  }
+  // Anschlag rechts und hinten
+  l.rechteck(34, 8 + v, 2, 18, WF.blauDunkel);
+  l.rechteck(4, 4 + v, 2, 14, WF.blauDunkel);
+  if (mitStapel) {
+    for (let i = 0; i < 6; i++) {
+      l.rechteck(8 + i * 4, 8 + i + v, 4, 9, MF.papier);
+      l.rechteck(8 + i * 4, 10 + i + v, 4, 1, MF.papierSchatten);
+      l.rechteck(8 + i * 4, 13 + i + v, 4, 1, MF.papierSchatten);
+      l.rechteck(8 + i * 4, 8 + i + v, 4, 1, MF.silberDunkel);
+    }
+  }
+}
+
+export const SCHNEIDEMASCHINE_BREITE = 56;
+export const SCHNEIDEMASCHINE_HOEHE = 46;
+
+/** Schneidemaschine von vorn: Tisch, Portal mit Messer, Bedienfeld. messerUnten = schneidet, mitStapel zeigt den Bogenstapel. */
+export function zeichneSchneidemaschine(l: Leinwand, messerUnten: boolean, mitStapel: boolean): void {
+  // Sockel
+  l.rechteck(4, 30, 48, 14, MF.anthrazit);
+  l.rechteck(4, 30, 48, 1, MF.anthrazitHell);
+  l.rechteck(2, 44, 52, 2, MF.anthrazitDunkel);
+  l.rechteck(8, 34, 14, 7, MF.anthrazitDunkel);
+  l.rechteck(34, 34, 14, 7, MF.anthrazitDunkel);
+  // Tisch
+  l.rechteck(0, 26, 56, 4, MF.silber);
+  l.rechteck(0, 26, 56, 1, MF.silberHell);
+  // Portal
+  l.rechteck(4, 2, 6, 24, MF.silberHell);
+  l.rechteck(46, 2, 6, 24, MF.silberHell);
+  l.rechteck(4, 2, 48, 10, MF.silberHell);
+  l.rechteck(4, 11, 48, 1, MF.silberDunkel);
+  l.rechteck(9, 2, 1, 24, MF.silberDunkel);
+  l.rechteck(46, 2, 1, 24, MF.silberDunkel);
+  // Bedienfeld mit kleinem Bildschirm und Lampe
+  l.rechteck(14, 4, 14, 6, MF.glas);
+  l.rechteck(15, 5, 8, 1, MF.blau);
+  l.rechteck(32, 5, 3, 3, messerUnten ? MF.gut : MF.schlecht);
+  l.rechteck(38, 5, 3, 3, MF.anthrazit);
+  // Stapel auf dem Tisch
+  if (mitStapel) {
+    l.rechteck(14, 20, 28, 6, MF.papier);
+    l.rechteck(14, 22, 28, 1, MF.papierSchatten);
+    l.rechteck(14, 24, 28, 1, MF.papierSchatten);
+  }
+  // Pressbalken und Messer
+  const y = messerUnten ? (mitStapel ? 16 : 22) : 12;
+  l.rechteck(10, y, 36, 3, MF.anthrazit);
+  l.rechteck(10, y + 3, 36, 1, MF.silberDunkel);
+  l.rechteck(10, y + 4, 36, 1, MF.weiss);
+}

@@ -6,6 +6,8 @@ import vorstufeDatei from '../../daten/vorstufe.json';
 import type { VorstufeEinstellungen } from './vorstufe';
 import ausruestungDatei from '../../daten/ausruestung.json';
 import type { AusruestungEinstellungen } from './ausruestung';
+import schneidenDatei from '../../daten/schneiden.json';
+import type { SchneidenEinstellungen } from './schneiden';
 import type { Einstellungen, Zahlenmodell } from './typen';
 
 export const ZAHLENMODELL: Zahlenmodell = maschinenDatei as Zahlenmodell;
@@ -13,3 +15,4 @@ export const EINSTELLUNGEN: Einstellungen = einstellungenDatei as Einstellungen;
 export const LEITSTAND: LeitstandEinstellungen = leitstandDatei as LeitstandEinstellungen;
 export const VORSTUFE: VorstufeEinstellungen = vorstufeDatei as VorstufeEinstellungen;
 export const AUSRUESTUNG: AusruestungEinstellungen = ausruestungDatei as AusruestungEinstellungen;
+export const SCHNEIDEN: SchneidenEinstellungen = schneidenDatei as SchneidenEinstellungen;
