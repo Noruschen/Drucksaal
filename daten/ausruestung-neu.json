@@ -46,7 +46,7 @@
   "punktePuenktlich": 100,
   "punkteVerspaetet": -50,
   "schneiden": {
-    "name": "Schneidemaschine",
+    "name": "Polar",
     "ruestzeit": 3,
     "leistung": 300
   },
