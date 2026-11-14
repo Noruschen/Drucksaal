@@ -28,6 +28,8 @@ interface AuswertungDaten {
   zeilen: string[];
   tipp: string;
   nochmals: string;
+  /** Text zur Bestleistung. Fehlt er, ist es eine Vorschau, die nicht zählt. */
+  best?: string;
 }
 
 // ---------------------------------------------------------------- Version A: Heften im Takt
@@ -742,7 +744,7 @@ export class VorschauAuswertungSzene extends Phaser.Scene {
     schrift(this, 4, 2, `Auswertung: ${d.titel}`, FARBEN.text);
     schrift(this, BREITE - 4, 2, punkteText(d.punkte), FARBEN.text, 'rechts');
     schrift(this, 4, 18, d.kopf, FARBEN.textAufBoden);
-    schrift(this, BREITE - 4, 18, 'Vorschau: zählt nicht für die Bestleistung', FARBEN.textAufBoden, 'rechts');
+    schrift(this, BREITE - 4, 18, d.best ?? 'Vorschau: zählt nicht für die Bestleistung', FARBEN.textAufBoden, 'rechts');
     d.zeilen.forEach((zeile, i) => schrift(this, 10, 36 + i * 14, zeile, FARBEN.textAufPapier, 'links', i === 0 ? 10 : 9));
     schrift(this, 10, 112, d.tipp, FARBEN.textAufPapier);
     bild(this, this.kAuswahl.x, this.kAuswahl.y, 'schaltflaeche_blaettern');

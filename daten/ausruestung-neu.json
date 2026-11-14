@@ -1,5 +1,5 @@
 {
-  "hinweis": "Vorschau Ausrüster mit Schneidemaschine, Wegen und Hilferuf (Aufruf mit ?ausruester=neu). Spielwerte, keine Fachwerte. Zeiten in Sekunden, Auflagen in Exemplaren.",
+  "hinweis": "Ausrüster mit Schneidemaschine, Wegen und Hilferuf (seit 14.11.2026 das Spiel des Ausrüsters; die frühere Fassung nutzt ausruestung.json und läuft mit ?ausruester=alt). Spielwerte, keine Fachwerte. Zeiten in Sekunden, Auflagen in Exemplaren.",
   "dauer": 180,
   "takt": 8,
   "annahmeBis": 140,
@@ -77,5 +77,5 @@
       "gewicht": 2
     }
   ],
-  "hilferufAnteil": 0.2
+  "hilferufAnteil": 0.1
 }

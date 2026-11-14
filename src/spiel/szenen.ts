@@ -24,8 +24,8 @@ const START_SZENE = new URLSearchParams(window.location.search).get('start') ===
 
 // Die drei Vorlagen für den Ausrüster (a, b, c) hat Alexander am 14.11.2026 verworfen: Sie sind abgeschaltet.
 // Der Code dazu bleibt liegen, bis Alexander das Löschen anordnet.
-// Neue Vorschau: Mit ?ausruester=neu startet der Ausrüster mit Schneidemaschine, Wegen und Hilferuf.
-const AUSRUESTER_VORSCHAU: string | null = new URLSearchParams(window.location.search).get('ausruester') === 'neu' ? 'neu' : null;
+// Der Ausrüster läuft mit Schneidemaschine, Wegen und Hilferuf. Mit ?ausruester=alt in der Adresse gilt die frühere Fassung.
+const AUSRUESTER_VORSCHAU: string | null = new URLSearchParams(window.location.search).get('ausruester') === 'alt' ? null : 'neu';
 
 const IMMER_HILFE = new URLSearchParams(window.location.search).get('hilfe') === '1';
 
@@ -334,7 +334,7 @@ export class EinfuehrungSzene extends Phaser.Scene {
     if (AUSRUESTER_VORSCHAU === 'neu') {
       const n = AUSRUESTUNG_NEU;
       inhalt.ausruestung = {
-        titel: 'Ausrüster (Vorschau)',
+        titel: 'Ausrüster',
         zeilen: [
           'Jede Palette zeigt ihren Weg: schneiden, falzen, heften.',
           'Palette antippen: Sie geht zu ihrer ersten Maschine, der Rest läuft von selbst.',

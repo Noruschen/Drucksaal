@@ -4,11 +4,12 @@ import { AUSRUESTUNG_NEU } from '../logik/daten';
 import { Ausruestung, type Palette, type Station, type StationArt } from '../logik/ausruestung';
 import { MF } from '../grafik/zeichnen.ts';
 import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
+import { meldeErgebnis } from './speicher';
 import { spiele } from './ton';
 
-// Vorschau zum Ausrüster (Aufruf mit ?ausruester=neu): das bisherige Spiel, erweitert um eine Schneidemaschine,
-// verschiedene Wege der Aufträge, mehr Aufträge und Arbeiter, die ab und zu Hilfe brauchen.
-// Zählt nicht für die Bestleistung.
+// Bereich Ausrüster seit 14.11.2026: Schneidemaschine, Falzmaschine und Sammelhefter, verschiedene Wege der Aufträge,
+// Lager und Lastwagen, dazu Arbeiter, die ab und zu Hilfe brauchen.
+// Die frühere Fassung (src/spiel/ausruestungSzenen.ts) läuft mit ?ausruester=alt.
 
 type Text = Phaser.GameObjects.Text;
 type Bildobjekt = Phaser.GameObjects.Image;
@@ -123,7 +124,7 @@ export class AusruestungNeuSzene extends Phaser.Scene {
     this.stationTeile = PLAETZE.map((platz) => {
       const mitte = platz.feld.x + platz.feld.b / 2;
       const name = this.station(platz.art).werte.name;
-      schrift(this, mitte, name.length > 12 ? 19 : 18, name, FARBEN.textAufBoden, 'mitte', name.length > 12 ? 7 : 9);
+      schrift(this, mitte, name.length > 14 ? 19 : 18, name, FARBEN.textAufBoden, 'mitte', name.length > 14 ? 7 : 9);
       bild(this, platz.arbeiterX - 5, BODEN + 2 - 16, 'drucker_steht', 4);
       return {
         bild: bild(this, platz.bildX, platz.bildY, `${platz.bild}_steht${platz.art === 'schneiden' ? '' : '_1'}`, 2),
@@ -237,8 +238,16 @@ export class AusruestungNeuSzene extends Phaser.Scene {
       this.endePause += echt;
       if (this.endePause > 0.8) {
         const w = s.auswertung();
+        // Bestleistung: Prüfläufe (?tempo, ?hilfe) zählen nicht.
+        let best = 'Prüflauf: zählt nicht für die Bestleistung';
+        if (TEMPO === 1 && !IMMER_HILFE) {
+          const meldung = meldeErgebnis('ausruestung', w.punkte, w.puenktlich, w.verspaetet);
+          best = meldung.neu ? 'Neue Bestleistung!' : `Bestleistung: ${tausender(meldung.best.punkte).replace('-', 'minus ')} Punkte`;
+          if (meldung.neu) spiele('bestleistung');
+        }
         this.scene.start('VorschauAuswertung', {
-          titel: 'Ausrüster (Vorschau)',
+          best,
+          titel: 'Ausrüster',
           punkte: w.punkte,
           kopf: `pünktlich: ${w.puenktlich}      verspätet: ${w.verspaetet}`,
           zeilen: [
