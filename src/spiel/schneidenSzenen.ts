@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
 import { SCHNEIDEN } from '../logik/daten';
-import { Schneiden, nutzen, type Linie, type SchneidenAuswertung } from '../logik/schneiden';
+import { Schneiden, nutzen, type Linie, type SchneidenAuswertung, type Stapel } from '../logik/schneiden';
 import { MF } from '../grafik/zeichnen.ts';
 import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
 import { meldeErgebnis } from './speicher';
@@ -15,6 +15,16 @@ type Bildobjekt = Phaser.GameObjects.Image;
 
 // Prüfhilfe wie in den anderen Bereichen: ?tempo=10 lässt die Schicht schneller laufen.
 const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get('tempo')) || 1);
+
+// Vorschau: Mit ?schnitt=neu in der Adresse wird der Bogen beim Schneiden an den gewählten Linien wirklich geteilt.
+const TEILEN = new URLSearchParams(window.location.search).get('schnitt') === 'neu';
+/** Abstand zwischen den Teilen nach dem Schnitt (Spielpixel) und Zeiten der Schnittanimation in Sekunden */
+const SPALT = 2;
+const TEIL_AUSEINANDER = 0.4;
+const TEIL_MELDUNG = 0.9;
+const TEIL_ENDE = 2.4;
+
+type Zeichner = (x: number, y: number, b: number, h: number, farbe: string) => void;
 
 /** Druckbogen auf dem Monitor */
 const BOGEN: Rechteck = { x: 130, y: 48, b: 176, h: 90 };
@@ -58,6 +68,8 @@ export class SchneidenSzene extends Phaser.Scene {
   private ablehnFeld: Rechteck | null = null;
   private endePause = 0;
   private lauf = 0;
+  /** Laufende Schnittanimation (nur Vorschau): der geschnittene Stapel, die Zeit seit dem Schnitt und die Meldung danach */
+  private schnitt: { stapel: Stapel; zeit: number; text: string; farbe: string; richtig: boolean; gemeldet: boolean } | null = null;
 
   constructor() {
     super('Schneiden');
@@ -72,6 +84,7 @@ export class SchneidenSzene extends Phaser.Scene {
     this.ablehnFeld = null;
     this.endePause = 0;
     this.lauf = 0;
+    this.schnitt = null;
 
     const grund = new Maler(this.add.graphics());
     grund.r(0, 0, BREITE, HOEHE, FARBEN.wand);
@@ -130,15 +143,22 @@ export class SchneidenSzene extends Phaser.Scene {
     for (let i = 0; i < s.eingang.length; i++) {
       const f = kartenFeld(i);
       if (!trifft(f, x, y)) continue;
-      if (s.nimm(s.eingang[i].nummer)) spiele('zuteilen');
+      // Solange der geteilte Bogen noch auf dem Monitor liegt, kommt keine neue Palette.
+      if (!this.schnitt && s.nimm(s.eingang[i].nummer)) spiele('zuteilen');
       else this.lehneAb(f);
       return;
     }
     // Schneiden
     if (trifft(K_SCHNEIDEN, x, y)) {
       const vorher = s.aktiv;
-      const antwort = s.schneide();
-      if (antwort === 'richtig') {
+      const antwort = this.schnitt ? 'nichts' : s.schneide();
+      if (TEILEN && vorher && (antwort === 'richtig' || antwort === 'fehlschnitt')) {
+        // Vorschau: Zuerst teilt sich der Bogen an den gewählten Linien, erst danach kommt die Meldung.
+        const richtig = antwort === 'richtig';
+        const text = richtig ? `plus ${SCHNEIDEN.punkteRichtig}` : `Fehlschnitt: Makulatur, minus ${Math.abs(SCHNEIDEN.punkteFehlschnitt)}`;
+        this.schnitt = { stapel: vorher, zeit: 0, text, farbe: richtig ? GRUEN : ROT, richtig, gemeldet: false };
+        spiele('zuteilen');
+      } else if (antwort === 'richtig') {
         spiele('puenktlich');
         this.melde(`plus ${SCHNEIDEN.punkteRichtig}`, GRUEN);
       } else if (antwort === 'fehlschnitt') {
@@ -150,7 +170,7 @@ export class SchneidenSzene extends Phaser.Scene {
       return;
     }
     // Linien auf dem Monitor
-    if (!s.aktiv || !trifft(TIPPFELD, x, y)) return;
+    if (this.schnitt || !s.aktiv || !trifft(TIPPFELD, x, y)) return;
     const nurSenkrecht = y < BOGEN.y;
     const nurWaagrecht = x < BOGEN.x;
     let beste = -1;
@@ -182,36 +202,95 @@ export class SchneidenSzene extends Phaser.Scene {
       }
     }
     this.meldungZeit = Math.max(0, this.meldungZeit - echt);
+    const t = this.schnitt;
+    if (t) {
+      t.zeit += echt;
+      if (!t.gemeldet && t.zeit >= TEIL_MELDUNG) {
+        t.gemeldet = true;
+        spiele(t.richtig ? 'puenktlich' : 'verspaetet');
+        this.melde(t.text, t.farbe);
+      }
+      // Der geteilte Bogen bleibt liegen, bis die Meldung weg ist und die Schneidemaschine fertig ist.
+      if (t.zeit >= TEIL_ENDE && !(s.phase === 'schneiden' && s.aktiv === t.stapel)) this.schnitt = null;
+    }
     this.ablehnZeit = Math.max(0, this.ablehnZeit - echt);
     this.zeichne();
   }
 
   /** Ein Nutzen: Bild eines Hauses mit weissem Rahmen. Geschnitten wird aussen am weissen Rahmen. */
-  private zeichneNutzen(x: number, y: number, b: number, h: number): void {
-    const m = this.maler;
-    m.r(x, y, b, h, '#ffffff');
-    const r = 3; // Breite des weissen Rahmens
-    const bx = x + r;
-    const by = y + r;
-    const bb = b - 2 * r;
-    const bh = h - 2 * r;
+  private zeichneNutzen(r: Zeichner, x: number, y: number, b: number, h: number): void {
+    r(x, y, b, h, '#ffffff');
+    const rahmen = 3; // Breite des weissen Rahmens
+    const bx = x + rahmen;
+    const by = y + rahmen;
+    const bb = b - 2 * rahmen;
+    const bh = h - 2 * rahmen;
     const boden = Math.max(3, Math.round(bh * 0.22));
-    m.r(bx, by, bb, bh - boden, '#8ecbf0'); // Himmel
-    m.r(bx, by + bh - boden, bb, boden, '#5dae4f'); // Wiese
+    r(bx, by, bb, bh - boden, '#8ecbf0'); // Himmel
+    r(bx, by + bh - boden, bb, boden, '#5dae4f'); // Wiese
     // Haus in der Mitte: Wand, Dach als Treppe, Tür und Fenster
     const hausB = Math.max(8, Math.min(Math.round(bb * 0.55), Math.round(bh * 0.9)));
     const wandH = Math.max(5, Math.round(bh * 0.34));
     const hx = bx + Math.round((bb - hausB) / 2);
     const wy = by + bh - boden - wandH + 1;
-    m.r(hx, wy, hausB, wandH, '#f1e3c4');
+    r(hx, wy, hausB, wandH, '#f1e3c4');
     const stufen = Math.max(2, Math.min(Math.floor(hausB / 4), Math.floor((wy - by - 2) / 2)));
     for (let i = 0; i < stufen; i++) {
       const einzug = Math.round(((i + 1) * (hausB / 2 - 1)) / stufen) - 1;
-      m.r(hx - 1 + einzug, wy - 2 * (i + 1), hausB + 2 - 2 * einzug, 2, '#4a4f57'); // dunkles Dach, damit rote Linien sichtbar bleiben
+      r(hx - 1 + einzug, wy - 2 * (i + 1), hausB + 2 - 2 * einzug, 2, '#4a4f57'); // dunkles Dach, damit rote Linien sichtbar bleiben
     }
     const tuerB = Math.max(2, Math.round(hausB * 0.2));
-    m.r(hx + Math.round(hausB * 0.6), wy + wandH - Math.round(wandH * 0.7), tuerB, Math.round(wandH * 0.7), '#7a4a2a');
-    m.r(hx + Math.round(hausB * 0.15), wy + 2, Math.max(2, Math.round(hausB * 0.22)), Math.max(2, Math.round(wandH * 0.4)), '#3f7fbd');
+    r(hx + Math.round(hausB * 0.6), wy + wandH - Math.round(wandH * 0.7), tuerB, Math.round(wandH * 0.7), '#7a4a2a');
+    r(hx + Math.round(hausB * 0.15), wy + 2, Math.max(2, Math.round(hausB * 0.22)), Math.max(2, Math.round(wandH * 0.4)), '#3f7fbd');
+  }
+
+  /** Druckbogen mit den Nutzen, ohne Linien. */
+  private zeichneBogen(a: Stapel, r: Zeichner): void {
+    const e = SCHNEIDEN;
+    r(BOGEN.x - 1, BOGEN.y - 1, BOGEN.b + 2, BOGEN.h + 2, MF.silberDunkel);
+    r(BOGEN.x, BOGEN.y, BOGEN.b, BOGEN.h, BOGEN_GRUND);
+    const innenX = BOGEN.x + e.rand * BOGEN.b;
+    const innenY = BOGEN.y + e.rand * BOGEN.h;
+    const nb = ((1 - 2 * e.rand) * BOGEN.b) / a.auftrag.spalten;
+    const nh = ((1 - 2 * e.rand) * BOGEN.h) / a.auftrag.zeilen;
+    for (let zeile = 0; zeile < a.auftrag.zeilen; zeile++) {
+      for (let spalte = 0; spalte < a.auftrag.spalten; spalte++) {
+        const x = Math.round(innenX + spalte * nb);
+        const y = Math.round(innenY + zeile * nh);
+        const b = Math.round(innenX + (spalte + 1) * nb) - x;
+        const h = Math.round(innenY + (zeile + 1) * nh) - y;
+        this.zeichneNutzen(r, x, y, b, h);
+      }
+    }
+  }
+
+  /** Vorschau: Der Bogen ist an den gewählten Linien geteilt, die Teile rücken auseinander. */
+  private zeichneGeteilt(a: Stapel, zeit: number): void {
+    const m = this.maler;
+    const teile: [number, number, number, number, string][] = [];
+    this.zeichneBogen(a, (x, y, b, h, farbe) => teile.push([x, y, b, h, farbe]));
+    const grenzen = (richtung: Linie['richtung'], von: number, bis: number, lage: (l: Linie) => number): number[] => {
+      const schnitte = a.linien.filter((l) => l.gewaehlt && l.richtung === richtung).map(lage);
+      return [...new Set([von, ...schnitte, bis])].sort((p, q) => p - q);
+    };
+    const xs = grenzen('senkrecht', BOGEN.x - 1, BOGEN.x + BOGEN.b + 1, linieX);
+    const ys = grenzen('waagrecht', BOGEN.y - 1, BOGEN.y + BOGEN.h + 1, linieY);
+    const anteil = Math.min(1, zeit / TEIL_AUSEINANDER);
+    const spalt = SPALT * anteil * (2 - anteil);
+    for (let i = 0; i < xs.length - 1; i++) {
+      for (let j = 0; j < ys.length - 1; j++) {
+        const dx = Math.round((i - (xs.length - 2) / 2) * spalt);
+        const dy = Math.round((j - (ys.length - 2) / 2) * spalt);
+        for (const [x, y, b, h, farbe] of teile) {
+          // Jedes Rechteck auf das Teil zuschneiden und mit dem Teil verschieben
+          const links = Math.max(x, xs[i]);
+          const oben = Math.max(y, ys[j]);
+          const rechts = Math.min(x + b, xs[i + 1]);
+          const unten = Math.min(y + h, ys[j + 1]);
+          if (rechts > links && unten > oben) m.r(links + dx, oben + dy, rechts - links, unten - oben, farbe);
+        }
+      }
+    }
   }
 
   private zeichne(): void {
@@ -244,7 +323,7 @@ export class SchneidenSzene extends Phaser.Scene {
     setzeBild(this.bMaschine, s.phase === 'bereit' ? 'schneidemaschine_bereit' : s.phase === 'schneiden' ? (bewegung === 0 ? 'schneidemaschine_schneidet' : 'schneidemaschine_bereit') : 'schneidemaschine_steht');
 
     // Monitor
-    const a = s.aktiv;
+    const a = this.schnitt?.stapel ?? s.aktiv;
     this.tLeer.setVisible(!a && this.meldungZeit <= 0);
     setze(this.tAuftrag, a ? `${a.auftrag.name}: ${nutzen(a.auftrag)} Nutzen` : 'Monitor');
     const status =
@@ -255,24 +334,11 @@ export class SchneidenSzene extends Phaser.Scene {
           : s.phase === 'schneiden'
             ? `schneidet ${anzeigeSekunden(s.phaseRest)} s`
             : '';
-    setze(this.tStatus, status);
-    if (a) {
-      // Druckbogen mit den Nutzen
-      m.r(BOGEN.x - 1, BOGEN.y - 1, BOGEN.b + 2, BOGEN.h + 2, MF.silberDunkel);
-      m.r(BOGEN.x, BOGEN.y, BOGEN.b, BOGEN.h, BOGEN_GRUND);
-      const innenX = BOGEN.x + e.rand * BOGEN.b;
-      const innenY = BOGEN.y + e.rand * BOGEN.h;
-      const nb = ((1 - 2 * e.rand) * BOGEN.b) / a.auftrag.spalten;
-      const nh = ((1 - 2 * e.rand) * BOGEN.h) / a.auftrag.zeilen;
-      for (let zeile = 0; zeile < a.auftrag.zeilen; zeile++) {
-        for (let spalte = 0; spalte < a.auftrag.spalten; spalte++) {
-          const x = Math.round(innenX + spalte * nb);
-          const y = Math.round(innenY + zeile * nh);
-          const b = Math.round(innenX + (spalte + 1) * nb) - x;
-          const h = Math.round(innenY + (zeile + 1) * nh) - y;
-          this.zeichneNutzen(x, y, b, h);
-        }
-      }
+    setze(this.tStatus, this.schnitt && !this.schnitt.gemeldet ? 'schneidet' : status);
+    if (a && this.schnitt) {
+      this.zeichneGeteilt(a, this.schnitt.zeit);
+    } else if (a) {
+      this.zeichneBogen(a, (x, y, b, h, farbe) => m.r(x, y, b, h, farbe));
       // Linien mit Griff oben oder links
       const waehlbar = s.phase === 'ruetteln' || s.phase === 'bereit';
       for (const l of a.linien) {
@@ -294,10 +360,16 @@ export class SchneidenSzene extends Phaser.Scene {
     // Meldung nach dem Schnitt
     const zeigt = this.meldungZeit > 0;
     this.tMeldung.setVisible(zeigt);
+    // Liegt der geteilte Bogen auf dem Monitor, steht die Meldung darüber, damit man den Schnitt sieht.
+    const oben = this.schnitt !== null;
+    const my = oben ? 23 : 79;
+    this.tMeldung.setY(my + 3);
+    this.tAuftrag.setVisible(!(zeigt && oben));
+    this.tStatus.setVisible(!(zeigt && oben));
     if (zeigt) {
       const b = Math.ceil(this.tMeldung.width) + 12;
-      m.r(Math.round(212 - b / 2), 79, b, 22, FARBEN.umriss);
-      m.r(Math.round(212 - b / 2) + 1, 80, b - 2, 20, FARBEN.papier);
+      m.r(Math.round(212 - b / 2), my, b, 22, FARBEN.umriss);
+      m.r(Math.round(212 - b / 2) + 1, my + 1, b - 2, 20, FARBEN.papier);
     }
 
     // Abgelehnt: Feld blinkt rot
