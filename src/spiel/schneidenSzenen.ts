@@ -16,8 +16,8 @@ type Bildobjekt = Phaser.GameObjects.Image;
 // Prüfhilfe wie in den anderen Bereichen: ?tempo=10 lässt die Schicht schneller laufen.
 const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get('tempo')) || 1);
 
-// Vorschau: Mit ?schnitt=neu in der Adresse wird der Bogen beim Schneiden an den gewählten Linien wirklich geteilt.
-const TEILEN = new URLSearchParams(window.location.search).get('schnitt') === 'neu';
+// Beim Schneiden wird der Bogen an den gewählten Linien wirklich geteilt. Mit ?schnitt=alt in der Adresse gilt die frühere Fassung ohne Teilen.
+const TEILEN = new URLSearchParams(window.location.search).get('schnitt') !== 'alt';
 /** Abstand zwischen den Teilen nach dem Schnitt (Spielpixel) und Zeiten der Schnittanimation in Sekunden */
 const SPALT = 2;
 const TEIL_AUSEINANDER = 0.4;
@@ -68,7 +68,7 @@ export class SchneidenSzene extends Phaser.Scene {
   private ablehnFeld: Rechteck | null = null;
   private endePause = 0;
   private lauf = 0;
-  /** Laufende Schnittanimation (nur Vorschau): der geschnittene Stapel, die Zeit seit dem Schnitt und die Meldung danach */
+  /** Laufende Schnittanimation: der geschnittene Stapel, die Zeit seit dem Schnitt und die Meldung danach */
   private schnitt: { stapel: Stapel; zeit: number; text: string; farbe: string; richtig: boolean; gemeldet: boolean } | null = null;
 
   constructor() {
@@ -153,7 +153,7 @@ export class SchneidenSzene extends Phaser.Scene {
       const vorher = s.aktiv;
       const antwort = this.schnitt ? 'nichts' : s.schneide();
       if (TEILEN && vorher && (antwort === 'richtig' || antwort === 'fehlschnitt')) {
-        // Vorschau: Zuerst teilt sich der Bogen an den gewählten Linien, erst danach kommt die Meldung.
+        // Zuerst teilt sich der Bogen an den gewählten Linien, erst danach kommt die Meldung.
         const richtig = antwort === 'richtig';
         const text = richtig ? `plus ${SCHNEIDEN.punkteRichtig}` : `Fehlschnitt: Makulatur, minus ${Math.abs(SCHNEIDEN.punkteFehlschnitt)}`;
         this.schnitt = { stapel: vorher, zeit: 0, text, farbe: richtig ? GRUEN : ROT, richtig, gemeldet: false };
@@ -264,7 +264,7 @@ export class SchneidenSzene extends Phaser.Scene {
     }
   }
 
-  /** Vorschau: Der Bogen ist an den gewählten Linien geteilt, die Teile rücken auseinander. */
+  /** Der Bogen ist an den gewählten Linien geteilt, die Teile rücken auseinander. */
   private zeichneGeteilt(a: Stapel, zeit: number): void {
     const m = this.maler;
     const teile: [number, number, number, number, string][] = [];
