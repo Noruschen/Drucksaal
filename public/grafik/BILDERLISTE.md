@@ -85,7 +85,7 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | schneidemaschine_bereit.png | 56 x 46 | Schneidemaschine mit Bogenstapel, Messer oben | Skript |
 | schneidemaschine_schneidet.png | 56 x 46 | Schneidemaschine mit Bogenstapel, Messer unten | Skript |
 | firmengebaeude.png | 320 x 180 | Neuer Startbildschirm (Vorschau): Firmengebäude von aussen mit Baum, Laterne und Strasse (nach Foto) | Skript |
-| firmengebaeude_fahne.png | 320 x 180 | Startbildschirm (Vorschau): Firmengebäude, Baum und Fahnenmast weiter links | Skript |
+| firmengebaeude_fahne.png | 320 x 180 | Startbildschirm: Firmengebäude, Baum und Fahnenmast links | Skript |
 | fahne_1.png | 30 x 22 | Rote Fahne mit weissem «a», Bewegungsbild 1 von 4 | Skript |
 | fahne_2.png | 30 x 22 | Rote Fahne mit weissem «a», Bewegungsbild 2 von 4 | Skript |
 | fahne_3.png | 30 x 22 | Rote Fahne mit weissem «a», Bewegungsbild 3 von 4 | Skript |

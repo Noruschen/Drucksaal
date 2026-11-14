@@ -10,8 +10,8 @@ import { spiele } from './ton';
 
 type Bildobjekt = Phaser.GameObjects.Image;
 
-// Vorschau: Mit ?fahne=neu in der Adresse stehen Baum und Fahnenmast weiter links, am Mast weht die rote Fahne.
-const MIT_FAHNE = new URLSearchParams(window.location.search).get('fahne') === 'neu';
+// Baum und Fahnenmast stehen links, am Mast weht die rote Fahne. Mit ?fahne=alt in der Adresse gilt die frühere Fassung mit Laterne.
+const MIT_FAHNE = new URLSearchParams(window.location.search).get('fahne') !== 'alt';
 /** Bewegungsbilder der Fahne pro Sekunde */
 const FAHNE_TAKT = 6;
 
