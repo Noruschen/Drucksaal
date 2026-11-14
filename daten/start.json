@@ -1,5 +1,5 @@
 {
-  "hinweis": "Werte für den neuen Startbildschirm (Vorschau, Aufruf mit ?start=neu). Reine Darstellung. Zeiten in Sekunden, Tempo in Spielpixeln pro Sekunde.",
+  "hinweis": "Werte für den Startbildschirm mit dem Firmengebäude. Reine Darstellung. Zeiten in Sekunden, Tempo in Spielpixeln pro Sekunde.",
   "lastwagenErsteFahrt": 2,
   "lastwagenAlle": 10,
   "lastwagenTempo": 70,

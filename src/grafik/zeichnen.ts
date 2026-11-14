@@ -1304,8 +1304,10 @@ export function zeichneFirmengebaeude(l: Leinwand): void {
 export const LASTWAGEN_BREITE = 80;
 export const LASTWAGEN_HOEHE = 34;
 
-/** Lastwagen von der Seite, fährt nach rechts: roter Aufbau mit weissem «a», weisses Führerhaus, zwei Achsen. */
-export function zeichneLastwagenSeite(l: Leinwand): void {
+/** Lastwagen von der Seite, fährt nach links: roter Aufbau mit weissem «a», weisses Führerhaus vorn (links), zwei Achsen. */
+export function zeichneLastwagenSeite(ziel: Leinwand): void {
+  // Gezeichnet wird mit dem Führerhaus rechts und dann gespiegelt. Das «a» bleibt lesbar (nicht gespiegelt).
+  const l: Leinwand = { rechteck: (x, y, b, h, farbe) => ziel.rechteck(LASTWAGEN_BREITE - x - b, y, b, h, farbe) };
   // Fahrgestell
   l.rechteck(2, 26, 74, 3, MF.anthrazitDunkel);
   // Aufbau
@@ -1315,7 +1317,7 @@ export function zeichneLastwagenSeite(l: Leinwand): void {
   l.rechteck(0, 2, 1, 24, WF.rotDunkel);
   l.rechteck(52, 2, 1, 24, WF.rotDunkel);
   BUCHSTABE_A.forEach((zeile, y) => {
-    for (let x = 0; x < zeile.length; x++) if (zeile[x] === '#') l.rechteck(20 + x, 8 + y, 1, 1, MF.weiss);
+    for (let x = 0; x < zeile.length; x++) if (zeile[x] === '#') ziel.rechteck(LASTWAGEN_BREITE - 33 + x, 8 + y, 1, 1, MF.weiss);
   });
   // Führerhaus
   l.rechteck(55, 4, 8, 4, MF.weiss);

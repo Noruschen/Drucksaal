@@ -19,8 +19,8 @@ type Bildobjekt = Phaser.GameObjects.Image;
 // Prüfhilfe: Mit ?tempo=10 in der Adresse läuft die Schicht zehnmal so schnell. Ohne Angabe gilt 1.
 const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get('tempo')) || 1);
 
-// Vorschau: Mit ?start=neu in der Adresse erscheint der neue Startbildschirm mit dem Firmengebäude.
-const START_SZENE = new URLSearchParams(window.location.search).get('start') === 'neu' ? 'StartNeu' : 'Start';
+// Startbildschirm ist das Firmengebäude. Mit ?start=alt in der Adresse erscheint der frühere Startbildschirm (Drucksaal).
+const START_SZENE = new URLSearchParams(window.location.search).get('start') === 'alt' ? 'Start' : 'StartNeu';
 
 const IMMER_HILFE = new URLSearchParams(window.location.search).get('hilfe') === '1';
 

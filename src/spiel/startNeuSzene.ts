@@ -4,7 +4,7 @@ import { GEBAEUDE, LASTWAGEN_BREITE, LASTWAGEN_HOEHE } from '../grafik/zeichnen.
 import { BREITE, FARBEN, HOEHE, Maler, ansicht, bild, richteAus, schrift, trifft, type Rechteck } from './hilfen';
 import { spiele } from './ton';
 
-// Vorschau eines neuen Startbildschirms (Aufruf mit ?start=neu): Firmengebäude von aussen.
+// Startbildschirm: Firmengebäude von aussen. (Der frühere Startbildschirm ist mit ?start=alt erreichbar.)
 // Alle paar Sekunden fährt der Lastwagen vorbei. «Beruf auswählen» führt durch die Eingangstür
 // in die Firma und blendet zur Berufswahl über. Reine Darstellung, ohne Spielwerte.
 
@@ -78,16 +78,16 @@ export class StartNeuSzene extends Phaser.Scene {
     if (!this.faehrt) {
       if (this.bisFahrt > 0) return;
       this.faehrt = true;
-      this.lastwagenX = -LASTWAGEN_BREITE;
+      this.lastwagenX = BREITE;
       // Die nächste Fahrt beginnt im festen Abstand zum Start dieser Fahrt.
       this.bisFahrt += startDatei.lastwagenAlle;
       this.lastwagen.setVisible(true);
     }
-    this.lastwagenX += startDatei.lastwagenTempo * dt;
+    this.lastwagenX -= startDatei.lastwagenTempo * dt; // von rechts nach links
     // Leichtes Wippen beim Fahren
     const wippen = Math.floor(this.lastwagenX / 6) % 2 === 0 ? 0 : 1;
     this.lastwagen.setPosition(Math.round(this.lastwagenX), STRASSE_Y - LASTWAGEN_HOEHE - wippen);
-    if (this.lastwagenX > BREITE) {
+    if (this.lastwagenX < -LASTWAGEN_BREITE) {
       this.faehrt = false;
       this.lastwagen.setVisible(false);
     }
