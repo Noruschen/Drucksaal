@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
-import { AUSRUESTEREI, AUSRUESTUNG, EINSTELLUNGEN, HEFTEN, LEITSTAND, SCHNEIDEN, VORSTUFE, ZAHLENMODELL, ZUSAMMENTRAGEN } from '../logik/daten';
+import { AUSRUESTEREI, AUSRUESTUNG, AUSRUESTUNG_NEU, EINSTELLUNGEN, HEFTEN, LEITSTAND, SCHNEIDEN, VORSTUFE, ZAHLENMODELL, ZUSAMMENTRAGEN } from '../logik/daten';
 import { maschinenName, werteAus, type Auswertung } from '../logik/auswertung';
 import { Schicht } from '../logik/schicht';
 import type { Auftrag, Farbigkeit } from '../logik/typen';
@@ -24,7 +24,8 @@ const START_SZENE = new URLSearchParams(window.location.search).get('start') ===
 
 // Die drei Vorlagen für den Ausrüster (a, b, c) hat Alexander am 14.11.2026 verworfen: Sie sind abgeschaltet.
 // Der Code dazu bleibt liegen, bis Alexander das Löschen anordnet.
-const AUSRUESTER_VORSCHAU = null as string | null;
+// Neue Vorschau: Mit ?ausruester=neu startet der Ausrüster mit Schneidemaschine, Wegen und Hilferuf.
+const AUSRUESTER_VORSCHAU: string | null = new URLSearchParams(window.location.search).get('ausruester') === 'neu' ? 'neu' : null;
 
 const IMMER_HILFE = new URLSearchParams(window.location.search).get('hilfe') === '1';
 
@@ -328,6 +329,21 @@ export class EinfuehrungSzene extends Phaser.Scene {
         ],
         start: 'Schicht starten',
         szene: 'Zusammentragen',
+      };
+    }
+    if (AUSRUESTER_VORSCHAU === 'neu') {
+      const n = AUSRUESTUNG_NEU;
+      inhalt.ausruestung = {
+        titel: 'Ausrüster (Vorschau)',
+        zeilen: [
+          'Jede Palette zeigt ihren Weg: schneiden, falzen, heften.',
+          'Palette antippen: Sie geht zu ihrer ersten Maschine, der Rest läuft von selbst.',
+          'Ruft ein Arbeiter «Hilfe!», steht seine Maschine: Tippe sie an.',
+          `Fertiges im Lager antippen lädt den Lastwagen (${n.lastwagenPlaetze} Plätze), dann «Abfahrt».`,
+          `Vor dem Liefertermin abgefahren: plus ${n.punktePuenktlich}. Sonst: minus ${Math.abs(n.punkteVerspaetet)}. Schicht: ${minuten(n.dauer)} Minuten.`,
+        ],
+        start: 'Schicht starten',
+        szene: 'AusruestungNeu',
       };
     }
     if (AUSRUESTER_VORSCHAU === 'c') {

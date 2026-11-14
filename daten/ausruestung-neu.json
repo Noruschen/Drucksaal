@@ -1,0 +1,81 @@
+{
+  "hinweis": "Vorschau Ausrüster mit Schneidemaschine, Wegen und Hilferuf (Aufruf mit ?ausruester=neu). Spielwerte, keine Fachwerte. Zeiten in Sekunden, Auflagen in Exemplaren.",
+  "dauer": 180,
+  "takt": 8,
+  "annahmeBis": 140,
+  "startPaletten": 3,
+  "maxWartend": 4,
+  "falzen": {
+    "name": "MBO",
+    "ruestzeit": 4,
+    "leistung": 200
+  },
+  "heften": {
+    "name": "Martini Hefter",
+    "ruestzeit": 8,
+    "leistung": 120
+  },
+  "wartePlaetzeFalzen": 1,
+  "ablagePlaetze": 2,
+  "auflageVon": 300,
+  "auflageBis": 2000,
+  "auflageSchritt": 100,
+  "anteilHeften": 0.5,
+  "groessen": [
+    {
+      "bis": 1200,
+      "plaetze": 1
+    },
+    {
+      "bis": 1700,
+      "plaetze": 2
+    },
+    {
+      "bis": 999999,
+      "plaetze": 3
+    }
+  ],
+  "lagerPlaetze": 6,
+  "lastwagenPlaetze": 3,
+  "fahrzeit": 12,
+  "terminFaktor": 2,
+  "terminZuschlag": 40,
+  "eilAnteil": 0,
+  "eilFaktor": 1.2,
+  "eilZuschlag": 30,
+  "punktePuenktlich": 100,
+  "punkteVerspaetet": -50,
+  "schneiden": {
+    "name": "Schneidemaschine",
+    "ruestzeit": 3,
+    "leistung": 300
+  },
+  "wartePlaetzeSchneiden": 1,
+  "wege": [
+    {
+      "schneiden": true,
+      "falzen": false,
+      "heften": false,
+      "gewicht": 3
+    },
+    {
+      "schneiden": false,
+      "falzen": true,
+      "heften": false,
+      "gewicht": 3
+    },
+    {
+      "schneiden": false,
+      "falzen": true,
+      "heften": true,
+      "gewicht": 2
+    },
+    {
+      "schneiden": true,
+      "falzen": true,
+      "heften": true,
+      "gewicht": 2
+    }
+  ],
+  "hilferufAnteil": 0.2
+}

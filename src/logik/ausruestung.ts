@@ -47,13 +47,27 @@ export interface AusruestungEinstellungen {
   eilZuschlag: number;
   punktePuenktlich: number;
   punkteVerspaetet: number;
+  /** Zusatz (Vorschau): Schneidemaschine vor der Falzmaschine. Fehlt der Eintrag, gibt es keine. */
+  schneiden?: Maschinenwerte;
+  /** So viele Paletten können an der Schneidemaschine zusätzlich zum laufenden Auftrag warten */
+  wartePlaetzeSchneiden?: number;
+  /** Zusatz (Vorschau): mögliche Wege der Aufträge mit Gewicht für die Häufigkeit. Fehlt der Eintrag, gilt: immer falzen, heften nach anteilHeften. */
+  wege?: { schneiden: boolean; falzen: boolean; heften: boolean; gewicht: number }[];
+  /** Zusatz (Vorschau): Anteil der Bearbeitungen, bei denen der Arbeiter mitten im Lauf Hilfe braucht (0.2 = jede fünfte) */
+  hilferufAnteil?: number;
 }
+
+export type StationArt = 'schneiden' | 'falzen' | 'heften';
 
 export interface Palette {
   nummer: number;
   auflage: number;
   /** true = falzen und heften, false = nur falzen */
   heften: boolean;
+  /** true = zuerst an die Schneidemaschine (nur mit Schneidemaschine) */
+  schneiden: boolean;
+  /** false = der Auftrag wird nur geschnitten */
+  falzen: boolean;
   /** Plätze im Lager und im Lastwagen */
   plaetze: number;
   erschienen: number;
@@ -66,12 +80,16 @@ export type Arbeitsphase = 'ruesten' | 'laufen';
 
 export interface Station {
   werte: Maschinenwerte;
-  laufend: { palette: Palette; phase: Arbeitsphase; rest: number; dauer: number } | null;
+  laufend: { palette: Palette; phase: Arbeitsphase; rest: number; dauer: number; hilfeBei?: number } | null;
   wartend: Palette[];
   /** Fertig bearbeitet, aber Ablage oder Lager ist voll: Die Maschine steht. */
   blockiert: Palette | null;
   /** Sekunden, die die Maschine wegen vollem Lager oder voller Ablage stand */
   stillstand: number;
+  /** true = der Arbeiter ruft um Hilfe, die Maschine steht, bis geholfen wird */
+  gestoert: boolean;
+  /** Sekunden, die die Maschine auf Hilfe gewartet hat */
+  hilfeStillstand: number;
 }
 
 export interface Lieferung {
@@ -92,6 +110,9 @@ export interface AusruestungAuswertung {
   leerePlaetze: number;
   /** Stillstand von Falzmaschine und Sammelhefter wegen vollem Lager oder voller Ablage */
   stillstand: number;
+  /** Anzahl Hilferufe und die Zeit, in der Maschinen auf Hilfe warteten */
+  hilferufe: number;
+  hilfeStillstand: number;
 }
 
 const SCHRITT = 0.05;
@@ -103,8 +124,11 @@ export class Ausruestung {
   leerePlaetze = 0;
   /** Paletten im Wareneingang */
   readonly eingang: Palette[] = [];
+  /** Schneidemaschine, null = es gibt keine */
+  readonly schneiden: Station | null;
   readonly falzen: Station;
   readonly heften: Station;
+  hilferufe = 0;
   /** Gefalzte Aufträge, die auf den Sammelhefter warten */
   readonly ablage: Palette[] = [];
   readonly lager: Palette[] = [];
@@ -121,8 +145,10 @@ export class Ausruestung {
     readonly einstellungen: AusruestungEinstellungen,
     private readonly zufall: Zufall,
   ) {
-    this.falzen = { werte: einstellungen.falzen, laufend: null, wartend: [], blockiert: null, stillstand: 0 };
-    this.heften = { werte: einstellungen.heften, laufend: null, wartend: [], blockiert: null, stillstand: 0 };
+    const station = (werte: Maschinenwerte): Station => ({ werte, laufend: null, wartend: [], blockiert: null, stillstand: 0, gestoert: false, hilfeStillstand: 0 });
+    this.schneiden = einstellungen.schneiden ? station(einstellungen.schneiden) : null;
+    this.falzen = station(einstellungen.falzen);
+    this.heften = station(einstellungen.heften);
     this.naechsterTakt = einstellungen.takt;
     for (let i = 0; i < Math.min(einstellungen.startPaletten, einstellungen.maxWartend); i++) this.eingang.push(this.neuePalette());
   }
@@ -145,9 +171,9 @@ export class Ausruestung {
   }
 
   /** Reine Bearbeitungszeit eines Auftrags ohne Warten. */
-  bearbeitungszeit(auflage: number, heften: boolean): number {
+  bearbeitungszeit(auflage: number, heften: boolean, schneiden = false, falzen = true): number {
     const e = this.einstellungen;
-    return this.dauerAn(e.falzen, auflage) + (heften ? this.dauerAn(e.heften, auflage) : 0);
+    return (schneiden && e.schneiden ? this.dauerAn(e.schneiden, auflage) : 0) + (falzen ? this.dauerAn(e.falzen, auflage) : 0) + (heften ? this.dauerAn(e.heften, auflage) : 0);
   }
 
   plaetzeFuer(auflage: number): number {
@@ -156,17 +182,32 @@ export class Ausruestung {
   }
 
   /** Legt eine Palette mit festen Werten an (auch für Tests). */
-  paletteMit(auflage: number, heften: boolean, eil = false): Palette {
+  paletteMit(auflage: number, heften: boolean, eil = false, schneiden = false, falzen = true): Palette {
     const e = this.einstellungen;
-    const arbeit = this.bearbeitungszeit(auflage, heften);
+    const mitSchneiden = schneiden && this.schneiden !== null;
+    const arbeit = this.bearbeitungszeit(auflage, heften, mitSchneiden, falzen);
     const termin = this.zeit + (eil ? arbeit * e.eilFaktor + e.eilZuschlag : arbeit * e.terminFaktor + e.terminZuschlag);
-    return { nummer: this.naechsteNummer++, auflage, heften, plaetze: this.plaetzeFuer(auflage), erschienen: this.zeit, termin, eil };
+    return { nummer: this.naechsteNummer++, auflage, heften, schneiden: mitSchneiden, falzen, plaetze: this.plaetzeFuer(auflage), erschienen: this.zeit, termin, eil };
   }
 
   private neuePalette(): Palette {
     const e = this.einstellungen;
     const stufen = Math.floor((e.auflageBis - e.auflageVon) / e.auflageSchritt) + 1;
     const auflage = e.auflageVon + Math.floor(this.zufall() * stufen) * e.auflageSchritt;
+    if (e.wege && e.wege.length > 0) {
+      // Vorschau: Der Weg des Auftrags wird nach Gewicht gewählt.
+      const summe = e.wege.reduce((x, w) => x + w.gewicht, 0);
+      let wurf = this.zufall() * summe;
+      let weg = e.wege[0];
+      for (const w of e.wege) {
+        wurf -= w.gewicht;
+        if (wurf < 0) {
+          weg = w;
+          break;
+        }
+      }
+      return this.paletteMit(auflage, weg.heften, false, weg.schneiden, weg.falzen);
+    }
     const heften = this.zufall() < e.anteilHeften;
     const eil = this.zufall() < e.eilAnteil;
     return this.paletteMit(auflage, heften, eil);
@@ -184,6 +225,35 @@ export class Ausruestung {
   get falzenFrei(): boolean {
     const f = this.falzen;
     return f.laufend === null && f.blockiert === null ? true : f.wartend.length < this.einstellungen.wartePlaetzeFalzen;
+  }
+
+  /** Kann die Schneidemaschine noch eine Palette annehmen? */
+  get schneidenFrei(): boolean {
+    const s = this.schneiden;
+    if (!s) return false;
+    return s.laufend === null && s.blockiert === null ? true : s.wartend.length < (this.einstellungen.wartePlaetzeSchneiden ?? 0);
+  }
+
+  /** Schickt eine Palette aus dem Wareneingang zu ihrer ersten Maschine: Schneidemaschine oder Falzmaschine. */
+  zurErstenMaschine(nummer: number): boolean {
+    if (this.beendet) return false;
+    const i = this.eingang.findIndex((p) => p.nummer === nummer);
+    if (i < 0) return false;
+    if (!this.eingang[i].schneiden || !this.schneiden) return this.zurFalzmaschine(nummer);
+    if (!this.schneidenFrei) return false;
+    const [palette] = this.eingang.splice(i, 1);
+    const s = this.schneiden;
+    if (s.laufend === null && s.blockiert === null) this.starte(s, palette);
+    else s.wartend.push(palette);
+    return true;
+  }
+
+  /** Dem Arbeiter an einer Maschine helfen: Sie läuft weiter. */
+  hilf(art: StationArt): boolean {
+    const station = art === 'schneiden' ? this.schneiden : art === 'falzen' ? this.falzen : this.heften;
+    if (this.beendet || !station || !station.gestoert) return false;
+    station.gestoert = false;
+    return true;
   }
 
   private starte(station: Station, palette: Palette): void {
@@ -241,9 +311,15 @@ export class Ausruestung {
   }
 
   /** Versucht, einen fertigen Auftrag von der Maschine wegzubringen. */
-  private gibAb(station: Station, palette: Palette, istFalzen: boolean): boolean {
+  private gibAb(station: Station, palette: Palette, art: StationArt): boolean {
     const e = this.einstellungen;
-    if (istFalzen && palette.heften) {
+    if (art === 'schneiden' && palette.falzen) {
+      // Nach dem Schneiden zur Falzmaschine, sobald dort Platz ist
+      if (!this.falzenFrei) return false;
+      this.falzen.wartend.push(palette);
+      return true;
+    }
+    if (art === 'falzen' && palette.heften) {
       if (this.ablage.length >= e.ablagePlaetze) return false;
       this.ablage.push(palette);
       return true;
@@ -254,29 +330,43 @@ export class Ausruestung {
     return true;
   }
 
-  private arbeite(station: Station, dt: number, istFalzen: boolean): void {
+  private arbeite(station: Station, dt: number, art: StationArt): void {
+    if (station.gestoert) {
+      station.hilfeStillstand += dt;
+      return;
+    }
     if (station.blockiert) {
-      if (this.gibAb(station, station.blockiert, istFalzen)) station.blockiert = null;
+      if (this.gibAb(station, station.blockiert, art)) station.blockiert = null;
       else {
         station.stillstand += dt;
         return;
       }
     }
     if (!station.laufend) {
-      const naechste = istFalzen ? station.wartend.shift() : this.ablage.shift();
+      const naechste = art === 'heften' ? this.ablage.shift() : station.wartend.shift();
       if (naechste) this.starte(station, naechste);
       else return;
     }
     const l = station.laufend!;
     l.rest -= dt;
+    if (l.hilfeBei !== undefined && l.phase === 'laufen' && l.rest <= l.hilfeBei) {
+      // Der Arbeiter ruft um Hilfe: Die Maschine steht, bis geholfen wird.
+      l.hilfeBei = undefined;
+      station.gestoert = true;
+      this.hilferufe++;
+      return;
+    }
     if (l.rest > 1e-9) return;
     if (l.phase === 'ruesten') {
       const laufzeit = l.palette.auflage / station.werte.leistung;
-      station.laufend = { palette: l.palette, phase: 'laufen', rest: laufzeit + l.rest, dauer: laufzeit };
+      const anteil = this.einstellungen.hilferufAnteil ?? 0;
+      // Hilferuf höchstens einmal pro Bearbeitung, zufällig zwischen 20 und 80 Prozent der Laufzeit
+      const hilfeBei = anteil > 0 && this.zufall() < anteil ? laufzeit * (0.2 + 0.6 * this.zufall()) : undefined;
+      station.laufend = { palette: l.palette, phase: 'laufen', rest: laufzeit + l.rest, dauer: laufzeit, hilfeBei };
       return;
     }
     station.laufend = null;
-    if (!this.gibAb(station, l.palette, istFalzen)) station.blockiert = l.palette;
+    if (!this.gibAb(station, l.palette, art)) station.blockiert = l.palette;
   }
 
   /** Lässt die Zeit um dt Sekunden laufen. */
@@ -285,8 +375,10 @@ export class Ausruestung {
     let rest = Math.max(0, dt);
     while (rest > 1e-9 && !this.beendet) {
       const stueck = Math.min(rest, SCHRITT, e.dauer - this.zeit);
-      this.arbeite(this.falzen, stueck, true);
-      this.arbeite(this.heften, stueck, false);
+      // Von hinten nach vorn, damit ein frei gewordener Platz im selben Schritt nachrücken kann
+      this.arbeite(this.heften, stueck, 'heften');
+      this.arbeite(this.falzen, stueck, 'falzen');
+      if (this.schneiden) this.arbeite(this.schneiden, stueck, 'schneiden');
       this.zeit += stueck;
       rest -= stueck;
       if (this.unterwegsBis !== null && this.zeit >= this.unterwegsBis - 1e-9) this.unterwegsBis = null;
@@ -303,7 +395,9 @@ export class Ausruestung {
   private beende(): void {
     this.beendet = true;
     const offen: Palette[] = [...this.eingang, ...this.falzen.wartend, ...this.ablage, ...this.lager, ...this.geladen];
-    for (const s of [this.falzen, this.heften]) {
+    if (this.schneiden) offen.push(...this.schneiden.wartend);
+    for (const s of [this.schneiden, this.falzen, this.heften]) {
+      if (!s) continue;
       if (s.laufend) offen.push(s.laufend.palette);
       if (s.blockiert) offen.push(s.blockiert);
     }
@@ -319,7 +413,9 @@ export class Ausruestung {
       nichtGeliefert: this.lieferungen.filter((l) => l.geliefertUm === null).length,
       fahrten: this.fahrten,
       leerePlaetze: this.leerePlaetze,
-      stillstand: this.falzen.stillstand + this.heften.stillstand,
+      stillstand: (this.schneiden?.stillstand ?? 0) + this.falzen.stillstand + this.heften.stillstand,
+      hilferufe: this.hilferufe,
+      hilfeStillstand: (this.schneiden?.hilfeStillstand ?? 0) + this.falzen.hilfeStillstand + this.heften.hilfeStillstand,
     };
   }
 }
@@ -338,8 +434,11 @@ export function simuliereAusruestung(einstellungen: AusruestungEinstellungen, sc
     let ersteLadung = 0;
     while (!a.fertig) {
       a.schritt(0.25);
-      const naechste = [...a.eingang].sort((x, y) => x.termin - y.termin)[0];
-      if (naechste && a.falzenFrei) a.zurFalzmaschine(naechste.nummer);
+      // Die automatische Spielweise hilft sofort und schickt die dringendste Palette los, die Platz findet.
+      for (const art of ['schneiden', 'falzen', 'heften'] as const) a.hilf(art);
+      for (const p of [...a.eingang].sort((x, y) => x.termin - y.termin)) {
+        if (a.zurErstenMaschine(p.nummer) && !einstellungen.schneiden) break;
+      }
       if (a.lastwagenDa) {
         for (const p of [...a.lager].sort((x, y) => x.termin - y.termin)) {
           if (a.lade(p.nummer) && a.geladen.length === 1) ersteLadung = a.zeit;

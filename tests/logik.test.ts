@@ -8,7 +8,7 @@ import { Schneiden, type SchneidenEinstellungen } from '../src/logik/schneiden';
 import { Heften, HEFTKOPF, type HeftenEinstellungen } from '../src/logik/heften';
 import { Zusammentragen, type ZusammentragenEinstellungen } from '../src/logik/zusammentragen';
 import { Ausruesterei, simuliereAusruesterei, type AusruestereiEinstellungen } from '../src/logik/ausruesterei';
-import { AUSRUESTEREI } from '../src/logik/daten';
+import { AUSRUESTEREI, AUSRUESTUNG_NEU } from '../src/logik/daten';
 import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
@@ -845,5 +845,94 @@ describe('Vorschau Ausrüster C: Ausrüsterei leiten', () => {
     const r = simuliereAusruesterei(AUSRUESTEREI, 100, (i) => zufallMitStartwert(40 + i));
     expect(r.quote).toBeGreaterThan(85);
     expect(r.auftraege).toBeGreaterThan(15);
+  });
+});
+
+describe('Vorschau Ausrüster neu: Schneidemaschine, Wege, Hilferuf', () => {
+  // Feste Prüfwerte: Schneiden 3 s + Auflage / 300, Falzen 4 s + Auflage / 200, Heften 8 s + Auflage / 120
+  const E: AusruestungEinstellungen = {
+    ...AUSRUESTUNG_NEU,
+    dauer: 300,
+    takt: 100000,
+    startPaletten: 0,
+    schneiden: { name: 'Schneidemaschine', ruestzeit: 3, leistung: 300 },
+    falzen: { name: 'MBO', ruestzeit: 4, leistung: 200 },
+    heften: { name: 'Martini Hefter', ruestzeit: 8, leistung: 120 },
+    wartePlaetzeSchneiden: 1,
+    wartePlaetzeFalzen: 1,
+    terminFaktor: 2,
+    terminZuschlag: 30,
+    hilferufAnteil: 0,
+    eilAnteil: 0,
+  };
+  const neu = (e: AusruestungEinstellungen = E) => new Ausruestung(e, zufallMitStartwert(11));
+  const lege = (a: Ausruestung, auflage: number, schneiden: boolean, falzen: boolean, heften: boolean) => {
+    const p = a.paletteMit(auflage, heften, false, schneiden, falzen);
+    a.eingang.push(p);
+    return p;
+  };
+
+  it('nur schneiden: nach der Schneidemaschine direkt ins Lager', () => {
+    const a = neu();
+    const p = lege(a, 1200, true, false, false);
+    nah(p.termin, 7 * 2 + 30);
+    expect(a.zurErstenMaschine(p.nummer)).toBe(true);
+    expect(a.schneiden?.laufend?.palette.nummer).toBe(p.nummer);
+    a.schritt(6.9);
+    expect(a.lager.length).toBe(0);
+    a.schritt(0.2);
+    expect(a.lager.map((x) => x.nummer)).toEqual([p.nummer]);
+    expect(a.falzen.laufend).toBeNull();
+  });
+
+  it('schneiden, falzen, heften: der Auftrag läuft von selbst durch alle drei Maschinen', () => {
+    const a = neu();
+    const p = lege(a, 1200, true, true, true);
+    nah(p.termin, (7 + 10 + 18) * 2 + 30);
+    a.zurErstenMaschine(p.nummer);
+    a.schritt(7.2);
+    expect(a.falzen.laufend?.palette.nummer).toBe(p.nummer);
+    a.schritt(10.2);
+    expect(a.heften.laufend?.palette.nummer).toBe(p.nummer);
+    a.schritt(18.2);
+    expect(a.lager.map((x) => x.nummer)).toEqual([p.nummer]);
+  });
+
+  it('nur falzen geht direkt zur Falzmaschine, volle Schneidemaschine lehnt ab', () => {
+    const a = neu();
+    const f = lege(a, 1000, false, true, false);
+    expect(a.zurErstenMaschine(f.nummer)).toBe(true);
+    expect(a.falzen.laufend?.palette.nummer).toBe(f.nummer);
+    const s1 = lege(a, 1000, true, false, false);
+    const s2 = lege(a, 1000, true, false, false);
+    const s3 = lege(a, 1000, true, false, false);
+    expect(a.zurErstenMaschine(s1.nummer)).toBe(true);
+    expect(a.zurErstenMaschine(s2.nummer)).toBe(true);
+    expect(a.zurErstenMaschine(s3.nummer)).toBe(false);
+    expect(a.eingang.map((x) => x.nummer)).toEqual([s3.nummer]);
+  });
+
+  it('Hilferuf: Die Maschine steht, bis geholfen wird', () => {
+    const a = neu({ ...E, hilferufAnteil: 1 });
+    const p = lege(a, 1200, true, false, false);
+    a.zurErstenMaschine(p.nummer);
+    a.schritt(7.5);
+    expect(a.schneiden?.gestoert).toBe(true);
+    expect(a.lager.length).toBe(0);
+    a.schritt(20);
+    expect(a.lager.length).toBe(0);
+    expect(a.hilf('falzen')).toBe(false);
+    expect(a.hilf('schneiden')).toBe(true);
+    a.schritt(4);
+    expect(a.lager.map((x) => x.nummer)).toEqual([p.nummer]);
+    const w = a.auswertung();
+    expect(w.hilferufe).toBe(1);
+    expect(w.hilfeStillstand).toBeGreaterThan(20);
+  });
+
+  it('die Werte der Einstelldatei liegen mit der automatischen Spielweise im Ziel', () => {
+    const r = simuliereAusruestung(AUSRUESTUNG_NEU, 100, (i) => zufallMitStartwert(60 + i));
+    expect(r.quote).toBeGreaterThan(70);
+    expect(r.paletten).toBeGreaterThan(16);
   });
 });

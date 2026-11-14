@@ -51,3 +51,21 @@ it.runIf(import.meta.env.VITE_ERKUNDUNG === '1')('Erkundung Ausrüsterei (Vorsch
   }
   throw new Error('\n' + zeilen.join('\n'));
 });
+
+// Erkundung der Vorschau mit Schneidemaschine, Wegen und Hilferuf.
+import { AUSRUESTUNG_NEU } from '../src/logik/daten';
+
+it.runIf(import.meta.env.VITE_ERKUNDUNG === '1')('Erkundung Ausrüster neu', () => {
+  const zeilen: string[] = [];
+  for (const takt of [6, 7, 8, 9]) {
+    for (const annahmeBis of [140, 155]) {
+      for (const terminZuschlag of [30, 40]) {
+        for (const fahrzeit of [12, 15, 18]) {
+          const r = simuliereAusruestung({ ...AUSRUESTUNG_NEU, takt, annahmeBis, terminZuschlag, fahrzeit }, 300, (s) => zufallMitStartwert(700 + s));
+          zeilen.push(`N Takt ${takt}, Annahme ${annahmeBis}, Zuschlag ${terminZuschlag}, Fahrt ${fahrzeit}: ${r.quote.toFixed(1)} % pünktlich, ${r.paletten.toFixed(1)} Paletten, ${r.fahrten.toFixed(1)} Fahrten`);
+        }
+      }
+    }
+  }
+  throw new Error('\n' + zeilen.join('\n'));
+});
