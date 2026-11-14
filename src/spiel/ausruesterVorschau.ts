@@ -475,7 +475,7 @@ export class AusruestereiSzene extends Phaser.Scene {
     this.tMitte = schrift(this, 192, 2, '', FARBEN.text, 'mitte');
     this.tPunkte = schrift(this, BREITE - 4, 2, '', FARBEN.text, 'rechts');
     this.tLastwagen = schrift(this, 295, 18, '', FARBEN.textAufBoden, 'mitte', 8).setAlign('center');
-    this.tMeldung = schrift(this, 250, 30, '', GRUEN, 'mitte', 12).setDepth(9).setVisible(false);
+    this.tMeldung = schrift(this, 295, 40, '', GRUEN, 'mitte', 10).setDepth(9).setVisible(false);
     schrift(this, 194, 99, 'Rampe', FARBEN.text, 'links', 8);
     schrift(this, K_ABFAHRT_C.x + 15, 130, 'Ab-\nfahrt', FARBEN.knopfText, 'mitte').setAlign('center').setDepth(6);
 
