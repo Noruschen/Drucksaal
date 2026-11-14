@@ -10,8 +10,11 @@ export const FARBEN = STIL.farben;
  */
 export const SCHRIFT = { name: 'Barlow Semi Condensed', familie: 'BarlowSemiCondensed', datei: 'barlow-semi-condensed-500.woff2', groesse: 9 };
 
-/** Vorschau vom 14.11.2026: Mit ?vorschau=neu in der Adresse gelten die neuen Fassungen von Startbildschirm, Ausrüster und Leitstand. */
-export const VORSCHAU = new URLSearchParams(window.location.search).get('vorschau') === 'neu';
+/**
+ * Seit 14.11.2026 Standard: Startbildschirm mit Hängesitz, Ausrüster mit laufenden Männchen und fahrendem Lastwagen,
+ * Leitstand mit Druckbild. Mit ?vorschau=alt in der Adresse gelten die früheren Fassungen.
+ */
+export const VORSCHAU = new URLSearchParams(window.location.search).get('vorschau') !== 'alt';
 
 export const BREITE = 320;
 export const HOEHE = 180;

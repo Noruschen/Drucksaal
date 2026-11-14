@@ -113,6 +113,8 @@ export class AusruestungNeuSzene extends Phaser.Scene {
   private arbeiter: Figur[] = [];
   private verlader: Figur | null = null;
   private orte = new Map<number, Ort>();
+  /** Wo im Wareneingang eine Palette stand, als sie losgeschickt wurde (Mitte der Karte) */
+  private abholX = new Map<number, number>();
 
   constructor() {
     super('AusruestungNeu');
@@ -148,6 +150,7 @@ export class AusruestungNeuSzene extends Phaser.Scene {
     this.tPunkte = schrift(this, BREITE - 4, 2, '', FARBEN.text, 'rechts');
     this.arbeiter = [];
     this.orte = this.leseOrte();
+    this.abholX.clear();
     this.verlader = VORSCHAU
       ? { bild: bild(this, VERLADER_X - 5, BODEN + 3 - 16, 'drucker_steht', 4), x: VERLADER_X, heimX: VERLADER_X, nachLinks: false, traegt: false, wege: [] }
       : null;
@@ -220,7 +223,12 @@ export class AusruestungNeuSzene extends Phaser.Scene {
       if (vorher === undefined || vorher === ort) continue;
       const von = stationen.indexOf(vorher);
       const nach = stationen.indexOf(ort);
-      if (von >= 0 && nach >= 0) schicke(this.arbeiter[von], [{ x: this.arbeiter[nach].heimX - 12, traegt: true }]);
+      if (vorher === 'eingang' && nach >= 0) {
+        // Der Arbeiter holt die Palette vorn am Wareneingang und trägt den Stapel zu seiner Maschine.
+        const figur = this.arbeiter[nach];
+        schicke(figur, [{ x: this.abholX.get(nummer) ?? figur.heimX, traegt: false }, { x: figur.heimX, traegt: true }]);
+        this.abholX.delete(nummer);
+      } else if (von >= 0 && nach >= 0) schicke(this.arbeiter[von], [{ x: this.arbeiter[nach].heimX - 12, traegt: true }]);
       else if (von >= 0 && ort === 'ablage') schicke(this.arbeiter[von], [{ x: ABLAGE_X, traegt: true }]);
       else if (von >= 0 && ort === 'lager') schicke(this.arbeiter[von], [{ x: LAGER_X, traegt: true }]);
       else if (vorher === 'ablage' && nach >= 0) schicke(this.arbeiter[nach], [{ x: ABLAGE_X + 8, traegt: false }, { x: this.arbeiter[nach].heimX, traegt: true }]);
@@ -280,8 +288,10 @@ export class AusruestungNeuSzene extends Phaser.Scene {
       const f = kartenFeld(i);
       const nummer = this.plaetze[i];
       if (nummer === null || !trifft(f, x, y)) continue;
-      if (s.zurErstenMaschine(nummer)) spiele('zuteilen');
-      else this.lehneAb(f);
+      if (s.zurErstenMaschine(nummer)) {
+        spiele('zuteilen');
+        this.abholX.set(nummer, f.x + Math.floor(f.b / 2));
+      } else this.lehneAb(f);
       this.ordnePlaetze();
       return;
     }
