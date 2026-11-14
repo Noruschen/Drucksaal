@@ -22,7 +22,9 @@ const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get
 // Startbildschirm ist das Firmengebäude. Mit ?start=alt in der Adresse erscheint der frühere Startbildschirm (Drucksaal).
 const START_SZENE = new URLSearchParams(window.location.search).get('start') === 'alt' ? 'Start' : 'StartNeu';
 
-const AUSRUESTER_VORSCHAU = new URLSearchParams(window.location.search).get('ausruester');
+// Die drei Vorlagen für den Ausrüster (a, b, c) hat Alexander am 14.11.2026 verworfen: Sie sind abgeschaltet.
+// Der Code dazu bleibt liegen, bis Alexander das Löschen anordnet.
+const AUSRUESTER_VORSCHAU = null as string | null;
 
 const IMMER_HILFE = new URLSearchParams(window.location.search).get('hilfe') === '1';
 
