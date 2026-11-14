@@ -207,7 +207,7 @@ export const BILDER: Bild[] = [
   { name: 'schneidemaschine_bereit', breite: 56, hoehe: 46, beschrieb: 'Schneidemaschine mit Bogenstapel, Messer oben', zeichne: (l) => zeichneSchneidemaschine(l, false, true) },
   { name: 'schneidemaschine_schneidet', breite: 56, hoehe: 46, beschrieb: 'Schneidemaschine mit Bogenstapel, Messer unten', zeichne: (l) => zeichneSchneidemaschine(l, true, true) },
   { name: 'firmengebaeude', breite: 320, hoehe: 180, beschrieb: 'Neuer Startbildschirm (Vorschau): Firmengebäude von aussen mit Baum, Laterne und Strasse (nach Foto)', zeichne: (l) => zeichneFirmengebaeude(l) },
-  { name: 'lastwagen_seite', breite: 80, hoehe: 34, beschrieb: 'Lastwagen von der Seite, fährt nach links: roter Aufbau mit weissem «a», weisses Führerhaus, zwei Achsen', zeichne: (l) => zeichneLastwagenSeite(l) },
+  { name: 'lastwagen_links', breite: 80, hoehe: 34, beschrieb: 'Lastwagen von der Seite, fährt nach links: roter Aufbau mit weissem «a», weisses Führerhaus, zwei Achsen', zeichne: (l) => zeichneLastwagenSeite(l) },
   { name: 'portrait_medientechnologe', breite: 40, hoehe: 46, beschrieb: 'Porträt Medientechnologe für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitMedientechnologe(l) },
   { name: 'portrait_produktionsleiter', breite: 40, hoehe: 46, beschrieb: 'Porträt Produktionsleiter für die Wahl des Bereichs (nach Foto)', zeichne: (l) => zeichnePortraitProduktionsleiter(l) },
   {

@@ -45,7 +45,7 @@ export class StartNeuSzene extends Phaser.Scene {
     schild.r(191, 61, 110, 21, FARBEN.papier);
     bild(this, 194, 63, 'logo_wallimann', 2);
 
-    this.lastwagen = bild(this, -LASTWAGEN_BREITE, STRASSE_Y - LASTWAGEN_HOEHE, 'lastwagen_seite', 3).setVisible(false);
+    this.lastwagen = bild(this, -LASTWAGEN_BREITE, STRASSE_Y - LASTWAGEN_HOEHE, 'lastwagen_links', 3).setVisible(false);
     const knopf = bild(this, K_BERUF.x, K_BERUF.y, 'schaltflaeche_start', 4);
     const knopfText = schrift(this, 160, 155, 'Beruf auswählen', FARBEN.knopfText, 'mitte', 10);
     const titel = schrift(this, 160, 4, 'Druckerei Wallimann', FARBEN.umriss, 'mitte', 12);

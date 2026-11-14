@@ -85,7 +85,7 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | schneidemaschine_bereit.png | 56 x 46 | Schneidemaschine mit Bogenstapel, Messer oben | Skript |
 | schneidemaschine_schneidet.png | 56 x 46 | Schneidemaschine mit Bogenstapel, Messer unten | Skript |
 | firmengebaeude.png | 320 x 180 | Neuer Startbildschirm (Vorschau): Firmengebäude von aussen mit Baum, Laterne und Strasse (nach Foto) | Skript |
-| lastwagen_seite.png | 80 x 34 | Lastwagen von der Seite, fährt nach links: roter Aufbau mit weissem «a», weisses Führerhaus, zwei Achsen | Skript |
+| lastwagen_links.png | 80 x 34 | Lastwagen von der Seite, fährt nach links: roter Aufbau mit weissem «a», weisses Führerhaus, zwei Achsen | Skript |
 | portrait_medientechnologe.png | 40 x 46 | Porträt Medientechnologe für die Wahl des Bereichs (nach Foto) | Skript |
 | portrait_produktionsleiter.png | 40 x 46 | Porträt Produktionsleiter für die Wahl des Bereichs (nach Foto) | Skript |
 | logo_wallimann.png | 104 x 17 | Logo Wallimann als Pixelart (roter Schriftzug). Umgerechnet aus dem Logo von wallimann.ch, nicht vom Skript gezeichnet | von Hand gezeichnet |
