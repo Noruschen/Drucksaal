@@ -5,6 +5,7 @@ import { AuswertungSzene, BerufswahlSzene, EinfuehrungSzene, LadeSzene, SchichtS
 import { VorstufeAuswertungSzene, VorstufeSzene } from './vorstufeSzenen';
 import { AusruestungAuswertungSzene, AusruestungSzene } from './ausruestungSzenen';
 import { SchneidenAuswertungSzene, SchneidenSzene } from './schneidenSzenen';
+import { HeftenTaktSzene, VorschauAuswertungSzene, ZusammentragenSzene } from './ausruesterVorschau';
 import { StartNeuSzene } from './startNeuSzene';
 import { LeitstandAuswertungSzene, LeitstandSzene } from './leitstandSzenen';
 
@@ -87,7 +88,7 @@ async function start(): Promise<void> {
       zoom,
       expandParent: false,
     },
-    scene: [LadeSzene, StartSzene, StartNeuSzene, BerufswahlSzene, EinfuehrungSzene, SchichtSzene, AuswertungSzene, LeitstandSzene, LeitstandAuswertungSzene, VorstufeSzene, VorstufeAuswertungSzene, AusruestungSzene, AusruestungAuswertungSzene, SchneidenSzene, SchneidenAuswertungSzene],
+    scene: [LadeSzene, StartSzene, StartNeuSzene, BerufswahlSzene, EinfuehrungSzene, SchichtSzene, AuswertungSzene, LeitstandSzene, LeitstandAuswertungSzene, VorstufeSzene, VorstufeAuswertungSzene, AusruestungSzene, AusruestungAuswertungSzene, SchneidenSzene, SchneidenAuswertungSzene, HeftenTaktSzene, ZusammentragenSzene, VorschauAuswertungSzene],
   });
   window.addEventListener('resize', passeGroesseAn);
   window.addEventListener('orientationchange', () => setTimeout(passeGroesseAn, 200));

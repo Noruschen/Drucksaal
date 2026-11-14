@@ -1,0 +1,9 @@
+{
+  "hinweis": "Vorschau Ausrüster, Version B «Zusammentragen». Spielwerte, keine Fachwerte. Zeiten in Sekunden. Teile pro Broschüre samt Umschlag.",
+  "dauer": 75,
+  "teileVon": 3,
+  "teileBis": 5,
+  "zeitlimit": 11,
+  "punkteRichtig": 100,
+  "punkteFehler": -50
+}

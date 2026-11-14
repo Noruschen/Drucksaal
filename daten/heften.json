@@ -1,0 +1,13 @@
+{
+  "hinweis": "Vorschau Ausrüster, Version A «Heften im Takt». Spielwerte, keine Fachwerte. Zeiten in Sekunden. Lage auf der Kette von 0 (links) bis 1 (rechts), der Heftkopf steht bei 0.5.",
+  "dauer": 60,
+  "tempoStart": 0.22,
+  "tempoEnde": 0.4,
+  "abstandVon": 0.28,
+  "abstandBis": 0.5,
+  "toleranz": 0.035,
+  "schiefBis": 0.11,
+  "fehlbogenAnteil": 0.2,
+  "punkteGeheftet": 100,
+  "punkteFehler": -50
+}

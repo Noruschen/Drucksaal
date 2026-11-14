@@ -8,6 +8,10 @@ import ausruestungDatei from '../../daten/ausruestung.json';
 import type { AusruestungEinstellungen } from './ausruestung';
 import schneidenDatei from '../../daten/schneiden.json';
 import type { SchneidenEinstellungen } from './schneiden';
+import heftenDatei from '../../daten/heften.json';
+import type { HeftenEinstellungen } from './heften';
+import zusammentragenDatei from '../../daten/zusammentragen.json';
+import type { ZusammentragenEinstellungen } from './zusammentragen';
 import type { Einstellungen, Zahlenmodell } from './typen';
 
 export const ZAHLENMODELL: Zahlenmodell = maschinenDatei as Zahlenmodell;
@@ -16,3 +20,5 @@ export const LEITSTAND: LeitstandEinstellungen = leitstandDatei as LeitstandEins
 export const VORSTUFE: VorstufeEinstellungen = vorstufeDatei as VorstufeEinstellungen;
 export const AUSRUESTUNG: AusruestungEinstellungen = ausruestungDatei as AusruestungEinstellungen;
 export const SCHNEIDEN: SchneidenEinstellungen = schneidenDatei as SchneidenEinstellungen;
+export const HEFTEN: HeftenEinstellungen = heftenDatei as HeftenEinstellungen;
+export const ZUSAMMENTRAGEN: ZusammentragenEinstellungen = zusammentragenDatei as ZusammentragenEinstellungen;

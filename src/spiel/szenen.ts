@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
-import { AUSRUESTUNG, EINSTELLUNGEN, LEITSTAND, SCHNEIDEN, VORSTUFE, ZAHLENMODELL } from '../logik/daten';
+import { AUSRUESTUNG, EINSTELLUNGEN, HEFTEN, LEITSTAND, SCHNEIDEN, VORSTUFE, ZAHLENMODELL, ZUSAMMENTRAGEN } from '../logik/daten';
 import { maschinenName, werteAus, type Auswertung } from '../logik/auswertung';
 import { Schicht } from '../logik/schicht';
 import type { Auftrag, Farbigkeit } from '../logik/typen';
@@ -21,6 +21,8 @@ const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get
 
 // Startbildschirm ist das Firmengebäude. Mit ?start=alt in der Adresse erscheint der frühere Startbildschirm (Drucksaal).
 const START_SZENE = new URLSearchParams(window.location.search).get('start') === 'alt' ? 'Start' : 'StartNeu';
+
+const AUSRUESTER_VORSCHAU = new URLSearchParams(window.location.search).get('ausruester');
 
 const IMMER_HILFE = new URLSearchParams(window.location.search).get('hilfe') === '1';
 
@@ -298,6 +300,34 @@ export class EinfuehrungSzene extends Phaser.Scene {
         szene: 'Vorstufe',
       },
     };
+    // Vorschau: Mit ?ausruester=a oder ?ausruester=b startet beim Ausrüster ein anderes Spiel.
+    if (AUSRUESTER_VORSCHAU === 'a') {
+      inhalt.ausruestung = {
+        titel: 'Ausrüster: Heften im Takt (Vorschau A)',
+        zeilen: [
+          'Die Broschüren laufen auf der Sammelkette unter dem Heftkopf durch.',
+          'Tippe «Heften», wenn die Broschüre zwischen den gelben Marken liegt.',
+          'Rot markiert: Ein Bogen fehlt. Diese Broschüre nicht heften.',
+          `Genau geheftet: plus ${HEFTEN.punkteGeheftet}. Schief oder verpasst: minus ${Math.abs(HEFTEN.punkteFehler)}.`,
+          `Die Kette wird immer schneller. Schicht: ${minuten(HEFTEN.dauer)} ${HEFTEN.dauer === 60 ? 'Minute' : 'Minuten'}.`,
+        ],
+        start: 'Schicht starten',
+        szene: 'HeftenTakt',
+      };
+    } else if (AUSRUESTER_VORSCHAU === 'b') {
+      inhalt.ausruestung = {
+        titel: 'Ausrüster: Zusammentragen (Vorschau B)',
+        zeilen: [
+          'Die Lauftasche zeigt, in welcher Reihenfolge die Bogen auf die Kette kommen.',
+          'Tippe die Anleger in dieser Reihenfolge an: innerster Bogen zuerst, Umschlag zuletzt.',
+          'Die Anleger stehen bei jeder Broschüre anders.',
+          `Richtig: plus ${ZUSAMMENTRAGEN.punkteRichtig}. Falscher Bogen oder länger als ${ZUSAMMENTRAGEN.zeitlimit} s: minus ${Math.abs(ZUSAMMENTRAGEN.punkteFehler)}.`,
+          `Schicht: ${minuten(ZUSAMMENTRAGEN.dauer)} Minuten.`,
+        ],
+        start: 'Schicht starten',
+        szene: 'Zusammentragen',
+      };
+    }
     const seite = inhalt[this.bereich];
     schrift(this, 160, 2, seite.titel, FARBEN.text, 'mitte', 10);
     const hell = new Maler(this.add.graphics().setDepth(2));

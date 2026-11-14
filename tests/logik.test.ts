@@ -5,6 +5,8 @@ import { Vorstufe } from '../src/logik/vorstufe';
 import { AUSRUESTUNG } from '../src/logik/daten';
 import { Ausruestung, simuliereAusruestung, type AusruestungEinstellungen } from '../src/logik/ausruestung';
 import { Schneiden, type SchneidenEinstellungen } from '../src/logik/schneiden';
+import { Heften, HEFTKOPF, type HeftenEinstellungen } from '../src/logik/heften';
+import { Zusammentragen, type ZusammentragenEinstellungen } from '../src/logik/zusammentragen';
 import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
@@ -664,5 +666,95 @@ describe('Schneiden (Bereich Schneiden)', () => {
     s.schritt(100);
     expect(s.fertig).toBe(true);
     expect(s.zeit).toBe(60);
+  });
+});
+
+describe('Vorschau Ausrüster A: Heften im Takt', () => {
+  const E: HeftenEinstellungen = { dauer: 60, tempoStart: 0.1, tempoEnde: 0.1, abstandVon: 2, abstandBis: 2, toleranz: 0.03, schiefBis: 0.1, fehlbogenAnteil: 0, punkteGeheftet: 100, punkteFehler: -50 };
+  const neu = (e: HeftenEinstellungen = E) => new Heften(e, zufallMitStartwert(3));
+
+  it('genau unter dem Heftkopf geheftet gibt Punkte', () => {
+    const h = neu();
+    h.schritt(5);
+    expect(h.kette[0].lage).toBeCloseTo(HEFTKOPF, 5);
+    expect(h.hefte()).toBe('genau');
+    expect(h.punkte).toBe(100);
+    // Dieselbe Broschüre lässt sich nicht zweimal heften
+    expect(h.hefte()).toBe('leer');
+  });
+
+  it('zu früh geheftet ist schief, weit weg passiert nichts', () => {
+    const h = neu();
+    h.schritt(2);
+    expect(h.hefte()).toBe('leer');
+    h.schritt(2.3);
+    expect(h.hefte()).toBe('schief');
+    expect(h.punkte).toBe(-50);
+  });
+
+  it('ungeheftet durchgelaufen zählt als verpasst, ein Fehlbogen nicht', () => {
+    const h = neu();
+    h.schritt(10.1);
+    expect(h.auswertung().verpasst).toBe(1);
+    expect(h.punkte).toBe(-50);
+    const f = neu({ ...E, fehlbogenAnteil: 1 });
+    f.schritt(10.1);
+    expect(f.auswertung()).toMatchObject({ punkte: 0, fehlbogenErkannt: 1, verpasst: 0 });
+    const g = neu({ ...E, fehlbogenAnteil: 1 });
+    g.schritt(5);
+    expect(g.hefte()).toBe('fehlbogen');
+    expect(g.punkte).toBe(-50);
+  });
+
+  it('das Tempo steigt über die Schicht, am Ende ist Schluss', () => {
+    const h = neu({ ...E, tempoStart: 0.1, tempoEnde: 0.3 });
+    expect(h.tempo).toBeCloseTo(0.1, 5);
+    h.schritt(30);
+    expect(h.tempo).toBeCloseTo(0.2, 5);
+    h.schritt(100);
+    expect(h.fertig).toBe(true);
+    expect(h.hefte()).toBe('leer');
+  });
+});
+
+describe('Vorschau Ausrüster B: Zusammentragen', () => {
+  const E: ZusammentragenEinstellungen = { dauer: 60, teileVon: 4, teileBis: 4, zeitlimit: 10, punkteRichtig: 100, punkteFehler: -50 };
+  const neu = () => new Zusammentragen(E, zufallMitStartwert(5));
+  const anlegerVon = (z: Zusammentragen, teil: number) => z.auftrag.anleger.indexOf(teil);
+
+  it('Reihenfolge: innerster Bogen zuerst, Umschlag zuletzt', () => {
+    const z = neu();
+    expect(z.auftrag.reihenfolge).toEqual([3, 2, 1, 0]);
+    expect([...z.auftrag.anleger].sort()).toEqual([0, 1, 2, 3]);
+  });
+
+  it('richtig zusammengetragen gibt Punkte und die nächste Broschüre', () => {
+    const z = neu();
+    expect(z.greife(anlegerVon(z, 3))).toBe('gelegt');
+    // Ein schon gelegter Bogen lässt sich nicht nochmals legen
+    expect(z.greife(anlegerVon(z, 3))).toBe('nichts');
+    expect(z.greife(anlegerVon(z, 2))).toBe('gelegt');
+    expect(z.greife(anlegerVon(z, 1))).toBe('gelegt');
+    expect(z.greife(anlegerVon(z, 0))).toBe('fertig');
+    expect(z.punkte).toBe(100);
+    expect(z.auftrag.nummer).toBe(2);
+    expect(z.auftrag.gelegt).toBe(0);
+  });
+
+  it('falscher Bogen: Abzug und neue Broschüre', () => {
+    const z = neu();
+    expect(z.greife(anlegerVon(z, 0))).toBe('falsch');
+    expect(z.punkte).toBe(-50);
+    expect(z.auftrag.nummer).toBe(2);
+  });
+
+  it('Zeitlimit überschritten: Abzug und neue Broschüre, am Schichtende ist Schluss', () => {
+    const z = neu();
+    expect(z.schritt(9)).toBe(false);
+    expect(z.schritt(1.5)).toBe(true);
+    expect(z.auswertung()).toEqual({ punkte: -50, richtig: 0, falsch: 0, verspaetet: 1 });
+    z.schritt(100);
+    expect(z.fertig).toBe(true);
+    expect(z.greife(0)).toBe('nichts');
   });
 });
