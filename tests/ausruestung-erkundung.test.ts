@@ -34,3 +34,20 @@ it.runIf(import.meta.env.VITE_ERKUNDUNG === '1')('Erkundung Ausrüster', () => {
   }
   throw new Error('\n' + zeilen.join('\n'));
 });
+
+// Erkundung der Vorschau C «Ausrüsterei leiten».
+import { AUSRUESTEREI } from '../src/logik/daten';
+import { simuliereAusruesterei } from '../src/logik/ausruesterei';
+
+it.runIf(import.meta.env.VITE_ERKUNDUNG === '1')('Erkundung Ausrüsterei (Vorschau C)', () => {
+  const zeilen: string[] = [];
+  for (const takt of [4, 5, 6]) {
+    for (const terminZuschlag of [6, 10, 14]) {
+      for (const terminFaktor of [1.5, 2]) {
+        const r = simuliereAusruesterei({ ...AUSRUESTEREI, takt, terminZuschlag, terminFaktor }, 300, (s) => zufallMitStartwert(900 + s));
+        zeilen.push(`C Takt ${takt}, Zuschlag ${terminZuschlag}, Faktor ${terminFaktor}: ${r.quote.toFixed(1)} % pünktlich, ${r.auftraege.toFixed(1)} Aufträge, ${r.fahrten.toFixed(1)} Fahrten`);
+      }
+    }
+  }
+  throw new Error('\n' + zeilen.join('\n'));
+});

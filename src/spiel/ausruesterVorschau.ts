@@ -1,13 +1,14 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
-import { HEFTEN, ZUSAMMENTRAGEN } from '../logik/daten';
+import { AUSRUESTEREI, HEFTEN, ZUSAMMENTRAGEN } from '../logik/daten';
+import { Ausruesterei, type Auftrag } from '../logik/ausruesterei';
 import { HEFTKOPF, Heften, type Heftung } from '../logik/heften';
 import { Zusammentragen } from '../logik/zusammentragen';
 import { MF, WF } from '../grafik/zeichnen.ts';
-import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, trifft, type Rechteck } from './hilfen';
+import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
 import { spiele } from './ton';
 
-// Vorschau: zwei ganz andere Spiele für den Ausrüster. Aufruf mit ?ausruester=a oder ?ausruester=b.
+// Vorschau: drei andere Spiele für den Ausrüster. Aufruf mit ?ausruester=a, ?ausruester=b oder ?ausruester=c.
 // Sie ersetzen das veröffentlichte Ausrüster-Spiel nicht und zählen nicht für die Bestleistung.
 
 type Text = Phaser.GameObjects.Text;
@@ -404,6 +405,315 @@ export class ZusammentragenSzene extends Phaser.Scene {
     }
 
     this.tMeldung.setVisible(this.meldungZeit > 0);
+  }
+}
+
+// ---------------------------------------------------------------- Version C: Ausrüsterei leiten
+
+/** Antippbare Fläche jeder Station und Lage ihres Maschinenbilds. Reihenfolge wie in daten/ausruesterei.json. */
+const STATION_FELD: Record<string, { feld: Rechteck; bildX: number; bildY: number; steht: string; laeuft: [string, string] }> = {
+  schneiden: { feld: { x: 2, y: 17, b: 66, h: 80 }, bildX: 7, bildY: 50, steht: 'schneidemaschine_steht', laeuft: ['schneidemaschine_bereit', 'schneidemaschine_schneidet'] },
+  falzen: { feld: { x: 70, y: 17, b: 70, h: 80 }, bildX: 73, bildY: 52, steht: 'mbo_steht_1', laeuft: ['mbo_laeuft_1', 'mbo_laeuft_2'] },
+  heften: { feld: { x: 142, y: 17, b: 128, h: 80 }, bildX: 144, bildY: 56, steht: 'hefter_steht_1', laeuft: ['hefter_laeuft_1', 'hefter_laeuft_2'] },
+};
+const SCHRITTFARBE: Record<string, string> = { schneiden: '#8e6bbf', falzen: '#f2a530', heften: '#3fa7d6' };
+const K_ABFAHRT_C: Rechteck = { x: 288, y: 110, b: 30, h: 66 };
+
+function eingangFeld(i: number): Rechteck {
+  return { x: 3 + i * 47, y: 100, b: 45, h: 78 };
+}
+
+function rampeFeld(i: number): Rechteck {
+  return { x: 194 + (i % 2) * 46, y: 110 + Math.floor(i / 2) * 34, b: 44, h: 32 };
+}
+
+export class AusruestereiSzene extends Phaser.Scene {
+  private spiel!: Ausruesterei;
+  private maler!: Maler;
+  private vorn!: Maler;
+  private tUhr!: Text;
+  private tMitte!: Text;
+  private tPunkte!: Text;
+  private tLastwagen!: Text;
+  private tMeldung!: Text;
+  private stationTeile: { bild: Phaser.GameObjects.Image; status: Text; nummer: Text }[] = [];
+  private kartenTeile: { nummer: Text; schritte: Text[]; rest: Text }[] = [];
+  private rampeTexte: Text[] = [];
+  /** Feste Plätze der Karten im Eingang: Auftragsnummer oder null. So rutscht beim Tippen keine Karte nach. */
+  private plaetze: (number | null)[] = [];
+  private bLastwagen!: Phaser.GameObjects.Image;
+  private meldungZeit = 0;
+  private abgelehnt: { feld: Rechteck; zeit: number } | null = null;
+  private endePause = 0;
+  private lauf = 0;
+
+  constructor() {
+    super('Ausruesterei');
+  }
+
+  create(): void {
+    const e = AUSRUESTEREI;
+    this.spiel = new Ausruesterei(e, Math.random);
+    if (TEMPO > 1) (window as unknown as { druckereiPruefung?: Ausruesterei }).druckereiPruefung = this.spiel;
+    this.meldungZeit = 0;
+    this.abgelehnt = null;
+    this.endePause = 0;
+    this.lauf = 0;
+    this.plaetze = Array.from({ length: e.maxEingang }, () => null);
+    this.ordnePlaetze();
+
+    const grund = new Maler(this.add.graphics());
+    grund.r(0, 0, BREITE, HOEHE, FARBEN.leiste);
+    grund.r(0, 16, BREITE, 62, FARBEN.wand);
+    grund.r(0, 78, BREITE, 20, FARBEN.boden);
+    bild(this, 4, 3, 'uhr_hell');
+    this.bLastwagen = bild(this, 272, 50, 'lastwagen_heck', 1);
+    this.maler = new Maler(this.add.graphics().setDepth(2));
+    this.vorn = new Maler(this.add.graphics().setDepth(7));
+
+    this.tUhr = schrift(this, 16, 2, '', FARBEN.text);
+    this.tMitte = schrift(this, 192, 2, '', FARBEN.text, 'mitte');
+    this.tPunkte = schrift(this, BREITE - 4, 2, '', FARBEN.text, 'rechts');
+    this.tLastwagen = schrift(this, 295, 18, '', FARBEN.textAufBoden, 'mitte', 8).setAlign('center');
+    this.tMeldung = schrift(this, 250, 30, '', GRUEN, 'mitte', 12).setDepth(9).setVisible(false);
+    schrift(this, 194, 99, 'Rampe', FARBEN.text, 'links', 8);
+    schrift(this, K_ABFAHRT_C.x + 15, 130, 'Ab-\nfahrt', FARBEN.knopfText, 'mitte').setAlign('center').setDepth(6);
+
+    this.stationTeile = e.stationen.map((st) => {
+      const lage = STATION_FELD[st.id];
+      const mitte = lage.feld.x + lage.feld.b / 2;
+      schrift(this, mitte, 18, st.name, FARBEN.textAufBoden, 'mitte', 9);
+      return {
+        bild: bild(this, lage.bildX, lage.bildY, lage.steht, 1),
+        status: schrift(this, mitte, 29, '', FARBEN.textAufBoden, 'mitte', 8),
+        nummer: schrift(this, mitte, 45, '', FARBEN.textAufPapier, 'mitte', 8).setDepth(6),
+      };
+    });
+    this.kartenTeile = [];
+    for (let i = 0; i < e.maxEingang; i++) {
+      const f = eingangFeld(i);
+      this.kartenTeile.push({
+        nummer: schrift(this, f.x + 4, f.y + 2, '', FARBEN.textAufPapier, 'links', 10),
+        schritte: e.stationen.map((_, k) => schrift(this, f.x + 10, f.y + 17 + k * 11, '', FARBEN.textAufPapier, 'links', 8)),
+        rest: schrift(this, f.x + 4, f.y + 56, '', FARBEN.textAufPapier),
+      });
+    }
+    this.rampeTexte = [];
+    for (let i = 0; i < e.rampePlaetze; i++) {
+      const f = rampeFeld(i);
+      this.rampeTexte.push(schrift(this, f.x + f.b / 2, f.y + 4, '', FARBEN.textAufPapier, 'mitte', 10));
+    }
+    richteAus(this);
+    this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.tippe(p.worldX, p.worldY));
+  }
+
+  /** Hält die festen Plätze im Eingang aktuell: Weggeschickte Aufträge geben ihren Platz frei, neue nehmen den ersten freien. */
+  private ordnePlaetze(): void {
+    const da = new Set(this.spiel.eingang.map((a) => a.nummer));
+    this.plaetze = this.plaetze.map((n) => (n !== null && da.has(n) ? n : null));
+    for (const a of this.spiel.eingang) {
+      if (this.plaetze.includes(a.nummer)) continue;
+      const frei = this.plaetze.indexOf(null);
+      if (frei >= 0) this.plaetze[frei] = a.nummer;
+    }
+  }
+
+  /** Wohin ein Auftrag als Nächstes geht, in Worten. */
+  private naechstesZiel(a: Auftrag): string {
+    return a.erledigt < a.weg.length ? `weiter: ${a.weg[a.erledigt]}` : 'weiter: Rampe';
+  }
+
+  private lehneAb(feld: Rechteck): void {
+    this.abgelehnt = { feld, zeit: 0.4 };
+    spiele('abgelehnt');
+  }
+
+  private tippe(x: number, y: number): void {
+    const s = this.spiel;
+    if (s.fertig) return;
+    // Aufträge im Eingang
+    for (let i = 0; i < this.plaetze.length; i++) {
+      const f = eingangFeld(i);
+      const nummer = this.plaetze[i];
+      if (nummer === null || !trifft(f, x, y)) continue;
+      if (s.tippe(nummer) === 'besetzt') this.lehneAb(f);
+      else spiele('zuteilen');
+      this.ordnePlaetze();
+      return;
+    }
+    // Stationen: fertigen Auftrag weiterschicken
+    for (const st of s.stationen) {
+      const feld = STATION_FELD[st.daten.id].feld;
+      if (!trifft(feld, x, y)) continue;
+      if (!st.auftrag) return;
+      const antwort = s.tippe(st.auftrag.nummer);
+      if (antwort === 'besetzt') this.lehneAb(feld);
+      else if (antwort !== 'laeuft') spiele('zuteilen');
+      return;
+    }
+    // Rampe: in den Lastwagen laden
+    for (let i = 0; i < s.rampe.length; i++) {
+      const f = rampeFeld(i);
+      if (!trifft(f, x, y)) continue;
+      if (s.tippe(s.rampe[i].nummer) === 'besetzt') this.lehneAb(f);
+      else spiele('zuteilen');
+      return;
+    }
+    if (trifft(K_ABFAHRT_C, x, y)) {
+      const vorher = s.punkte;
+      if (s.abfahrt()) {
+        const plus = s.punkte - vorher;
+        spiele(plus >= 0 ? 'puenktlich' : 'verspaetet');
+        setze(this.tMeldung, plus >= 0 ? `plus ${plus}` : `minus ${Math.abs(plus)}`, plus >= 0 ? GRUEN : ROT);
+        this.meldungZeit = 1.2;
+      } else {
+        this.lehneAb(K_ABFAHRT_C);
+      }
+      return;
+    }
+  }
+
+  update(_zeit: number, delta: number): void {
+    const s = this.spiel;
+    const echt = delta / 1000;
+    this.lauf += echt;
+    if (!s.fertig) {
+      s.schritt((Math.min(delta, 100) / 1000) * TEMPO);
+      this.ordnePlaetze();
+      if (s.fertig) spiele('schichtende');
+    } else {
+      this.endePause += echt;
+      if (this.endePause > 0.8) {
+        const w = s.auswertung();
+        const daten: AuswertungDaten = {
+          titel: 'Ausrüsterei leiten',
+          punkte: w.punkte,
+          kopf: `pünktlich: ${w.puenktlich}      verspätet: ${w.verspaetet}`,
+          zeilen: [
+            `Pünktlich abgefahren: ${w.puenktlich} ${w.puenktlich === 1 ? 'Auftrag' : 'Aufträge'}`,
+            `Zu spät abgefahren: ${w.verspaetet - w.nichtGeliefert}`,
+            `Am Schichtende nicht abgefahren: ${w.nichtGeliefert}`,
+            `Fahrten des Lastwagens: ${w.fahrten}`,
+            `Fertige Aufträge blieben auf den Maschinen liegen: ${anzeigeSekunden(w.stillstand)} s`,
+          ],
+          tipp:
+            w.stillstand > 30
+              ? 'Tipp: Fertige Aufträge sofort weiterschicken, sonst steht die Maschine.'
+              : w.nichtGeliefert > 3
+                ? 'Tipp: Gegen Schichtende früher verladen und abfahren.'
+                : w.verspaetet > w.puenktlich
+                  ? 'Tipp: Aufträge mit wenig Restzeit zuerst weiterschicken.'
+                  : 'Sauber gearbeitet: Die Ausrüsterei läuft rund.',
+          nochmals: 'Ausruesterei',
+        };
+        this.scene.start('VorschauAuswertung', daten);
+        return;
+      }
+    }
+    this.meldungZeit = Math.max(0, this.meldungZeit - echt);
+    if (this.abgelehnt) {
+      this.abgelehnt.zeit -= echt;
+      if (this.abgelehnt.zeit <= 0) this.abgelehnt = null;
+    }
+    this.zeichne();
+  }
+
+  private restBalken(a: Auftrag, x: number, y: number, b: number): void {
+    const rest = a.termin - this.spiel.zeit;
+    const anteil = rest / (a.termin - a.erschienen);
+    this.maler.balken(x, y, b, 4, rest <= 0 ? 1 : anteil, rest <= 0 ? FARBEN.schlecht : anteil > 0.5 ? FARBEN.gut : anteil > 0.25 ? FARBEN.warnung : FARBEN.schlecht);
+  }
+
+  private zeichne(): void {
+    const s = this.spiel;
+    const e = AUSRUESTEREI;
+    const m = this.maler;
+    m.leeren();
+    this.vorn.leeren();
+    const schichtRest = Math.max(0, e.dauer - s.zeit);
+    setze(this.tUhr, `Schicht ${minSek(schichtRest)}`);
+    m.balken(66, 5, 60, 6, schichtRest / e.dauer, FARBEN.akzent);
+    setze(this.tMitte, `pünktlich ${s.puenktlich}    verspätet ${s.verspaetet}`);
+    setze(this.tPunkte, punkteText(s.punkte));
+    const blinkt = Math.floor(this.lauf * 4) % 2 === 0;
+    const bewegung = Math.floor(this.lauf * 6) % 2;
+
+    // Stationen
+    s.stationen.forEach((st, i) => {
+      const lage = STATION_FELD[st.daten.id];
+      const t = this.stationTeile[i];
+      const f = lage.feld;
+      const a = st.auftrag;
+      const laeuft = a !== null && st.rest > 0;
+      const wartet = a !== null && st.rest === 0;
+      setzeBild(t.bild, laeuft ? lage.laeuft[bewegung] : lage.steht);
+      setze(t.status, laeuft ? `läuft ${anzeigeSekunden(st.rest)} s` : wartet && a ? this.naechstesZiel(a) : 'frei', wartet ? GRUEN : FARBEN.textAufBoden);
+      m.balken(f.x + 5, 40, f.b - 10, 4, laeuft ? 1 - st.rest / st.daten.dauer : wartet ? 1 : 0, wartet ? FARBEN.gut : FARBEN.akzent);
+      t.nummer.setVisible(a !== null);
+      if (a) {
+        // Zettel mit der Auftragsnummer an der Maschine
+        const mitte = f.x + f.b / 2;
+        m.r(mitte - 14, 44, 28, 12, wartet && blinkt ? FARBEN.gut : FARBEN.umriss);
+        m.r(mitte - 13, 45, 26, 10, FARBEN.papier);
+        setze(t.nummer, `Nr ${a.nummer}`);
+        if (wartet) m.rahmen(f.x, f.y, f.b, f.h, FARBEN.gut, blinkt ? 2 : 1);
+      }
+    });
+
+    // Lastwagen
+    const da = s.lastwagenDa;
+    this.bLastwagen.setVisible(da);
+    setze(this.tLastwagen, da ? `${s.geladen.length} von ${e.lastwagenPlaetze}\ngeladen` : `unterwegs\n${anzeigeSekunden(s.unterwegsBis - s.zeit)} s`);
+
+    // Eingang
+    for (let i = 0; i < e.maxEingang; i++) {
+      const f = eingangFeld(i);
+      const t = this.kartenTeile[i];
+      const a = s.eingang.find((x) => x.nummer === this.plaetze[i]);
+      const sichtbar = a !== undefined;
+      t.nummer.setVisible(sichtbar);
+      t.rest.setVisible(sichtbar);
+      t.schritte.forEach((x) => x.setVisible(false));
+      if (!a) {
+        m.rahmen(f.x, f.y, f.b, f.h, FARBEN.maschineDunkel);
+        continue;
+      }
+      m.r(f.x, f.y, f.b, f.h, FARBEN.maschineDunkel);
+      m.r(f.x + 1, f.y + 1, f.b - 2, f.h - 2, FARBEN.papier);
+      setze(t.nummer, `Nr ${a.nummer}`);
+      a.weg.forEach((id, k) => {
+        const text = t.schritte[k];
+        text.setVisible(true);
+        setze(text, id);
+        m.r(f.x + 3, f.y + 20 + k * 11, 5, 6, SCHRITTFARBE[id] ?? FARBEN.akzent);
+      });
+      const rest = a.termin - s.zeit;
+      setze(t.rest, rest <= 0 ? 'zu spät' : `${anzeigeSekunden(rest)} s`, rest <= 0 ? FARBEN.schlecht : FARBEN.textAufPapier);
+      this.restBalken(a, f.x + 3, f.y + 70, f.b - 6);
+    }
+
+    // Rampe
+    for (let i = 0; i < e.rampePlaetze; i++) {
+      const f = rampeFeld(i);
+      const a = s.rampe[i];
+      this.rampeTexte[i].setVisible(a !== undefined);
+      m.r(f.x, f.y, f.b, f.h, FARBEN.warnung);
+      m.r(f.x + 1, f.y + 1, f.b - 2, f.h - 2, a ? FARBEN.papier : FARBEN.maschine);
+      if (!a) continue;
+      setze(this.rampeTexte[i], `Nr ${a.nummer}`);
+      this.restBalken(a, f.x + 4, f.y + 23, f.b - 8);
+    }
+
+    // Abfahrt
+    const bereit = da && s.geladen.length > 0;
+    m.r(K_ABFAHRT_C.x, K_ABFAHRT_C.y, K_ABFAHRT_C.b, K_ABFAHRT_C.h, FARBEN.umriss);
+    m.r(K_ABFAHRT_C.x + 1, K_ABFAHRT_C.y + 1, K_ABFAHRT_C.b - 2, K_ABFAHRT_C.h - 2, bereit ? FARBEN.gut : FARBEN.maschineDunkel);
+
+    this.tMeldung.setVisible(this.meldungZeit > 0);
+    if (this.abgelehnt && Math.floor(this.abgelehnt.zeit * 10) % 2 === 0) {
+      const f = this.abgelehnt.feld;
+      this.vorn.r(f.x, f.y, f.b, f.h, FARBEN.schlecht, 0.45);
+    }
   }
 }
 

@@ -12,6 +12,8 @@ import heftenDatei from '../../daten/heften.json';
 import type { HeftenEinstellungen } from './heften';
 import zusammentragenDatei from '../../daten/zusammentragen.json';
 import type { ZusammentragenEinstellungen } from './zusammentragen';
+import ausruestereiDatei from '../../daten/ausruesterei.json';
+import type { AusruestereiEinstellungen } from './ausruesterei';
 import type { Einstellungen, Zahlenmodell } from './typen';
 
 export const ZAHLENMODELL: Zahlenmodell = maschinenDatei as Zahlenmodell;
@@ -22,3 +24,4 @@ export const AUSRUESTUNG: AusruestungEinstellungen = ausruestungDatei as Ausrues
 export const SCHNEIDEN: SchneidenEinstellungen = schneidenDatei as SchneidenEinstellungen;
 export const HEFTEN: HeftenEinstellungen = heftenDatei as HeftenEinstellungen;
 export const ZUSAMMENTRAGEN: ZusammentragenEinstellungen = zusammentragenDatei as ZusammentragenEinstellungen;
+export const AUSRUESTEREI: AusruestereiEinstellungen = ausruestereiDatei as AusruestereiEinstellungen;

@@ -7,6 +7,8 @@ import { Ausruestung, simuliereAusruestung, type AusruestungEinstellungen } from
 import { Schneiden, type SchneidenEinstellungen } from '../src/logik/schneiden';
 import { Heften, HEFTKOPF, type HeftenEinstellungen } from '../src/logik/heften';
 import { Zusammentragen, type ZusammentragenEinstellungen } from '../src/logik/zusammentragen';
+import { Ausruesterei, simuliereAusruesterei, type AusruestereiEinstellungen } from '../src/logik/ausruesterei';
+import { AUSRUESTEREI } from '../src/logik/daten';
 import { Leitstand, type LeitstandEinstellungen } from '../src/logik/leitstand';
 import { Schicht } from '../src/logik/schicht';
 import { vergleiche, werteAus } from '../src/logik/auswertung';
@@ -756,5 +758,92 @@ describe('Vorschau Ausrüster B: Zusammentragen', () => {
     z.schritt(100);
     expect(z.fertig).toBe(true);
     expect(z.greife(0)).toBe('nichts');
+  });
+});
+
+describe('Vorschau Ausrüster C: Ausrüsterei leiten', () => {
+  const E: AusruestereiEinstellungen = {
+    dauer: 100,
+    takt: 1000,
+    annahmeBis: 0,
+    startAuftraege: 0,
+    maxEingang: 4,
+    stationen: [
+      { id: 'schneiden', name: 'Schneiden', dauer: 4 },
+      { id: 'falzen', name: 'MBO', dauer: 5 },
+      { id: 'heften', name: 'Martini Hefter', dauer: 6 },
+    ],
+    wege: [{ weg: ['falzen'], gewicht: 1 }],
+    rampePlaetze: 1,
+    lastwagenPlaetze: 3,
+    fahrzeit: 8,
+    terminFaktor: 2,
+    terminZuschlag: 10,
+    punktePuenktlich: 100,
+    punkteVerspaetet: -50,
+  };
+  const neu = () => new Ausruesterei(E, zufallMitStartwert(2));
+  const lege = (s: Ausruesterei, weg: string[]) => {
+    const a = s.auftragMit(weg);
+    s.eingang.push(a);
+    return a;
+  };
+
+  it('ein Auftrag geht mit je einem Tipp über seinen Weg bis in den Lastwagen', () => {
+    const s = neu();
+    const a = lege(s, ['schneiden', 'falzen', 'heften']);
+    expect(a.termin).toBe(40);
+    expect(s.tippe(a.nummer)).toBe('weiter');
+    expect(s.tippe(a.nummer)).toBe('laeuft');
+    s.schritt(4);
+    expect(s.tippe(a.nummer)).toBe('weiter');
+    s.schritt(5);
+    expect(s.tippe(a.nummer)).toBe('weiter');
+    s.schritt(6);
+    expect(s.tippe(a.nummer)).toBe('rampe');
+    expect(s.tippe(a.nummer)).toBe('geladen');
+    expect(s.abfahrt()).toBe(true);
+    expect(s.auswertung()).toMatchObject({ punkte: 100, puenktlich: 1, fahrten: 1 });
+    expect(s.lastwagenDa).toBe(false);
+    s.schritt(8);
+    expect(s.lastwagenDa).toBe(true);
+  });
+
+  it('besetzte Station nimmt nichts an, ein fertiger Auftrag hält sie besetzt', () => {
+    const s = neu();
+    const a = lege(s, ['falzen']);
+    const b = lege(s, ['falzen']);
+    s.tippe(a.nummer);
+    expect(s.tippe(b.nummer)).toBe('besetzt');
+    s.schritt(7);
+    expect(s.tippe(b.nummer)).toBe('besetzt');
+    expect(s.stillstand).toBeCloseTo(2, 5);
+    expect(s.tippe(a.nummer)).toBe('rampe');
+    expect(s.tippe(b.nummer)).toBe('weiter');
+    // Die Rampe hat hier nur einen Platz
+    s.schritt(5);
+    expect(s.tippe(b.nummer)).toBe('besetzt');
+  });
+
+  it('zu spät abgefahren gibt Abzug, am Schichtende zählt alles Offene als verspätet', () => {
+    const s = neu();
+    const a = lege(s, ['falzen']);
+    const b = lege(s, ['schneiden']);
+    s.tippe(a.nummer);
+    s.schritt(25);
+    s.tippe(a.nummer);
+    s.tippe(a.nummer);
+    s.abfahrt();
+    expect(s.punkte).toBe(-50);
+    s.schritt(100);
+    expect(s.fertig).toBe(true);
+    expect(s.auswertung()).toMatchObject({ punkte: -100, verspaetet: 2, nichtGeliefert: 1 });
+    expect(s.tippe(b.nummer)).toBe('nichts');
+  });
+
+  it('die Werte der Einstelldatei sind mit idealer Spielweise gut zu schaffen', () => {
+    const r = simuliereAusruesterei(AUSRUESTEREI, 100, (i) => zufallMitStartwert(40 + i));
+    expect(r.quote).toBeGreaterThan(85);
+    expect(r.auftraege).toBeGreaterThan(15);
   });
 });

@@ -1,0 +1,27 @@
+{
+  "hinweis": "Vorschau Ausrüster, Version C «Ausrüsterei leiten». Spielwerte, keine Fachwerte. Zeiten in Sekunden.",
+  "dauer": 120,
+  "takt": 6,
+  "annahmeBis": 100,
+  "startAuftraege": 2,
+  "maxEingang": 4,
+  "stationen": [
+    { "id": "schneiden", "name": "Schneiden", "dauer": 4 },
+    { "id": "falzen", "name": "MBO", "dauer": 5 },
+    { "id": "heften", "name": "Martini Hefter", "dauer": 6 }
+  ],
+  "wege": [
+    { "weg": ["falzen"], "gewicht": 2 },
+    { "weg": ["falzen", "heften"], "gewicht": 3 },
+    { "weg": ["schneiden"], "gewicht": 2 },
+    { "weg": ["schneiden", "falzen"], "gewicht": 2 },
+    { "weg": ["schneiden", "falzen", "heften"], "gewicht": 2 }
+  ],
+  "rampePlaetze": 4,
+  "lastwagenPlaetze": 3,
+  "fahrzeit": 8,
+  "terminFaktor": 2,
+  "terminZuschlag": 10,
+  "punktePuenktlich": 100,
+  "punkteVerspaetet": -50
+}

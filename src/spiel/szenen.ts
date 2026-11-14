@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { anzeigeSekunden, tausender } from '../logik/dauer';
-import { AUSRUESTUNG, EINSTELLUNGEN, HEFTEN, LEITSTAND, SCHNEIDEN, VORSTUFE, ZAHLENMODELL, ZUSAMMENTRAGEN } from '../logik/daten';
+import { AUSRUESTEREI, AUSRUESTUNG, EINSTELLUNGEN, HEFTEN, LEITSTAND, SCHNEIDEN, VORSTUFE, ZAHLENMODELL, ZUSAMMENTRAGEN } from '../logik/daten';
 import { maschinenName, werteAus, type Auswertung } from '../logik/auswertung';
 import { Schicht } from '../logik/schicht';
 import type { Auftrag, Farbigkeit } from '../logik/typen';
@@ -300,7 +300,7 @@ export class EinfuehrungSzene extends Phaser.Scene {
         szene: 'Vorstufe',
       },
     };
-    // Vorschau: Mit ?ausruester=a oder ?ausruester=b startet beim Ausrüster ein anderes Spiel.
+    // Vorschau: Mit ?ausruester=a, ?ausruester=b oder ?ausruester=c startet beim Ausrüster ein anderes Spiel.
     if (AUSRUESTER_VORSCHAU === 'a') {
       inhalt.ausruestung = {
         titel: 'Ausrüster: Heften im Takt (Vorschau A)',
@@ -326,6 +326,20 @@ export class EinfuehrungSzene extends Phaser.Scene {
         ],
         start: 'Schicht starten',
         szene: 'Zusammentragen',
+      };
+    }
+    if (AUSRUESTER_VORSCHAU === 'c') {
+      inhalt.ausruestung = {
+        titel: 'Ausrüster: Ausrüsterei leiten (Vorschau C)',
+        zeilen: [
+          'Jeder Auftrag zeigt seinen Weg: schneiden, falzen, heften.',
+          'Auftrag antippen: Er geht zur nächsten Station. Ist sie besetzt, blinkt er rot.',
+          'Ist eine Maschine fertig, steht dort grün «weiter»: Tippe sie an.',
+          'Fertiges auf der Rampe antippen lädt den Lastwagen, dann «Abfahrt».',
+          `Pünktlich abgefahren: plus ${AUSRUESTEREI.punktePuenktlich}. Sonst: minus ${Math.abs(AUSRUESTEREI.punkteVerspaetet)}. Schicht: ${minuten(AUSRUESTEREI.dauer)} Minuten.`,
+        ],
+        start: 'Schicht starten',
+        szene: 'Ausruesterei',
       };
     }
     const seite = inhalt[this.bereich];
