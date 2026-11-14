@@ -1229,8 +1229,34 @@ export function zeichneSchneidemaschine(l: Leinwand, messerUnten: boolean, mitSt
 /** Lage des Firmengebäudes und der Eingangstür im Bild, für Schild und Animation. */
 export const GEBAEUDE = { x: 8, y: 52, b: 304, h: 62, feld: 19, tuer: { x: 281, y: 96, b: 16, h: 18 } } as const;
 
+/** Lage des Fahnenmasts (Spitze) im Bild mit Fahnenmast */
+export const FAHNENMAST = { x: 84, y: 30 } as const;
+export const FAHNE_BREITE = 30;
+export const FAHNE_HOEHE = 22;
+
+/** Rote Fahne mit weissem «a», weht nach rechts. bild 0 bis 3 sind die Bewegungsbilder der Welle. */
+export function zeichneFahne(l: Leinwand, bild: number): void {
+  const b = 26;
+  const h = 16;
+  // Flache, lange Welle: Sie läuft vom Mast weg und wird nach aussen stärker.
+  const welle = (x: number): number => Math.sin((x / 26 - bild / 4) * 2 * Math.PI);
+  const versatz = (x: number): number => 3 + Math.round(welle(x) * (0.4 + (1.2 * x) / b));
+  for (let x = 0; x < b; x++) {
+    // Licht und Schatten der Welle nur neben dem Buchstaben, damit sein Inneres rot bleibt.
+    const neben = x < 6 || x > 20;
+    l.rechteck(x, versatz(x), 1, h, neben && welle(x) > 0.35 ? WF.rotHell : neben && welle(x) < -0.35 ? WF.rotDunkel : WF.rot);
+  }
+  // Das «a» bewegt sich als Ganzes mit der Mitte der Fahne, so bleibt es lesbar.
+  const oben = versatz(13) + 2;
+  BUCHSTABE_A.forEach((zeile, y) => {
+    for (let x = 0; x < zeile.length; x++) if (zeile[x] === '#') l.rechteck(7 + x, oben + y, 1, 1, MF.weiss);
+  });
+}
+
 /** Firmengebäude von aussen, 320 x 180: Himmel, zweigeschossiger Bau mit Fensterbändern, Baum, Laterne, Strasse mit rotem Streifen. */
-export function zeichneFirmengebaeude(l: Leinwand): void {
+export function zeichneFirmengebaeude(l: Leinwand, mitFahnenmast = false): void {
+  // Mit Fahnenmast stehen Baum und Mast weiter links, auf der Höhe des 3. und 4. Fensters.
+  const bx = mitFahnenmast ? 30 : 112;
   const G = GEBAEUDE;
   // Himmel mit Wolken
   l.rechteck(0, 0, 320, 116, '#79b8ea');
@@ -1273,7 +1299,6 @@ export function zeichneFirmengebaeude(l: Leinwand): void {
   // Weg zum Eingang
   l.rechteck(G.tuer.x - 2, 114, G.tuer.b + 4, 12, '#b9bfc5');
   // Baum
-  const bx = 112;
   const unten = 118;
   l.rechteck(bx + 23, unten - 17, 4, 17, '#6b4a2b');
   const laub: [number, number, number, number, string][] = [
@@ -1288,8 +1313,15 @@ export function zeichneFirmengebaeude(l: Leinwand): void {
   ];
   for (const [dx, hoch, b, h, farbe] of laub) l.rechteck(bx + dx, unten - hoch, b, h, farbe);
   // Laterne und Busch
-  l.rechteck(160, 36, 2, 86, '#9aa1a8');
-  l.rechteck(158, 33, 6, 4, MF.anthrazit);
+  if (mitFahnenmast) {
+    l.rechteck(FAHNENMAST.x, FAHNENMAST.y, 2, 122 - FAHNENMAST.y, '#b4bbc2');
+    l.rechteck(FAHNENMAST.x + 1, FAHNENMAST.y, 1, 122 - FAHNENMAST.y, '#8f979f');
+    l.rechteck(FAHNENMAST.x - 1, FAHNENMAST.y - 2, 4, 2, '#8f979f');
+    l.rechteck(FAHNENMAST.x - 2, 120, 6, 2, '#8f979f');
+  } else {
+    l.rechteck(160, 36, 2, 86, '#9aa1a8');
+    l.rechteck(158, 33, 6, 4, MF.anthrazit);
+  }
   l.rechteck(232, 104, 26, 12, '#3f9a3e');
   l.rechteck(236, 100, 16, 6, '#58b451');
   // Strasse mit Mittellinie und rotem Streifen

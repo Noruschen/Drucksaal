@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import startDatei from '../../daten/start.json';
-import { GEBAEUDE, LASTWAGEN_BREITE, LASTWAGEN_HOEHE } from '../grafik/zeichnen.ts';
-import { BREITE, FARBEN, HOEHE, Maler, ansicht, bild, richteAus, schrift, trifft, type Rechteck } from './hilfen';
+import { FAHNENMAST, GEBAEUDE, LASTWAGEN_BREITE, LASTWAGEN_HOEHE } from '../grafik/zeichnen.ts';
+import { BREITE, FARBEN, HOEHE, Maler, ansicht, bild, richteAus, schrift, setzeBild, trifft, type Rechteck } from './hilfen';
 import { spiele } from './ton';
 
 // Startbildschirm: Firmengebäude von aussen. (Der frühere Startbildschirm ist mit ?start=alt erreichbar.)
@@ -9,6 +9,11 @@ import { spiele } from './ton';
 // in die Firma und blendet zur Berufswahl über. Reine Darstellung, ohne Spielwerte.
 
 type Bildobjekt = Phaser.GameObjects.Image;
+
+// Vorschau: Mit ?fahne=neu in der Adresse stehen Baum und Fahnenmast weiter links, am Mast weht die rote Fahne.
+const MIT_FAHNE = new URLSearchParams(window.location.search).get('fahne') === 'neu';
+/** Bewegungsbilder der Fahne pro Sekunde */
+const FAHNE_TAKT = 6;
 
 /** Farbe der Überblendung: gleich beim Ausblenden hier und beim Einblenden der Berufswahl */
 export const BLENDE = '#fbfbf6';
@@ -28,6 +33,8 @@ export class StartNeuSzene extends Phaser.Scene {
   private eintritt: number | null = null;
   private vorn!: Maler;
   private ausblenden: Phaser.GameObjects.GameObject[] = [];
+  private fahne: Bildobjekt | null = null;
+  private lauf = 0;
 
   constructor() {
     super('StartNeu');
@@ -38,7 +45,9 @@ export class StartNeuSzene extends Phaser.Scene {
     this.faehrt = false;
     this.bisFahrt = startDatei.lastwagenErsteFahrt;
 
-    bild(this, 0, 0, 'firmengebaeude', 0);
+    bild(this, 0, 0, MIT_FAHNE ? 'firmengebaeude_fahne' : 'firmengebaeude', 0);
+    this.fahne = MIT_FAHNE ? bild(this, FAHNENMAST.x + 2, FAHNENMAST.y - 2, 'fahne_1', 1) : null;
+    this.lauf = 0;
     // Firmenschild an der Fassade
     const schild = new Maler(this.add.graphics().setDepth(1));
     schild.r(190, 60, 112, 23, FARBEN.umriss);
@@ -65,6 +74,8 @@ export class StartNeuSzene extends Phaser.Scene {
   update(_zeit: number, delta: number): void {
     const dt = Math.min(delta, 100) / 1000;
     this.bewegeLastwagen(dt);
+    this.lauf += dt;
+    if (this.fahne) setzeBild(this.fahne, `fahne_${(Math.floor(this.lauf * FAHNE_TAKT) % 4) + 1}`);
     if (this.eintritt === null) return;
     this.eintritt += dt;
     const anteil = Math.min(1, this.eintritt / startDatei.eintrittDauer);
