@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import startDatei from '../../daten/start.json';
 import { FAHNENMAST, GEBAEUDE, LASTWAGEN_BREITE, LASTWAGEN_HOEHE } from '../grafik/zeichnen.ts';
-import { BREITE, FARBEN, HOEHE, Maler, ansicht, bild, richteAus, schrift, setzeBild, trifft, type Rechteck } from './hilfen';
+import { BREITE, FARBEN, HOEHE, Maler, VORSCHAU, ansicht, bild, richteAus, schrift, setzeBild, trifft, type Rechteck } from './hilfen';
 import { spiele } from './ton';
 
 // Startbildschirm: Firmengebäude von aussen. (Der frühere Startbildschirm ist mit ?start=alt erreichbar.)
@@ -23,6 +23,14 @@ const STRASSE_Y = 142;
 /** So stark wird am Ende auf die Tür vergrössert */
 const ZOOM_ENDE = 9;
 
+/** Der Hängesitz hängt rechts vom Stamm unter der Baumkrone */
+const SITZ = { x: 60, y: 97 };
+/** Hier steht die Person beim Aufhängen (Füsse) */
+const SITZ_STAND_X = SITZ.x + 20;
+/** Füsse der Person: in der Tür und auf dem Rasen */
+const TUER_Y = 114;
+const WEG_Y = 123;
+
 export class StartNeuSzene extends Phaser.Scene {
   private lastwagen!: Bildobjekt;
   /** Zeit bis zur nächsten Fahrt, in Sekunden */
@@ -35,6 +43,8 @@ export class StartNeuSzene extends Phaser.Scene {
   private ausblenden: Phaser.GameObjects.GameObject[] = [];
   private fahne: Bildobjekt | null = null;
   private lauf = 0;
+  private person!: Bildobjekt;
+  private sitz!: Bildobjekt;
 
   constructor() {
     super('StartNeu');
@@ -57,8 +67,11 @@ export class StartNeuSzene extends Phaser.Scene {
     this.lastwagen = bild(this, -LASTWAGEN_BREITE, STRASSE_Y - LASTWAGEN_HOEHE, 'lastwagen_links', 3).setVisible(false);
     const knopf = bild(this, K_BERUF.x, K_BERUF.y, 'schaltflaeche_start', 4);
     const knopfText = schrift(this, 160, 155, 'Beruf auswählen', FARBEN.knopfText, 'mitte', 10);
-    const titel = schrift(this, 160, 4, 'Druckerei Wallimann', FARBEN.umriss, 'mitte', 12);
-    this.ausblenden = [knopf, knopfText, titel];
+    // In der Vorschau steht oben kein Schriftzug mehr (das Logo hängt an der Fassade).
+    this.ausblenden = [knopf, knopfText];
+    if (!VORSCHAU) this.ausblenden.push(schrift(this, 160, 4, 'Druckerei Wallimann', FARBEN.umriss, 'mitte', 12));
+    this.person = bild(this, 0, 0, 'person_steht', 2).setVisible(false);
+    this.sitz = bild(this, SITZ.x, SITZ.y, 'haengesitz_0', 2).setVisible(false);
     this.vorn = new Maler(this.add.graphics().setDepth(8));
     richteAus(this);
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
@@ -76,11 +89,64 @@ export class StartNeuSzene extends Phaser.Scene {
     this.bewegeLastwagen(dt);
     this.lauf += dt;
     if (this.fahne) setzeBild(this.fahne, `fahne_${(Math.floor(this.lauf * FAHNE_TAKT) % 4) + 1}`);
+    if (VORSCHAU) this.bewegePerson();
     if (this.eintritt === null) return;
     this.eintritt += dt;
     const anteil = Math.min(1, this.eintritt / startDatei.eintrittDauer);
     this.zeichneEintritt(anteil);
     if (anteil >= 1) this.scene.start('Berufswahl', { nummer: 0, einblenden: true });
+  }
+
+  /**
+   * Nach einigen Sekunden kommt eine Person aus dem Eingang, geht zum Baum,
+   * hängt den blauen Hängesitz auf und setzt sich hinein. Danach schaukelt sie leicht.
+   */
+  private bewegePerson(): void {
+    const t = this.lauf - startDatei.personNach;
+    if (t < 0) return;
+    const tuerX = GEBAEUDE.tuer.x + GEBAEUDE.tuer.b / 2;
+    const tempo = startDatei.personTempo;
+    const zeitRunter = (WEG_Y - TUER_Y) / tempo;
+    const zeitQuer = (tuerX - SITZ_STAND_X) / tempo;
+    const schritt = (Math.floor(t * 6) % 2) + 1;
+    const p = this.person;
+    const stelle = (x: number, fuesse: number): void => {
+      p.setPosition(Math.round(x) - 5, Math.round(fuesse) - 16);
+    };
+    p.setVisible(true).setFlipX(false);
+    if (t < zeitRunter) {
+      // aus der Tür auf den Weg
+      setzeBild(p, `person_geht_${schritt}_sitz`);
+      stelle(tuerX, TUER_Y + t * tempo);
+      return;
+    }
+    const tQuer = t - zeitRunter;
+    if (tQuer < zeitQuer) {
+      // über den Rasen nach links zum Baum
+      setzeBild(p, `person_geht_${schritt}_sitz`);
+      p.setFlipX(true);
+      stelle(tuerX - tQuer * tempo, WEG_Y);
+      return;
+    }
+    const tHaengt = tQuer - zeitQuer;
+    stelle(SITZ_STAND_X, WEG_Y);
+    this.sitz.setVisible(true);
+    if (tHaengt < 2.4) {
+      // aufhängen: zuerst das Seil, dann der Sitz
+      p.setFlipX(true);
+      setzeBild(p, 'person_haengt_auf');
+      setzeBild(this.sitz, tHaengt < 1.2 ? 'haengesitz_0' : 'haengesitz_1');
+      return;
+    }
+    if (tHaengt < 3) {
+      setzeBild(p, 'person_steht');
+      setzeBild(this.sitz, 'haengesitz_1');
+      return;
+    }
+    // sitzt und schaukelt leicht
+    p.setVisible(false);
+    setzeBild(this.sitz, 'haengesitz_2');
+    this.sitz.setPosition(SITZ.x + Math.round(Math.sin((tHaengt - 3) * 1.6) * 1.4), SITZ.y);
   }
 
   private bewegeLastwagen(dt: number): void {

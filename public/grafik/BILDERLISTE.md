@@ -42,6 +42,15 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 | drucker_geht_1_tasche.png | 10 x 16 | Drucker (Figur), geht, Bewegungsbild 1 von 2, trägt eine Lauftasche | Skript |
 | drucker_geht_2.png | 10 x 16 | Drucker (Figur), geht, Bewegungsbild 2 von 2 | Skript |
 | drucker_geht_2_tasche.png | 10 x 16 | Drucker (Figur), geht, Bewegungsbild 2 von 2, trägt eine Lauftasche | Skript |
+| person_steht.png | 10 x 16 | Person im roten Hemd (Startbildschirm), steht | Skript |
+| person_geht_1.png | 10 x 16 | Person im roten Hemd (Startbildschirm), geht, Bewegungsbild 1 von 2 | Skript |
+| person_geht_2.png | 10 x 16 | Person im roten Hemd (Startbildschirm), geht, Bewegungsbild 2 von 2 | Skript |
+| person_geht_1_sitz.png | 10 x 16 | Person im roten Hemd (Startbildschirm), geht mit dem Hängesitz, Bewegungsbild 1 von 2 | Skript |
+| person_geht_2_sitz.png | 10 x 16 | Person im roten Hemd (Startbildschirm), geht mit dem Hängesitz, Bewegungsbild 2 von 2 | Skript |
+| person_haengt_auf.png | 10 x 16 | Person im roten Hemd (Startbildschirm), steht mit erhobenen Armen (hängt den Sitz auf) | Skript |
+| haengesitz_0.png | 14 x 26 | Blauer Hängesitz am Baum: nur das Seil | Skript |
+| haengesitz_1.png | 14 x 26 | Blauer Hängesitz am Baum: leer | Skript |
+| haengesitz_2.png | 14 x 26 | Blauer Hängesitz am Baum: die Person sitzt drin | Skript |
 | symbol_home_180.png | 180 x 180 | Symbol für den Home-Bildschirm am iPhone (Datei 180 x 180) | Skript |
 | symbol_home_192.png | 192 x 192 | Symbol für den Home-Bildschirm (Datei 192 x 192) | Skript |
 | symbol_home_512.png | 512 x 512 | Symbol für den Home-Bildschirm (Datei 512 x 512) | Skript |
@@ -99,4 +108,4 @@ Die Maschinen stehen unten in der Mitte des Bildes, die unterste Pixelreihe ist 
 
 `#14181d` `#1aa7e0` `#20242e` `#262a30` `#2678a3` `#2b3445` `#3b4148` `#3d4855` `#3f7fbd` `#3fa7d6` `#434a54` `#49b35a` `#525a63` `#56657a` `#5b6470` `#5b9bd5` `#7b8695` `#8a6239` `#8cbce6` `#8d98a6` `#8f979f` `#8fd3f0` `#9c070c` `#9eadbd` `#b98a56` `#c9ced3` `#c9d3dd` `#cfd3d0` `#d20a11` `#d93a8a` `#d94a3d` `#e6e9ec` `#e6ebf0` `#e8474d` `#e8b98f` `#eaf4fb` `#f1f0ea` `#f2a530` `#f2c230` `#f4d51e` `#f4f5f6` `#fbfbf6` `#ffffff`
 
-Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#1d1f24` `#1f1c1b` `#2a2827` `#2f7d32` `#2f8540` `#33373f` `#3a281e` `#3a3532` `#3a444e` `#3b2416` `#3b3431` `#3d4a5e` `#3e2617` `#3f2817` `#3f9a3e` `#4a3220` `#4a3426` `#4a4745` `#4a4f57` `#56626e` `#57392a` `#58b451` `#5a3a22` `#5b3a26` `#5c5753` `#6b4a2b` `#6cae45` `#6e6b68` `#6f8f8a` `#79b8ea` `#7c8aa0` `#7d0509` `#7d5433` `#7d5638` `#84c35a` `#8a4b2a` `#8a8784` `#8d939a` `#8fd69b` `#9a6236` `#9aa1a8` `#9ccbf0` `#a85a52` `#aab2b9` `#b4bbc2` `#b9bfc5` `#bcdcf5` `#bd8f6d` `#c5cbd0` `#c7392f` `#cf9a72` `#d8b25a` `#dfe1e3` `#e6f0f8` `#e7eaec` `#f1f1ec` `#f6c9c2` `#f6f7f8`
+Zusatzfarben für einzelne Zustände (abgelaufene Lauftasche, grüne und graue Schaltfläche): `#1d1f24` `#1f1c1b` `#1f4c9a` `#2a2827` `#2f6fd0` `#2f7d32` `#2f8540` `#33373f` `#3a281e` `#3a3532` `#3a444e` `#3b2416` `#3b3431` `#3d4a5e` `#3e2617` `#3f2817` `#3f9a3e` `#4a3220` `#4a3426` `#4a4745` `#4a4f57` `#56626e` `#57392a` `#58b451` `#5a3a22` `#5b3a26` `#5c5753` `#6b4a2b` `#6cae45` `#6e6b68` `#6f8f8a` `#79b8ea` `#7c8aa0` `#7d0509` `#7d5433` `#7d5638` `#84c35a` `#8a4b2a` `#8a8784` `#8d939a` `#8fd69b` `#9a6236` `#9aa1a8` `#9ccbf0` `#a85a52` `#aab2b9` `#b4bbc2` `#b9bfc5` `#bcdcf5` `#bd8f6d` `#c5cbd0` `#c7392f` `#cf9a72` `#d8b25a` `#dfe1e3` `#e2685c` `#e6f0f8` `#e7eaec` `#e9e2cf` `#f1f1ec` `#f6c9c2` `#f6f7f8`

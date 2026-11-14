@@ -10,6 +10,9 @@ export const FARBEN = STIL.farben;
  */
 export const SCHRIFT = { name: 'Barlow Semi Condensed', familie: 'BarlowSemiCondensed', datei: 'barlow-semi-condensed-500.woff2', groesse: 9 };
 
+/** Vorschau vom 14.11.2026: Mit ?vorschau=neu in der Adresse gelten die neuen Fassungen von Startbildschirm, Ausrüster und Leitstand. */
+export const VORSCHAU = new URLSearchParams(window.location.search).get('vorschau') === 'neu';
+
 export const BREITE = 320;
 export const HOEHE = 180;
 

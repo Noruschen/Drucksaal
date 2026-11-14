@@ -37,6 +37,9 @@ import {
   zeichneHalle,
   zeichneLauftasche,
   zeichneSchaltflaeche,
+  HAENGESITZ_BREITE,
+  HAENGESITZ_HOEHE,
+  zeichneHaengesitz,
   zeichneSymbol,
   zeichneUhr,
   type Leinwand,
@@ -47,6 +50,7 @@ import {
 /** Gewähltes Design: Variante 1 «Werkhalle». */
 export const STIL: Stil = VARIANTEN[0].stil;
 const F = STIL.farben;
+const PERSON_HEMD = '#c7392f';
 
 export interface Bild {
   name: string;
@@ -159,6 +163,30 @@ export const BILDER: Bild[] = [
       zeichne: (l) => zeichneDrucker(l, F, 0, 0, b, traegt),
     })),
   ),
+  // Startbildschirm: Person in rotem Hemd, die den blauen Hängesitz zum Baum trägt und aufhängt
+  ...(
+    [
+      ['person_steht', 0, false, 'steht'],
+      ['person_geht_1', 1, false, 'geht, Bewegungsbild 1 von 2'],
+      ['person_geht_2', 2, false, 'geht, Bewegungsbild 2 von 2'],
+      ['person_geht_1_sitz', 1, 'sitz', 'geht mit dem Hängesitz, Bewegungsbild 1 von 2'],
+      ['person_geht_2_sitz', 2, 'sitz', 'geht mit dem Hängesitz, Bewegungsbild 2 von 2'],
+      ['person_haengt_auf', 0, 'hoch', 'steht mit erhobenen Armen (hängt den Sitz auf)'],
+    ] as const
+  ).map(([name, b, traegt, text]): Bild => ({
+    name,
+    breite: 10,
+    hoehe: 16,
+    beschrieb: `Person im roten Hemd (Startbildschirm), ${text}`,
+    zeichne: (l) => zeichneDrucker(l, { ...F, knopfDunkel: PERSON_HEMD, knopf: '#e2685c' }, 0, 0, b, traegt),
+  })),
+  ...[0, 1, 2].map((stufe): Bild => ({
+    name: `haengesitz_${stufe}`,
+    breite: HAENGESITZ_BREITE,
+    hoehe: HAENGESITZ_HOEHE,
+    beschrieb: `Blauer Hängesitz am Baum: ${['nur das Seil', 'leer', 'die Person sitzt drin'][stufe]}`,
+    zeichne: (l) => zeichneHaengesitz(l, F, stufe, PERSON_HEMD),
+  })),
   { name: 'symbol_home_180', breite: 36, hoehe: 36, massstab: 5, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm am iPhone (Datei 180 x 180)', zeichne: (l) => zeichneSymbol(l, F, 36) },
   { name: 'symbol_home_192', breite: 32, hoehe: 32, massstab: 6, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm (Datei 192 x 192)', zeichne: (l) => zeichneSymbol(l, F, 32) },
   { name: 'symbol_home_512', breite: 32, hoehe: 32, massstab: 16, imSpiel: false, beschrieb: 'Symbol für den Home-Bildschirm (Datei 512 x 512)', zeichne: (l) => zeichneSymbol(l, F, 32) },

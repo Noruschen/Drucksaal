@@ -3,6 +3,8 @@
   "lastwagenErsteFahrt": 2,
   "lastwagenAlle": 10,
   "lastwagenTempo": 70,
+  "personNach": 15,
+  "personTempo": 34,
   "eintrittDauer": 1.6,
   "einblendDauer": 0.5
 }

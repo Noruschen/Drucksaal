@@ -3,7 +3,7 @@ import { anzeigeSekunden, tausender } from '../logik/dauer';
 import { AUSRUESTUNG_NEU } from '../logik/daten';
 import { Ausruestung, type Palette, type Station, type StationArt } from '../logik/ausruestung';
 import { MF } from '../grafik/zeichnen.ts';
-import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
+import { BREITE, FARBEN, HOEHE, Maler, VORSCHAU, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
 import { meldeErgebnis } from './speicher';
 import { spiele } from './ton';
 
@@ -42,6 +42,28 @@ const PLAETZE: Platz[] = [
 ];
 const FELD_LASTWAGEN: Rechteck = { x: 272, y: 16, b: 48, h: 92 };
 const K_ABFAHRT: Rechteck = { x: 288, y: 118, b: 30, h: 61 };
+
+// Vorschau (?vorschau=neu): Die Männchen tragen die Stapel von Maschine zu Maschine, ins Lager und in den Lastwagen,
+// und der Lastwagen fährt sichtbar weg und wieder vor. Reine Darstellung: Die Zeiten der Logik laufen unabhängig davon.
+interface Figur {
+  bild: Bildobjekt;
+  x: number;
+  heimX: number;
+  nachLinks: boolean;
+  traegt: boolean;
+  /** Wegpunkte: dorthin gehen, mit oder ohne Stapel */
+  wege: { x: number; traegt: boolean }[];
+}
+type Ort = StationArt | 'eingang' | 'ablage' | 'lager' | 'wagen';
+const FIGUR_TEMPO = 75;
+/** Hier übergeben die Arbeiter den Stapel ans Lager, hier steht der Verlader */
+const LAGER_X = 246;
+const VERLADER_X = 258;
+const WAGEN_X = 279;
+const ABLAGE_X = 139;
+const WAGEN_BILD_X = 274;
+/** Sekunden für das Wegfahren und das Vorfahren des Lastwagens */
+const WAGEN_FAHRT = 1.2;
 
 function kartenFeld(i: number): Rechteck {
   return { x: 3 + i * 47, y: 111, b: 45, h: 67 };
@@ -88,6 +110,9 @@ export class AusruestungNeuSzene extends Phaser.Scene {
   private meldungZeit = 0;
   private lauf = 0;
   private endePause = 0;
+  private arbeiter: Figur[] = [];
+  private verlader: Figur | null = null;
+  private orte = new Map<number, Ort>();
 
   constructor() {
     super('AusruestungNeu');
@@ -121,11 +146,17 @@ export class AusruestungNeuSzene extends Phaser.Scene {
     this.tUhr = schrift(this, 16, 2, '', FARBEN.text);
     this.tMitte = schrift(this, 192, 2, '', FARBEN.text, 'mitte');
     this.tPunkte = schrift(this, BREITE - 4, 2, '', FARBEN.text, 'rechts');
+    this.arbeiter = [];
+    this.orte = this.leseOrte();
+    this.verlader = VORSCHAU
+      ? { bild: bild(this, VERLADER_X - 5, BODEN + 3 - 16, 'drucker_steht', 4), x: VERLADER_X, heimX: VERLADER_X, nachLinks: false, traegt: false, wege: [] }
+      : null;
     this.stationTeile = PLAETZE.map((platz) => {
       const mitte = platz.feld.x + platz.feld.b / 2;
       const name = this.station(platz.art).werte.name;
       schrift(this, mitte, name.length > 14 ? 19 : 18, name, FARBEN.textAufBoden, 'mitte', name.length > 14 ? 7 : 9);
-      bild(this, platz.arbeiterX - 5, BODEN + 2 - 16, 'drucker_steht', 4);
+      const figur = bild(this, platz.arbeiterX - 5, BODEN + 2 - 16, 'drucker_steht', 4);
+      this.arbeiter.push({ bild: figur, x: platz.arbeiterX, heimX: platz.arbeiterX, nachLinks: false, traegt: false, wege: [] });
       return {
         bild: bild(this, platz.bildX, platz.bildY, `${platz.bild}_steht${platz.art === 'schneiden' ? '' : '_1'}`, 2),
         status: schrift(this, mitte, 29, '', FARBEN.textAufBoden, 'mitte', 8),
@@ -159,6 +190,70 @@ export class AusruestungNeuSzene extends Phaser.Scene {
     }
     richteAus(this);
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.tippe(p.worldX, p.worldY));
+  }
+
+  /** Wo jede Palette gerade ist (für die Wege der Männchen). */
+  private leseOrte(): Map<number, Ort> {
+    const s = this.spiel;
+    const orte = new Map<number, Ort>();
+    for (const p of s.eingang) orte.set(p.nummer, 'eingang');
+    for (const platz of PLAETZE) {
+      const st = this.station(platz.art);
+      for (const p of [st.laufend?.palette, st.blockiert, ...st.wartend]) if (p) orte.set(p.nummer, platz.art);
+    }
+    for (const p of s.ablage) orte.set(p.nummer, 'ablage');
+    for (const p of s.lager) orte.set(p.nummer, 'lager');
+    for (const p of s.geladen) orte.set(p.nummer, 'wagen');
+    return orte;
+  }
+
+  /** Vergleicht die Orte der Paletten mit dem letzten Bild und schickt die Männchen los. */
+  private planeWege(): void {
+    const neu = this.leseOrte();
+    const stationen: Ort[] = PLAETZE.map((p) => p.art);
+    const schicke = (f: Figur, wege: { x: number; traegt: boolean }[]): void => {
+      // Hat das Männchen schon viel vor, entfällt der Weg (reine Darstellung).
+      if (f.wege.length <= 3) f.wege.push(...wege, { x: f.heimX, traegt: false });
+    };
+    for (const [nummer, ort] of neu) {
+      const vorher = this.orte.get(nummer);
+      if (vorher === undefined || vorher === ort) continue;
+      const von = stationen.indexOf(vorher);
+      const nach = stationen.indexOf(ort);
+      if (von >= 0 && nach >= 0) schicke(this.arbeiter[von], [{ x: this.arbeiter[nach].heimX - 12, traegt: true }]);
+      else if (von >= 0 && ort === 'ablage') schicke(this.arbeiter[von], [{ x: ABLAGE_X, traegt: true }]);
+      else if (von >= 0 && ort === 'lager') schicke(this.arbeiter[von], [{ x: LAGER_X, traegt: true }]);
+      else if (vorher === 'ablage' && nach >= 0) schicke(this.arbeiter[nach], [{ x: ABLAGE_X + 8, traegt: false }, { x: this.arbeiter[nach].heimX, traegt: true }]);
+      else if (vorher === 'lager' && ort === 'wagen' && this.verlader) schicke(this.verlader, [{ x: LAGER_X, traegt: false }, { x: WAGEN_X, traegt: true }]);
+      else if (vorher === 'wagen' && ort === 'lager' && this.verlader) schicke(this.verlader, [{ x: WAGEN_X, traegt: false }, { x: LAGER_X, traegt: true }]);
+    }
+    this.orte = neu;
+  }
+
+  private bewegeFiguren(dt: number): void {
+    const schritt = 1 + (Math.floor(this.lauf * 7) % 2);
+    for (const f of [...this.arbeiter, ...(this.verlader ? [this.verlader] : [])]) {
+      let rest = FIGUR_TEMPO * dt;
+      while (rest > 0 && f.wege.length > 0) {
+        const ziel = f.wege[0];
+        const weg = ziel.x - f.x;
+        f.traegt = ziel.traegt;
+        if (Math.abs(weg) > 0.5) f.nachLinks = weg < 0;
+        if (Math.abs(weg) <= rest) {
+          f.x = ziel.x;
+          rest -= Math.abs(weg);
+          f.wege.shift();
+        } else {
+          f.x += Math.sign(weg) * rest;
+          rest = 0;
+        }
+      }
+      const geht = f.wege.length > 0;
+      if (!geht) f.traegt = false;
+      setzeBild(f.bild, geht ? `drucker_geht_${schritt}${f.traegt ? '_tasche' : ''}` : 'drucker_steht');
+      f.bild.setFlipX(geht && f.nachLinks);
+      f.bild.setX(Math.round(f.x) - 5);
+    }
   }
 
   /** Hält die festen Plätze im Wareneingang aktuell. */
@@ -272,6 +367,10 @@ export class AusruestungNeuSzene extends Phaser.Scene {
         return;
       }
     }
+    if (VORSCHAU) {
+      this.planeWege();
+      this.bewegeFiguren(Math.min(echt, 0.1) * TEMPO);
+    }
     this.meldungZeit = Math.max(0, this.meldungZeit - echt);
     if (this.abgelehnt) {
       this.abgelehnt.zeit -= echt;
@@ -315,11 +414,13 @@ export class AusruestungNeuSzene extends Phaser.Scene {
       // Hilferuf: Sprechblase über dem Arbeiter, die Maschine ist rot umrandet
       t.hilfe.setVisible(st.gestoert);
       if (st.gestoert) {
-        const bx = platz.arbeiterX - 17;
+        const figurX = Math.round(this.arbeiter[i].x);
+        t.hilfe.setX(figurX);
+        const bx = figurX - 17;
         const by = BODEN - 33;
         this.vorn.r(bx, by, 34, 15, FARBEN.umriss);
         this.vorn.r(bx + 1, by + 1, 32, 13, '#ffffff');
-        this.vorn.r(platz.arbeiterX - 2, by + 15, 4, 3, FARBEN.umriss);
+        this.vorn.r(figurX - 2, by + 15, 4, 3, FARBEN.umriss);
         m.rahmen(f.x, f.y, f.b, f.h, FARBEN.schlecht, blinkt ? 2 : 1);
       }
     });
@@ -334,7 +435,17 @@ export class AusruestungNeuSzene extends Phaser.Scene {
 
     // Lastwagen
     const da = s.lastwagenDa;
-    this.bWagen.setVisible(da);
+    if (VORSCHAU) {
+      // Der Lastwagen fährt nach rechts weg und kurz vor der Rückkehr wieder vor.
+      const rest = da ? 0 : (s.unterwegsBis ?? s.zeit) - s.zeit;
+      const seit = da ? 0 : E.fahrzeit - rest;
+      const anteil = da ? 0 : Math.min(1, seit / WAGEN_FAHRT, rest / WAGEN_FAHRT);
+      const weich = anteil * anteil;
+      this.bWagen.setVisible(anteil < 1);
+      this.bWagen.setPosition(WAGEN_BILD_X + Math.round(weich * 50), BODEN - 44 - (anteil > 0 && Math.floor(this.lauf * 10) % 2 === 0 ? 1 : 0));
+    } else {
+      this.bWagen.setVisible(da);
+    }
     setze(this.tWagen, da ? `${s.belegt(s.geladen)} von ${E.lastwagenPlaetze}\nPlätzen` : `unterwegs\n${anzeigeSekunden((s.unterwegsBis ?? s.zeit) - s.zeit)} s`);
 
     // Wareneingang

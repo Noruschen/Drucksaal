@@ -341,11 +341,51 @@ export function zeichneBalken(l: Leinwand, f: Farben, x: number, y: number, b: n
   l.rechteck(x + 1, y + 1, Math.round((b - 2) * anteil), h - 2, farbe);
 }
 
+export const HAENGESITZ_BLAU = '#2f6fd0';
+export const HAENGESITZ_BLAU_DUNKEL = '#1f4c9a';
+export const HAENGESITZ_BREITE = 14;
+export const HAENGESITZ_HOEHE = 26;
+
+/** Blauer Hängesitz am Baum, 14 x 26. stufe: 0 = nur das Seil, 1 = Sitz leer, 2 = die Person sitzt drin. */
+export function zeichneHaengesitz(l: Leinwand, f: Farben, stufe: number, hemd: string): void {
+  const seil = '#e9e2cf';
+  // Seil vom Ast, unten gespreizt
+  l.rechteck(6, 0, 2, 7, seil);
+  l.rechteck(5, 7, 1, 1, seil);
+  l.rechteck(8, 7, 1, 1, seil);
+  l.rechteck(4, 8, 1, 1, seil);
+  l.rechteck(9, 8, 1, 1, seil);
+  l.rechteck(3, 9, 1, 1, seil);
+  l.rechteck(10, 9, 1, 1, seil);
+  if (stufe === 0) return;
+  // Querholz
+  l.rechteck(2, 10, 10, 1, '#6b4a2b');
+  if (stufe === 2) {
+    // Person: Kopf mit Mütze, Oberkörper, Beine hängen vorn heraus
+    l.rechteck(5, 10, 4, 1, f.umriss);
+    l.rechteck(4, 11, 6, 1, f.umriss);
+    l.rechteck(5, 12, 4, 3, f.haut);
+    l.rechteck(8, 13, 1, 1, f.umriss);
+    l.rechteck(4, 15, 6, 5, hemd);
+    l.rechteck(8, 19, 4, 2, f.umriss);
+    l.rechteck(11, 21, 2, 4, f.umriss);
+    l.rechteck(11, 25, 3, 1, f.umriss);
+  }
+  // Tuch: hohe Rückenwand links, Boden, niedrige Vorderkante rechts
+  l.rechteck(1, 11, 3, 11, HAENGESITZ_BLAU);
+  l.rechteck(1, 11, 1, 11, HAENGESITZ_BLAU_DUNKEL);
+  l.rechteck(2, 20, 9, 3, HAENGESITZ_BLAU);
+  l.rechteck(2, 22, 9, 1, HAENGESITZ_BLAU_DUNKEL);
+  l.rechteck(10, 17, 2, 5, HAENGESITZ_BLAU);
+  l.rechteck(11, 11, 1, 6, seil);
+  if (stufe === 1) l.rechteck(4, 12, 6, 8, HAENGESITZ_BLAU_DUNKEL);
+}
+
 /**
  * Drucker (Figur), 10 x 16. bild: 0 = steht, 1 und 2 = geht. traegt = hält eine Lauftasche.
  * Die Figur schaut nach rechts, für links wird das Bild im Spiel gespiegelt.
  */
-export function zeichneDrucker(l: Leinwand, f: Farben, x: number, y: number, bild: number, traegt: boolean): void {
+export function zeichneDrucker(l: Leinwand, f: Farben, x: number, y: number, bild: number, traegt: boolean | 'sitz' | 'hoch'): void {
   // Kopf mit Mütze
   l.rechteck(x + 3, y, 4, 1, f.umriss);
   l.rechteck(x + 2, y + 1, 6, 1, f.umriss);
@@ -355,7 +395,19 @@ export function zeichneDrucker(l: Leinwand, f: Farben, x: number, y: number, bil
   l.rechteck(x + 2, y + 5, 6, 6, f.knopfDunkel);
   l.rechteck(x + 3, y + 5, 4, 1, f.knopf);
   // Arme
-  if (traegt) {
+  if (traegt === 'hoch') {
+    // Beide Arme nach oben (hängt etwas auf)
+    l.rechteck(x + 1, y + 2, 1, 5, f.knopfDunkel);
+    l.rechteck(x + 8, y + 2, 1, 5, f.knopfDunkel);
+    l.rechteck(x + 1, y + 1, 1, 1, f.haut);
+    l.rechteck(x + 8, y + 1, 1, 1, f.haut);
+  } else if (traegt === 'sitz') {
+    // Trägt den zusammengelegten blauen Hängesitz
+    l.rechteck(x + 6, y + 6, 3, 2, f.knopfDunkel);
+    l.rechteck(x + 5, y + 5, 5, 5, HAENGESITZ_BLAU_DUNKEL);
+    l.rechteck(x + 6, y + 6, 3, 3, HAENGESITZ_BLAU);
+    l.rechteck(x + 8, y + 10, 1, 1, f.haut);
+  } else if (traegt) {
     l.rechteck(x + 6, y + 6, 3, 2, f.knopfDunkel);
     l.rechteck(x + 5, y + 4, 5, 5, f.umriss);
     l.rechteck(x + 6, y + 5, 3, 3, f.papier);
