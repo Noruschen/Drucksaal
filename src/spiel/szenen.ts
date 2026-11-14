@@ -104,10 +104,10 @@ interface Beruf {
 
 const BERUFE: Beruf[] = [
   { bereich: 'vorstufe', name: 'Polygraf', portrait: 'portrait_polygraf', zeilen: ['Medienvorstufe:', 'Seiten nachbauen'], platz: 'vorstufenplatz', raum: 'buero', einheit: 'Punkte' },
-  { bereich: 'produktion', name: 'Produktionsleiter', portrait: 'portrait_produktionsleiter', zeilen: ['Planung:', 'Lauftaschen verteilen'], platz: 'arbeitsplatz', raum: 'buero', einheit: 'Punkte' },
   { bereich: 'leitstand', name: 'Medientechnologe', portrait: 'portrait_medientechnologe', zeilen: ['Leitstand der RA 76:', 'Farbe und Passer'], platz: 'ra76_steht_1', raum: 'saal', einheit: 'Gutbogen' },
-  { bereich: 'ausruestung', name: 'Ausrüster', portrait: 'portrait_ausruester', zeilen: ['Weiterverarbeitung:', 'falzen, heften, liefern'], platz: 'mbo_steht_1', raum: 'saal', einheit: 'Punkte' },
   { bereich: 'schneiden', name: 'Schneiden', portrait: 'portrait_schneiden', zeilen: ['Weiterverarbeitung:', 'rütteln und schneiden'], platz: 'schneidemaschine_steht', raum: 'saal', einheit: 'Punkte' },
+  { bereich: 'ausruestung', name: 'Ausrüster', portrait: 'portrait_ausruester', zeilen: ['Weiterverarbeitung:', 'falzen, heften, liefern'], platz: 'mbo_steht_1', raum: 'saal', einheit: 'Punkte' },
+  { bereich: 'produktion', name: 'Produktionsleiter', portrait: 'portrait_produktionsleiter', zeilen: ['Planung:', 'Lauftaschen verteilen'], platz: 'arbeitsplatz', raum: 'buero', einheit: 'Punkte' },
 ];
 
 export class BerufswahlSzene extends Phaser.Scene {
