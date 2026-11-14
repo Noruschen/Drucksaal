@@ -7,6 +7,8 @@ import type { Auftrag, Farbigkeit } from '../logik/typen';
 import { BILDER, MASCHINE_H } from '../grafik/bilder.ts';
 import { ladeBestleistung, meldeErgebnis, setzeTon, tonAn, type Bereich } from './speicher';
 import { spiele } from './ton';
+import START from '../../daten/start.json';
+import { BLENDE } from './startNeuSzene';
 import { BREITE, FARBEN, HOEHE, Maler, bild, minSek, richteAus, schrift, setze, setzeBild, trifft, type Rechteck } from './hilfen';
 
 // Meilenstein M2: Pixelart im Design «Werkhalle». Alle Bilder kommen als PNG aus public/grafik/.
@@ -16,6 +18,9 @@ type Bildobjekt = Phaser.GameObjects.Image;
 
 // Prüfhilfe: Mit ?tempo=10 in der Adresse läuft die Schicht zehnmal so schnell. Ohne Angabe gilt 1.
 const TEMPO = Math.max(1, Number(new URLSearchParams(window.location.search).get('tempo')) || 1);
+
+// Vorschau: Mit ?start=neu in der Adresse erscheint der neue Startbildschirm mit dem Firmengebäude.
+const START_SZENE = new URLSearchParams(window.location.search).get('start') === 'neu' ? 'StartNeu' : 'Start';
 
 const IMMER_HILFE = new URLSearchParams(window.location.search).get('hilfe') === '1';
 
@@ -39,7 +44,7 @@ export class LadeSzene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start('Start');
+    this.scene.start(START_SZENE);
   }
 }
 
@@ -113,12 +118,24 @@ export class BerufswahlSzene extends Phaser.Scene {
   private kSpielen: Rechteck = { x: 100, y: 138, b: 120, h: 32 };
   private kTon: Rechteck = { x: 246, y: 139, b: 70, h: 30 };
   private wischStart: number | null = null;
+  private einblendRest = 0;
+  private blende: Maler | null = null;
+
+  update(_zeit: number, delta: number): void {
+    if (!this.blende) return;
+    this.einblendRest = Math.max(0, this.einblendRest - delta / 1000);
+    this.blende.leeren();
+    if (this.einblendRest > 0) this.blende.r(0, 0, BREITE, HOEHE, BLENDE, this.einblendRest / START.einblendDauer);
+    else this.blende = null;
+  }
 
   constructor() {
     super('Berufswahl');
   }
 
-  init(daten: { bereich?: Bereich; nummer?: number }): void {
+  init(daten: { bereich?: Bereich; nummer?: number; einblenden?: boolean }): void {
+    // Nach dem Gang durch die Eingangstür blendet die Berufswahl aus dem hellen Bild ein.
+    this.einblendRest = daten.einblenden ? START.einblendDauer : 0;
     if (typeof daten.nummer === 'number') this.nummer = daten.nummer;
     else this.nummer = Math.max(0, BERUFE.findIndex((b) => b.bereich === daten.bereich));
   }
@@ -140,6 +157,8 @@ export class BerufswahlSzene extends Phaser.Scene {
       bild(this, 214, 62, beruf.platz).setScale(2);
     }
     schrift(this, 160, 2, 'Wähle deinen Beruf', FARBEN.text, 'mitte', 10);
+    this.blende = this.einblendRest > 0 ? new Maler(this.add.graphics().setDepth(20)) : null;
+    this.blende?.r(0, 0, BREITE, HOEHE, BLENDE);
 
     const vorn = new Maler(this.add.graphics().setDepth(2));
     vorn.r(40, 21, 84, 96, FARBEN.akzent);
@@ -187,7 +206,7 @@ export class BerufswahlSzene extends Phaser.Scene {
       else if (trifft(this.kSpielen, p.worldX, p.worldY)) {
         spiele('zuteilen');
         this.scene.start('Einfuehrung', { bereich: beruf.bereich });
-      } else if (trifft(this.kZurueck, p.worldX, p.worldY)) this.scene.start('Start');
+      } else if (trifft(this.kZurueck, p.worldX, p.worldY)) this.scene.start(START_SZENE);
       else if (trifft(this.kTon, p.worldX, p.worldY)) {
         setzeTon(!tonAn());
         setze(tTon, tonAn() ? 'Ton: an' : 'Ton: aus');

@@ -1223,3 +1223,114 @@ export function zeichneSchneidemaschine(l: Leinwand, messerUnten: boolean, mitSt
   l.rechteck(10, y + 3, 36, 1, MF.silberDunkel);
   l.rechteck(10, y + 4, 36, 1, MF.weiss);
 }
+
+// ---------------------------------------------------------------- Neuer Startbildschirm (Vorschau)
+
+/** Lage des Firmengebäudes und der Eingangstür im Bild, für Schild und Animation. */
+export const GEBAEUDE = { x: 8, y: 52, b: 304, h: 62, feld: 19, tuer: { x: 281, y: 96, b: 16, h: 18 } } as const;
+
+/** Firmengebäude von aussen, 320 x 180: Himmel, zweigeschossiger Bau mit Fensterbändern, Baum, Laterne, Strasse mit rotem Streifen. */
+export function zeichneFirmengebaeude(l: Leinwand): void {
+  const G = GEBAEUDE;
+  // Himmel mit Wolken
+  l.rechteck(0, 0, 320, 116, '#79b8ea');
+  l.rechteck(0, 64, 320, 52, '#9ccbf0');
+  l.rechteck(0, 93, 320, 23, '#bcdcf5');
+  for (const [x, y, b] of [[10, 18, 46], [256, 14, 54]]) {
+    l.rechteck(x, y + 4, b, 7, '#ffffff');
+    l.rechteck(x + 6, y, b - 18, 5, '#ffffff');
+    l.rechteck(x + 4, y + 11, b - 10, 2, '#e6f0f8');
+  }
+  // Gebäude: helle Paneele, zwei Fensterbänder mit Storen, schmale Stützen
+  const wand = '#e7eaec';
+  const wandDunkel = '#c5cbd0';
+  const glas = '#3a444e';
+  l.rechteck(G.x, G.y, G.b, G.h, wand);
+  l.rechteck(G.x - 1, G.y - 2, G.b + 2, 3, '#aab2b9');
+  l.rechteck(G.x, G.y + G.h - 3, G.b, 3, wandDunkel);
+  const fensterH = 16;
+  for (const fy of [G.y + 8, G.y + 35]) {
+    l.rechteck(G.x + 2, fy, G.b - 4, fensterH, glas);
+    for (let k = 1; k < fensterH; k += 2) l.rechteck(G.x + 2, fy + k, G.b - 4, 1, '#56626e');
+  }
+  for (let sx = G.x; sx < G.x + G.b; sx += G.feld) {
+    l.rechteck(sx, G.y, 2, G.h, '#f6f7f8');
+    l.rechteck(sx + 2, G.y, 1, G.h, wandDunkel);
+  }
+  l.rechteck(G.x + G.b - 2, G.y, 2, G.h, '#f6f7f8');
+  // Eingang rechts mit Vordach und Glastür
+  const ex = G.x + G.b - G.feld * 2 + 3;
+  l.rechteck(ex, G.y + 35, G.feld * 2 - 5, G.h - 35, wand);
+  l.rechteck(G.tuer.x - 1, G.tuer.y - 1, G.tuer.b + 2, G.tuer.h + 1, '#8f979f');
+  l.rechteck(G.tuer.x, G.tuer.y, G.tuer.b, G.tuer.h, glas);
+  l.rechteck(G.tuer.x + G.tuer.b / 2 - 1, G.tuer.y, 1, G.tuer.h, '#8f979f');
+  l.rechteck(G.tuer.x + 2, G.tuer.y + 2, 2, 6, '#56626e');
+  l.rechteck(G.tuer.x + G.tuer.b - 5, G.tuer.y + 2, 2, 6, '#56626e');
+  l.rechteck(ex - 2, G.tuer.y - 5, G.feld * 2 - 2, 3, '#8f979f');
+  // Rasen
+  l.rechteck(0, 114, 320, 12, '#6cae45');
+  l.rechteck(0, 114, 320, 2, '#84c35a');
+  // Weg zum Eingang
+  l.rechteck(G.tuer.x - 2, 114, G.tuer.b + 4, 12, '#b9bfc5');
+  // Baum
+  const bx = 112;
+  const unten = 118;
+  l.rechteck(bx + 23, unten - 17, 4, 17, '#6b4a2b');
+  const laub: [number, number, number, number, string][] = [
+    [10, 80, 30, 20, '#3f9a3e'],
+    [4, 69, 42, 24, '#2f7d32'],
+    [0, 51, 50, 27, '#2f7d32'],
+    [5, 27, 40, 13, '#2f7d32'],
+    [14, 77, 15, 16, '#58b451'],
+    [7, 61, 15, 16, '#3f9a3e'],
+    [25, 56, 17, 19, '#3f9a3e'],
+    [10, 40, 13, 11, '#58b451'],
+  ];
+  for (const [dx, hoch, b, h, farbe] of laub) l.rechteck(bx + dx, unten - hoch, b, h, farbe);
+  // Laterne und Busch
+  l.rechteck(160, 36, 2, 86, '#9aa1a8');
+  l.rechteck(158, 33, 6, 4, MF.anthrazit);
+  l.rechteck(232, 104, 26, 12, '#3f9a3e');
+  l.rechteck(236, 100, 16, 6, '#58b451');
+  // Strasse mit Mittellinie und rotem Streifen
+  l.rechteck(0, 126, 320, 54, '#4a4f57');
+  l.rechteck(0, 126, 320, 2, '#8d939a');
+  for (let sx = 6; sx < 320; sx += 26) l.rechteck(sx, 135, 12, 2, '#f1f1ec');
+  l.rechteck(0, 142, 320, 2, '#f1f1ec');
+  l.rechteck(0, 144, 320, 10, '#c7392f');
+  l.rechteck(0, 154, 320, 2, '#f1f1ec');
+}
+
+export const LASTWAGEN_BREITE = 80;
+export const LASTWAGEN_HOEHE = 34;
+
+/** Lastwagen von der Seite, fährt nach rechts: roter Aufbau mit weissem «a», weisses Führerhaus, zwei Achsen. */
+export function zeichneLastwagenSeite(l: Leinwand): void {
+  // Fahrgestell
+  l.rechteck(2, 26, 74, 3, MF.anthrazitDunkel);
+  // Aufbau
+  l.rechteck(0, 2, 53, 24, WF.rot);
+  l.rechteck(0, 2, 53, 2, WF.rotHell);
+  l.rechteck(0, 24, 53, 2, WF.rotDunkel);
+  l.rechteck(0, 2, 1, 24, WF.rotDunkel);
+  l.rechteck(52, 2, 1, 24, WF.rotDunkel);
+  BUCHSTABE_A.forEach((zeile, y) => {
+    for (let x = 0; x < zeile.length; x++) if (zeile[x] === '#') l.rechteck(20 + x, 8 + y, 1, 1, MF.weiss);
+  });
+  // Führerhaus
+  l.rechteck(55, 4, 8, 4, MF.weiss);
+  l.rechteck(55, 8, 20, 18, MF.weiss);
+  l.rechteck(55, 8, 1, 18, MF.silber);
+  l.rechteck(55, 24, 20, 2, MF.silber);
+  l.rechteck(63, 10, 11, 8, MF.glas);
+  l.rechteck(64, 11, 3, 2, MF.glasGlanz);
+  l.rechteck(59, 19, 3, 1, MF.silberDunkel);
+  l.rechteck(73, 25, 5, 3, MF.anthrazit);
+  l.rechteck(75, 21, 2, 2, MF.warnung);
+  // Zwei Achsen
+  for (const x of [9, 59]) {
+    l.rechteck(x, 25, 10, 9, MF.anthrazitDunkel);
+    l.rechteck(x - 1, 27, 12, 5, MF.anthrazitDunkel);
+    l.rechteck(x + 3, 28, 4, 4, MF.silberDunkel);
+  }
+}
